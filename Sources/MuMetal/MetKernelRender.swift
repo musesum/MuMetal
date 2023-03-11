@@ -98,7 +98,7 @@ public class MetKernelRender: MetKernel {
         setupSampler()
     }
 
-    override func nextCommand(_ command: MTLCommandBuffer) {
+    public override func nextCommand(_ command: MTLCommandBuffer) {
 
         setupInOutTextures(via: metItem.name)
 

@@ -51,7 +51,7 @@ public class MetKernelColor: MetKernel {
         altTex = altTex ?? makePaletteTex() // 256 false color palette
     }
 
-    override func nextCommand(_ command: MTLCommandBuffer) {
+    public override func nextCommand(_ command: MTLCommandBuffer) {
 
         setupInOutTextures(via: metItem.name)
         updatePalette()

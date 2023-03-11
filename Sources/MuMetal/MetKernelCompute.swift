@@ -22,7 +22,7 @@ public class MetKernelCompute: MetKernel {
         outTex = temp
     }
 
-    override func nextCommand(_ command: MTLCommandBuffer) {
+    public override func nextCommand(_ command: MTLCommandBuffer) {
 
         setupInOutTextures(via: metItem.name)
         

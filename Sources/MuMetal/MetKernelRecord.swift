@@ -45,7 +45,7 @@ public class MetKernelRecord: MetKernel {
         outTex = inTex
     }
     
-    override func nextCommand(_ command: MTLCommandBuffer) {
+    public override func nextCommand(_ command: MTLCommandBuffer) {
 
         setupInOutTextures(via: metItem.name)
 

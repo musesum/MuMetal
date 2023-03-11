@@ -60,7 +60,7 @@ public class MetKernel: MetNode {
             cc.endEncoding()
         }
     }
-    override func nextCommand(_ command: MTLCommandBuffer) {
+    override public func nextCommand(_ command: MTLCommandBuffer) {
 
         execCommand(command)
     }

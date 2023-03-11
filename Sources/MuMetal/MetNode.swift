@@ -10,26 +10,25 @@ public class MetNode: Equatable {
     var id = Visitor.nextId()
     public static func == (lhs: MetNode, rhs: MetNode) -> Bool { return lhs.id == rhs.id }
     
-    var metItem: MetItem
+    public var metItem: MetItem
+    public var filename = "" // optional filename for runtime compile of shader file
+    public var inTex: MTLTexture?   // input texture 0
+    public var outTex: MTLTexture?  // output texture 1
+    public var altTex: MTLTexture?  // optional texture 2
+    public var samplr: MTLSamplerState?
 
-    var filename = "" // optional filename for runtime compile of shader file
-    var inTex: MTLTexture?   // input texture 0
-    var outTex: MTLTexture?  // output texture 1
-    var altTex: MTLTexture?  // optional texture 2
-    var samplr: MTLSamplerState?
-
-    var inNode: MetNode?    // optional input kernel
-    var outNode: MetNode?   // optional output kernel
+    public var inNode: MetNode?    // optional input kernel
+    public var outNode: MetNode?   // optional output kernel
 
     typealias BufId = Int
     internal var nameBufId = [String: BufId]()
     internal var nameBuffer = [String: MetBuffer]()
 
-    var loops = 1
-    var isOn = false
+    public var loops = 1
+    public var isOn = false
 
     // can override to trigger behaviors, such as turning on  camera
-    func setMetalNodeOn(_ isOn: Bool,
+    public func setMetalNodeOn(_ isOn: Bool,
                         _ completion: @escaping ()->()) {
         if self.isOn != isOn {
             self.isOn = isOn
@@ -37,7 +36,7 @@ public class MetNode: Equatable {
         }
     }
 
-    init(_ metItem: MetItem) {
+    public init(_ metItem: MetItem) {
         self.metItem = metItem
     }
 
@@ -58,7 +57,7 @@ public class MetNode: Equatable {
     }
 
     /// continue onto next node to execute command
-    func nextCommand(_ command: MTLCommandBuffer) {
+    public func nextCommand(_ command: MTLCommandBuffer) {
         print("🚫 goCommand:\(String(describing: command)) needs override")
     }
     

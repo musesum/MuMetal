@@ -8,7 +8,7 @@ public class MetKernelCamera: MetKernel {
     private var bypassTex: MTLTexture?  // bypass outTex when not on
     public var drawTex: MTLTexture? { get { return outTex ?? nil } }
 
-    override init(_ metItem: MetItem) {
+    override public init(_ metItem: MetItem) {
 
         super.init(metItem)
         nameBufId["mix"] = 0
@@ -66,7 +66,7 @@ public class MetKernelCamera: MetKernel {
         outTex = isOn ? outTex ?? makeNewTex(via) : inTex
     }
 
-    override func nextCommand(_ command: MTLCommandBuffer) {
+    public override func nextCommand(_ command: MTLCommandBuffer) {
 
         setupInOutTextures(via: metItem.name)
 
