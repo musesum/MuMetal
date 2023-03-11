@@ -1,0 +1,50 @@
+{
+  "pins" : [
+    {
+      "identity" : "muflo",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/musesum/MuFlo.git",
+      "state" : {
+        "revision" : "cc8d22b6395fb1c5721fe3ee2e87d9fb50a11b82",
+        "version" : "0.23.203"
+      }
+    },
+    {
+      "identity" : "mupar",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/musesum/MuPar.git",
+      "state" : {
+        "revision" : "84c1daaebac2091286b4da2381a5fc4108f276d3",
+        "version" : "0.23.201"
+      }
+    },
+    {
+      "identity" : "muskyflo",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/musesum/MuSkyFlo.git",
+      "state" : {
+        "revision" : "a1434a95ddb74b561b60b7acdace095ed381eef9",
+        "version" : "0.23.203"
+      }
+    },
+    {
+      "identity" : "mutime",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/musesum/MuTime.git",
+      "state" : {
+        "revision" : "81adea94421037659bca892ac210686e8b28d7e3",
+        "version" : "0.23.201"
+      }
+    },
+    {
+      "identity" : "swift-collections",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-collections.git",
+      "state" : {
+        "revision" : "937e904258d22af6e447a0b72c0bc67583ef64a2",
+        "version" : "1.0.4"
+      }
+    }
+  ],
+  "version" : 2
+}
