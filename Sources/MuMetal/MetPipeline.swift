@@ -22,14 +22,11 @@ open class MetPipeline: NSObject {
 
     public var settingOp = true        // ignore swapping in new shaders
 
-    /// Called whenever view changes orientation or is resized
-    static var mtkViewIsFirstTime = true
-
-
     public override init() {
         super.init()
 
         let bounds = UIScreen.main.bounds
+
         drawSize = (bounds.size.width > bounds.size.height
                     ? CGSize(width: 1920, height: 1080)
                     : CGSize(width: 1080, height: 1920))
