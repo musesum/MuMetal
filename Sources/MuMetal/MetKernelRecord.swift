@@ -20,6 +20,7 @@ public class MetKernelRecord: MetKernel {
         // placeholder nameIndex["record"] = 0
         setupSampler()
     }
+    var docURL: URL?
 
     override public func setMetalNodeOn(_ isOn: Bool,
                                      _ completion: @escaping ()->()) {
@@ -29,15 +30,13 @@ public class MetKernelRecord: MetKernel {
             print("-> startRecording")
                 completion()
             }
-        }
-        else {
+        } else {
             endRecording {
                 completion()
                 print("-> endRecording")
             }
         }
     }
-
 
     override func setupInOutTextures(via: String) {
 
@@ -57,7 +56,6 @@ public class MetKernelRecord: MetKernel {
 
     // MARK: writer
 
-    var docURL: URL?
 
     func removeURL(_ url: URL?) {
         guard let url = url else { return }

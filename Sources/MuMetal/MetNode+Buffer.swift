@@ -22,8 +22,7 @@ extension MetNode {
 
         if let buffer = nameBuffer[named] {
             buffer.newBuf(val)
-        }
-        else {
+        } else {
             addBuffer(named, val)
         }
     }
