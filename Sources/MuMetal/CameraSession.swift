@@ -33,6 +33,7 @@ public final class CameraSession: NSObject {
     }
 
     public func startCamera() {
+        
         print("startCamera state: \(cameraState)")
 
         switch cameraState {

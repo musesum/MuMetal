@@ -42,9 +42,6 @@ public class MetNode: Equatable {
 
     func makeNewTex(_ via: String) -> MTLTexture? {
         if let tex = MetTexCache.makeTexturePixelFormat(.bgra8Unorm, size: metItem.size, device: metItem.device) {
-            //??? let texPtr = String.pointer(tex)
-            //??? print("makeNewTex via: \(via) => \(texPtr)")
-
             return tex
         }
         return nil

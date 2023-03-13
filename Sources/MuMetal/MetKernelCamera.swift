@@ -55,7 +55,6 @@ public class MetKernelCamera: MetKernel {
             bypassTex = outTex // push old outTex, restore later
             outTex = inTex // pass through outTex
         }
-        //??? print("\(metItem.name) in:\(String.pointer(inTex)) out:\(String.pointer(outTex)) bypass:\(String.pointer(bypassTex))")
         completion()
     }
     

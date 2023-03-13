@@ -11,7 +11,9 @@ import MetalKit
 open class MetPipeline: NSObject {
 
     public var mtkView = MTKView()             // MetalKit render view
-    private var mtlCommand: MTLCommandQueue?  // queue w/ command buffers
+    public var metalLayer = CAMetalLayer()
+    public var device = MTLCreateSystemDefaultDevice()!
+    public var mtlCommand: MTLCommandQueue!  // queue w/ command buffers
 
     public var nodeNamed = [String: MetNode]() // find node by name
     public var firstNode: MetNode?    // 1st node in renderer chain
@@ -20,7 +22,7 @@ open class MetPipeline: NSObject {
     public var viewSize = CGSize.zero  // size of render surface
     public var clipRect = CGRect.zero
 
-    public var settingOp = true        // ignore swapping in new shaders
+    public var settingUp = true        // ignore swapping in new shaders
 
     public override init() {
         super.init()
@@ -31,19 +33,17 @@ open class MetPipeline: NSObject {
                     ? CGSize(width: 1920, height: 1080)
                     : CGSize(width: 1080, height: 1920))
 
-        mtkView.device = MTLCreateSystemDefaultDevice()
+
+        mtkView.device = device
+        mtkView.delegate = self
+        metalLayer = mtkView.layer as! CAMetalLayer
+
         mtkView.enableSetNeedsDisplay = true
         mtkView.isPaused = true
         mtkView.framebufferOnly = false
-        mtkView.delegate = self
-        mtlCommand = mtkView.device?.makeCommandQueue()
-    }
-
-    public func setViewFrame(_ viewFrame: CGRect) -> MTKView {
-        mtkView.frame = viewFrame
-        mtkView(mtkView, drawableSizeWillChange: mtkView.drawableSize)
-        mtkView.delegate = self
-        return mtkView
+        metalLayer.device = device
+        mtlCommand = device.makeCommandQueue()
+        mtkView.frame = bounds
     }
 
     public func scriptPipeline() -> String {
@@ -77,7 +77,8 @@ extension MetPipeline: MTKViewDelegate {
         viewSize = size // view.frame.size
         clipRect = MuAspect.fillClip(from: drawSize, to: viewSize).normalize()
 
-        if  settingOp {
+        if  settingUp {
+            settingUp = false
             setupPipeline()
             mtkView.autoResizeDrawable = false
 
@@ -90,7 +91,7 @@ extension MetPipeline: MTKViewDelegate {
 
         if nodeNamed.isEmpty { return } // nothing to draw yet
 
-        settingOp = false // done setting up
+        settingUp = false // done setting up
 
         if let command = mtlCommand?.makeCommandBuffer(),
            let firstNode {
