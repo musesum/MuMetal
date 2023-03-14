@@ -13,7 +13,7 @@ extension CameraSession: AVCaptureVideoDataOutputSampleBufferDelegate {
     
     /**
      Converts a sample buffer received from camera to a Metal texture
-
+     /Applications
      - Parameters:
        - sampleBuffer: Sample buffer
        - textureCache: Texture cache
@@ -40,6 +40,7 @@ extension CameraSession: AVCaptureVideoDataOutputSampleBufferDelegate {
         guard let imageTex else { return err("imageTex") }
         guard let texture = CVMetalTextureGetTexture(imageTex) else { return err("get texture")}
         return texture
+        
         func err(_ str: String) -> MTLTexture? {
             print("⁉️ texture(): err \(#function): \(str)")
             return nil

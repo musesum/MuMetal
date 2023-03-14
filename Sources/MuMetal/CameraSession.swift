@@ -21,6 +21,7 @@ public final class CameraSession: NSObject {
     var cameraTexture: MTLTexture?  // optional texture 2
     var cameraPosition: AVCaptureDevice.Position = .front
     var cameraState: CameraState = .waiting
+
     private var cameraSession = AVCaptureSession()
     private var cameraQueue = DispatchQueue(label: "CameraQueue", attributes: [])
     internal var textureCache: CVMetalTextureCache?

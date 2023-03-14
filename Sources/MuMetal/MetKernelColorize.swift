@@ -33,8 +33,8 @@ public class MetKernelColor: MetKernel {
 
         // draw into palette texture
 
-        if let altTex = altTex,
-           let getPal = getPal {
+        if let altTex,
+           let getPal {
 
             let palSize = 256
             let pixSize = MemoryLayout<UInt32>.size

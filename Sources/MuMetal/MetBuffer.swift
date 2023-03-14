@@ -18,7 +18,14 @@ public class MetBuffer {
     private var name = "" // name of Metal Kernel
     public var bufIndex = 0  // index in metal buffer
     private var device: MTLDevice // metal device
-    private var buf: Any!
+
+    /// the next four bufs is a kludge, as using `buf: Any!` results in a shader bug
+
+    private var buf1 = Float(0)
+    private var buf2 = SIMD2<Float>(repeating: 0)
+    private var buf3 = SIMD3<Float>(repeating: 0)
+    private var buf4 = SIMD4<Float>(repeating: 0)
+    //private var buf: Any! // this doesn't work
 
     public var mtlBuffer: MTLBuffer? // buffer of constants
 
@@ -30,35 +37,35 @@ public class MetBuffer {
         self.name = name
         self.bufIndex = index
         self.device = device
-        newBuf(any)
+        updateBuf(any)
     }
 
-    func newBuf(_ floats: Array<Float>) {
+    func updateBuf(_ floats: Array<Float>) {
 
         switch floats.count {
             case 1:
 
-                buf = floats[0]
-                let length = MemoryLayout<Float>.size
-                mtlBuffer = device.makeBuffer(bytes: &buf, length: length, options: [])
+                buf1 = floats[0]
+                let length = MemoryLayout<Float>.stride
+                mtlBuffer = device.makeBuffer(bytes: &buf1, length: length, options: [])
 
             case 2:
 
-                buf = SIMD2<Float>(floats[0], floats[1] )
-                let length = MemoryLayout<SIMD2<Float>>.size
-                mtlBuffer = device.makeBuffer(bytes: &buf, length: length, options: [])
+                buf2 = SIMD2<Float>(floats)
+                let length = MemoryLayout<SIMD2<Float>>.stride
+                mtlBuffer = device.makeBuffer(bytes: &buf2, length: length, options: [])
 
             case 3:
 
-                buf = SIMD3<Float>(floats[0], floats[1], floats[2])
-                let length = MemoryLayout<SIMD3<Float>>.size
-                mtlBuffer = device.makeBuffer(bytes: &buf, length: length, options: [])
+                buf3 = SIMD3<Float>(floats)
+                let length = MemoryLayout<SIMD3<Float>>.stride
+                mtlBuffer = device.makeBuffer(bytes: &buf3, length: length, options: [])
 
             case 4:
 
-                buf = SIMD4<Float>(floats[0], floats[1], floats[2], floats[3] )
-                let length = MemoryLayout<SIMD4<Float>>.size
-                mtlBuffer = device.makeBuffer(bytes: &buf, length: length, options: [])
+                buf4 = SIMD4<Float>(floats)
+                let length = MemoryLayout<SIMD4<Float>>.stride
+                mtlBuffer = device.makeBuffer(bytes: &buf4, length: length, options: [])
 
             default:
                 print("🚫 updateFloats unknown count: \(floats)")
@@ -66,32 +73,32 @@ public class MetBuffer {
         }
         //print(String(format:"˚\(name):%.2f", float), terminator:" ")
     }
-    func newBuf(_ doubles: [Double]) {
+    func updateBuf(_ doubles: [Double]) {
         var floats = [Float]()
         for double in doubles {
             floats.append(Float(double))
         }
-        newBuf(floats)
+        updateBuf(floats)
     }
-    func newBuf(_ cgFloats: [CGFloat]) {
+    func updateBuf(_ cgFloats: [CGFloat]) {
         var floats = [Float]()
         for cgFloat in cgFloats {
             floats.append(Float(cgFloat))
         }
-        newBuf(floats)
+        updateBuf(floats)
     }
 
     /// add any translated to SIMD?<Float> to mtlBuffer
-    func newBuf(_ val: Any) {
+    func updateBuf(_ val: Any) {
 
         switch val {
-            case let v as Float:    newBuf([v])
-            case let v as [Float]:  newBuf(v)
-            case let v as Double:   newBuf([v])
-            case let v as [Double]: newBuf(v)
-            case let v as CGPoint:  newBuf(v.floats())
-            case let v as CGSize:   newBuf(v.floats())
-            case let v as CGRect:   newBuf(v.floats())
+            case let v as Float:    updateBuf([v])
+            case let v as [Float]:  updateBuf(v)
+            case let v as Double:   updateBuf([v])
+            case let v as [Double]: updateBuf(v)
+            case let v as CGPoint:  updateBuf(v.floats())
+            case let v as CGSize:   updateBuf(v.floats())
+            case let v as CGRect:   updateBuf(v.floats())
             case _ as FloValExprs: break
             default: print("🚫 \(#function) unknown format: \(val)")
         }

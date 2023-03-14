@@ -6,7 +6,7 @@ import MetalKit
 public class MetKernelCamera: MetKernel {
 
     private var bypassTex: MTLTexture?  // bypass outTex when not on
-    public var drawTex: MTLTexture? { get { return outTex ?? nil } }
+    //??? public var drawTex: MTLTexture? { get { return outTex ?? nil } }
 
     override public init(_ metItem: MetItem) {
 
@@ -21,11 +21,11 @@ public class MetKernelCamera: MetKernel {
 
         if  let altTex,
             let outTex {
-
+            // output
             let ow = CGFloat(max(outTex.width, outTex.height))
             let oh = CGFloat(min(outTex.width, outTex.height))
             let oa = ow/oh
-
+            // input
             let iw = CGFloat(max(altTex.width, altTex.height))
             let ih = CGFloat(min(altTex.width, altTex.height))
             let ia = iw/ih

@@ -10,7 +10,7 @@ import MetalKit
 
 open class MetPipeline: NSObject {
 
-    public var mtkView = MTKView()             // MetalKit render view
+    public var mtkView = MTKView()           // MetalKit render view
     public var metalLayer = CAMetalLayer()
     public var device = MTLCreateSystemDefaultDevice()!
     public var mtlCommand: MTLCommandQueue!  // queue w/ command buffers
@@ -33,7 +33,6 @@ open class MetPipeline: NSObject {
                     ? CGSize(width: 1920, height: 1080)
                     : CGSize(width: 1080, height: 1920))
 
-
         mtkView.device = device
         mtkView.delegate = self
         metalLayer = mtkView.layer as! CAMetalLayer
@@ -51,7 +50,7 @@ open class MetPipeline: NSObject {
         var node = firstNode
         while node != nil {
             if let node {
-                str += "\n" + node.metItem.name + "\n <- " + String.pointer(node.inTex) + "\n -> " + String.pointer(node.outTex)
+                str += "\n" + node.metItem.name.pad(10) + "<- " + String.pointer(node.inTex) + " -> " + String.pointer(node.outTex)
             }
             node = node!.outNode
         }

@@ -15,6 +15,7 @@ public class MetKernel: MetNode {
  
         super.init(metItem)
         compileKernelFunction()
+        setupInOutTextures(via: metItem.name)
         determineThreadGroupSize()
     }
     func compileKernelFunction() {
