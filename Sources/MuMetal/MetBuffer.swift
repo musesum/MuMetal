@@ -13,6 +13,11 @@ import MuFlo
 
 // only float buffers are allowed for now
 
+public let Float1Len = MemoryLayout<Float>.stride
+public let Float2Len = MemoryLayout<SIMD2<Float>>.stride
+public let Float3Len = MemoryLayout<SIMD3<Float>>.stride
+public let Float4Len = MemoryLayout<SIMD2<Float>>.stride
+
 public class MetBuffer {
 
     private var name = "" // name of Metal Kernel
@@ -20,7 +25,6 @@ public class MetBuffer {
     private var device: MTLDevice // metal device
 
     /// the next four bufs is a kludge, as using `buf: Any!` results in a shader bug
-
     private var buf1 = Float(0)
     private var buf2 = SIMD2<Float>(repeating: 0)
     private var buf3 = SIMD3<Float>(repeating: 0)
@@ -46,26 +50,25 @@ public class MetBuffer {
             case 1:
 
                 buf1 = floats[0]
-                let length = MemoryLayout<Float>.stride
-                mtlBuffer = device.makeBuffer(bytes: &buf1, length: length, options: [])
+                mtlBuffer = device.makeBuffer(bytes: &buf1,
+                                              length: Float1Len)
 
             case 2:
 
                 buf2 = SIMD2<Float>(floats)
-                let length = MemoryLayout<SIMD2<Float>>.stride
-                mtlBuffer = device.makeBuffer(bytes: &buf2, length: length, options: [])
-
+                mtlBuffer = device.makeBuffer(bytes: &buf2,
+                                              length: Float2Len)
             case 3:
 
                 buf3 = SIMD3<Float>(floats)
-                let length = MemoryLayout<SIMD3<Float>>.stride
-                mtlBuffer = device.makeBuffer(bytes: &buf3, length: length, options: [])
+                mtlBuffer = device.makeBuffer(bytes: &buf3,
+                                              length: Float3Len)
 
             case 4:
 
                 buf4 = SIMD4<Float>(floats)
-                let length = MemoryLayout<SIMD4<Float>>.stride
-                mtlBuffer = device.makeBuffer(bytes: &buf4, length: length, options: [])
+                mtlBuffer = device.makeBuffer(bytes: &buf4,
+                                              length: Float4Len)
 
             default:
                 print("🚫 updateFloats unknown count: \(floats)")

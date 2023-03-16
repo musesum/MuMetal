@@ -18,7 +18,7 @@ extension CameraSession: AVCaptureVideoDataOutputSampleBufferDelegate {
        - sampleBuffer: Sample buffer
        - textureCache: Texture cache
        - planeIndex:   Index of the plane for planar buffers. Defaults to 0.
-       - pixelFormat:  Metal pixel format. Defaults to `.BGRA8Unorm`.
+       - pixelFormat:  Metal pixel format. Defaults to `.bgra8Unorm`.
 
      - returns: Metal texture or nil
     */

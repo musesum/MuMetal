@@ -33,14 +33,15 @@ open class MetPipeline: NSObject {
                     ? CGSize(width: 1920, height: 1080)
                     : CGSize(width: 1080, height: 1920))
 
-        mtkView.device = device
         mtkView.delegate = self
-        metalLayer = mtkView.layer as! CAMetalLayer
-
         mtkView.enableSetNeedsDisplay = true
         mtkView.isPaused = true
         mtkView.framebufferOnly = false
+
+        metalLayer = mtkView.layer as! CAMetalLayer
         metalLayer.device = device
+
+        mtkView.device = device
         mtlCommand = device.makeCommandQueue()
         mtkView.frame = bounds
     }
@@ -74,7 +75,9 @@ extension MetPipeline: MTKViewDelegate {
 
         if size.width == 0 { return }
         viewSize = size // view.frame.size
-        clipRect = MuAspect.fillClip(from: drawSize, to: viewSize).normalize()
+        clipRect = MuAspect
+            .fillClip(from: drawSize, to: viewSize)
+            .normalize()
 
         if  settingUp {
             settingUp = false

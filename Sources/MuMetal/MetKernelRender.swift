@@ -102,8 +102,8 @@ public class MetKernelRender: MetKernel {
 
         setupInOutTextures(via: metItem.name)
 
-        if  let rp = mtkView.currentRenderPassDescriptor,
-            let rc = command.makeRenderCommandEncoder(descriptor: rp),
+        if  let renderPass = mtkView.currentRenderPassDescriptor,
+            let renderEnc = command.makeRenderCommandEncoder(descriptor: renderPass),
             let renderPipeline {
 
             let vx = Double(viewSize.x)
@@ -111,23 +111,23 @@ public class MetKernelRender: MetKernel {
             let viewPort = MTLViewport(originX: 0, originY: 0,
                                        width: vx, height: vy,
                                        znear: 0, zfar: 1)
-            rc.setViewport(viewPort)
-            rc.setRenderPipelineState(renderPipeline)
+            renderEnc.setViewport(viewPort)
+            renderEnc.setRenderPipelineState(renderPipeline)
 
             // vertex
-            rc.setVertexBuffer(vertices, offset: 0, index: 0)
-            rc.setVertexBytes(&viewSize, length: MemoryLayout<SIMD2<Float>>.size, index: 1)
-            rc.setVertexBytes(&clipFrame, length: MemoryLayout<SIMD4<Float>>.size, index: 2)
+            renderEnc.setVertexBuffer(vertices, offset: 0, index: 0)
+            renderEnc.setVertexBytes(&viewSize, length: MemoryLayout<SIMD2<Float>>.size, index: 1)
+            renderEnc.setVertexBytes(&clipFrame, length: MemoryLayout<SIMD4<Float>>.size, index: 2)
 
             // fragment
-            rc.setFragmentTexture(inTex, index: 0)
-            rc.setFragmentSamplerState(samplr, index: 0)
+            renderEnc.setFragmentTexture(inTex, index: 0)
+            renderEnc.setFragmentSamplerState(samplr, index: 0)
             
             for buf in nameBuffer.values {
-                rc.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
+                renderEnc.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
             }
-            rc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: vertexCount)
-            rc.endEncoding()
+            renderEnc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: vertexCount)
+            renderEnc.endEncoding()
             
             if let currentDrawable = mtkView.currentDrawable {
 
