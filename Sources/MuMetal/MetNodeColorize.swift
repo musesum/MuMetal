@@ -8,7 +8,7 @@ import MetalKit
 public typealias DrawTextureFunc = ((_ bytes: UnsafeMutablePointer<UInt32>, _ size: CGSize)->(Bool))
 public typealias GetTextureFunc = ((_ size: Int) -> (UnsafeMutablePointer<UInt32>))
 
-public class MetKernelColor: MetKernel {
+public class MetNodeColor: MetNode {
 
     private var getPal: GetTextureFunc?
 
@@ -29,10 +29,13 @@ public class MetKernelColor: MetKernel {
         return paletteTex
     }
 
-    func updatePalette() {
+
+    override func setupInOutTextures(via: String) {
+
+        super.setupInOutTextures(via: via)
+        altTex = altTex ?? makePaletteTex() // 256 false color palette
 
         // draw into palette texture
-
         if let altTex,
            let getPal {
 
@@ -43,19 +46,5 @@ public class MetKernelColor: MetKernel {
             let palBytes = getPal(palSize)
             altTex.replace(region: palRegion, mipmapLevel: 0, withBytes: palBytes, bytesPerRow: bytesPerRow)
         }
-    }
-
-    override func setupInOutTextures(via: String) {
-
-        super.setupInOutTextures(via: via)
-        altTex = altTex ?? makePaletteTex() // 256 false color palette
-    }
-
-    public override func nextCommand(_ command: MTLCommandBuffer) {
-
-        setupInOutTextures(via: metItem.name)
-        updatePalette()
-        execCommand(command)
-        outNode?.nextCommand(command) // continue onto the next node in the chain
     }
 }

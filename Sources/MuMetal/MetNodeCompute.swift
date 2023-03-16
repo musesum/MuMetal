@@ -4,7 +4,7 @@ import Foundation
 import Metal
 import MetalKit
 
-public class MetKernelCompute: MetKernel {
+public class MetNodeCompute: MetNode {
     
     // cellular automata uses double buffering
     override func setupInOutTextures(via: String) {
@@ -15,26 +15,21 @@ public class MetKernelCompute: MetKernel {
         outTex = outTex ?? makeNewTex(via)
     }
 
-    // cellular automata uses double buffering
-    func flipInOutTextures() {
-        let temp = inTex
-        inTex = outTex
-        outTex = temp
-    }
+    override func execCommand(_ commandBuf: MTLCommandBuffer) {
 
-    public override func nextCommand(_ command: MTLCommandBuffer) {
-
-        setupInOutTextures(via: metItem.name)
-        
         if isOn {
-
-            execCommand(command)
+            super.execCommand(commandBuf)
 
             for _ in 1 ..< loops {
                 flipInOutTextures()
-                execCommand(command)
+                super.execCommand(commandBuf)
             }
         }
-        outNode?.nextCommand(command)
+        // cellular automata uses double buffering
+        func flipInOutTextures() {
+            let temp = inTex
+            inTex = outTex
+            outTex = temp
+        }
     }
 }

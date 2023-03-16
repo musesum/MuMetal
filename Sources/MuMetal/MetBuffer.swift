@@ -13,10 +13,10 @@ import MuFlo
 
 // only float buffers are allowed for now
 
-public let Float1Len = MemoryLayout<Float>.stride
-public let Float2Len = MemoryLayout<SIMD2<Float>>.stride
-public let Float3Len = MemoryLayout<SIMD3<Float>>.stride
-public let Float4Len = MemoryLayout<SIMD2<Float>>.stride
+public let Float1Len = MemoryLayout<Float>.size
+public let Float2Len = MemoryLayout<SIMD2<Float>>.size
+public let Float3Len = MemoryLayout<SIMD3<Float>>.size
+public let Float4Len = MemoryLayout<SIMD4<Float>>.size
 
 public class MetBuffer {
 

@@ -1,13 +1,11 @@
 
 import Foundation
 import Metal
-import MetalKit
-
-public class MetKernelCamera: MetKernel {
+import UIKit
+public class MetNodeCamera: MetNode {
 
     private var bypassTex: MTLTexture?  // bypass outTex when not on
-    //??? public var drawTex: MTLTexture? { get { return outTex ?? nil } }
-
+    
     override public init(_ metItem: MetItem) {
 
         super.init(metItem)
@@ -65,10 +63,7 @@ public class MetKernelCamera: MetKernel {
         outTex = isOn ? outTex ?? makeNewTex(via) : inTex
     }
 
-    public override func nextCommand(_ command: MTLCommandBuffer) {
-
-        setupInOutTextures(via: metItem.name)
-
+    public override func execCommand(_ commandBuf: MTLCommandBuffer) {
         if isOn {
             let cameraSession = CameraSession.shared
             altTex = cameraSession.cameraTexture
@@ -79,10 +74,9 @@ public class MetKernelCamera: MetKernel {
                 if frame != .zero {
                     updateBuffer("frame", frame)
                 }
-                execCommand(command)
+                super.execCommand(commandBuf)
             }
         }
-        outNode?.nextCommand(command)
     }
 
 }

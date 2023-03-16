@@ -1,62 +1,10 @@
+//  Created by warren on 3/16/23.
 
-import Foundation
-import Metal
-import MetalKit
-import AVKit
+import AVFoundation
 import Photos
 
-public class MetKernelRecord: MetKernel {
-
-    var isRecording = false
-    var recordingStartTime = TimeInterval(0)
-
-    private var assetWriter: AVAssetWriter?
-    private var assetWriterInput: AVAssetWriterInput?
-    private var inputPixelBufferAdaptor: AVAssetWriterInputPixelBufferAdaptor?
-
-    override public init(_ metItem: MetItem) {
-
-        super.init(metItem)
-        // placeholder nameIndex["record"] = 0
-        setupSampler()
-    }
-    var docURL: URL?
-
-    override public func setMetalNodeOn(_ isOn: Bool,
-                                     _ completion: @escaping ()->()) {
-        self.isOn = isOn
-        if isOn {
-            startRecording() {
-            print("-> startRecording")
-                completion()
-            }
-        } else {
-            endRecording {
-                completion()
-                print("-> endRecording")
-            }
-        }
-    }
-
-    override func setupInOutTextures(via: String) {
-
-        inTex = inNode?.outTex ?? makeNewTex(via)
-        outTex = inTex
-    }
+extension MetNodeRecord {
     
-    public override func nextCommand(_ command: MTLCommandBuffer) {
-
-        setupInOutTextures(via: metItem.name)
-
-        if isRecording, let inTex = inTex {
-            writeFrame(inTex)
-        }
-        outNode?.nextCommand(command)
-    }
-
-    // MARK: writer
-
-
     func removeURL(_ url: URL?) {
         guard let url = url else { return }
         if FileManager.default.fileExists(atPath: url.path) {
@@ -80,9 +28,9 @@ public class MetKernelRecord: MetKernel {
         guard let assetWriter = assetWriter else { print("🚫 assetWriter: nil"); return nil }
 
         let outputSettings: [String: Any] =
-            [ AVVideoCodecKey: AVVideoCodecType.h264,
-              AVVideoWidthKey: metItem.size.width,
-             AVVideoHeightKey: metItem.size.height ]
+        [ AVVideoCodecKey: AVVideoCodecType.h264,
+          AVVideoWidthKey: metItem.size.width,
+         AVVideoHeightKey: metItem.size.height ]
 
         assetWriterInput = AVAssetWriterInput(mediaType: AVMediaType.video, outputSettings: outputSettings)
         guard let assetWriterInput = assetWriterInput else { bail("assetWriterInput: nil"); return assetWriter }
@@ -117,7 +65,7 @@ public class MetKernelRecord: MetKernel {
     }
 
     func endRecording(_ completion: @escaping ()->()) {
-        
+
         if !isRecording { return }
         isRecording = false
         func bail(_ msg: String) { print("🚫 endRecording \(msg)"); completion() }
@@ -169,7 +117,7 @@ public class MetKernelRecord: MetKernel {
 
         if !isRecording { return bail("not recording") }
         guard let input = assetWriterInput else { return bail("assetWriterInput: nil)") }
-        while !input.isReadyForMoreMediaData {} //!! TODO: can lockup UI 
+        while !input.isReadyForMoreMediaData {} //!! TODO: can lockup UI
 
         guard let adapter = inputPixelBufferAdaptor else { return bail("inputPixelBufferAdaptor: nil") }
         guard let pixelBufferPool = adapter.pixelBufferPool else { return bail("pixelBufferPool: nil")}
@@ -196,4 +144,3 @@ public class MetKernelRecord: MetKernel {
         CVPixelBufferUnlockBaseAddress(pixelBuffer, [])
     }
 }
-

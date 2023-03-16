@@ -12,9 +12,9 @@ import Metal
 import MetalKit
 import QuartzCore
 
-public class MetKernelRender: MetKernel {
+public class MetNodeRender: MetNode {
 
-    private var renderPipeline: MTLRenderPipelineState?
+    private var renderPipe: MTLRenderPipelineState?
     public var renderTexture: MTLTexture? { get {
         return  mtkView.currentDrawable?.texture ?? nil
        }
@@ -54,7 +54,7 @@ public class MetKernelRender: MetKernel {
         clipFrame = SIMD4<Float>( Float(clip.minX), Float(clip.minY),
                                   Float(clip.width), Float(clip.height))
 
-        print("  MetKernelRender::fillClip: \(clip)")
+        print("  MetNodeRender::fillClip: \(clip)")
 
         let w2 = Float(viewSize.width / 2)
         let h2 = Float(viewSize.height / 2)
@@ -92,53 +92,51 @@ public class MetKernelRender: MetKernel {
             d.fragmentFunction = fragmentFunc
             d.colorAttachments[0].pixelFormat = mtkView.colorPixelFormat
 
-            do { renderPipeline = try metItem.device.makeRenderPipelineState(descriptor: d) }
+            do { renderPipe = try metItem.device.makeRenderPipelineState(descriptor: d) }
             catch { print("🚫 Failed to created _renderPipeline, error \(error)") }
         }
         setupSampler()
     }
 
-    public override func nextCommand(_ command: MTLCommandBuffer) {
 
-        setupInOutTextures(via: metItem.name)
+    public override func execCommand(_ commandBuf: MTLCommandBuffer) {
 
         if  let renderPass = mtkView.currentRenderPassDescriptor,
-            let renderEnc = command.makeRenderCommandEncoder(descriptor: renderPass),
-            let renderPipeline {
+            let renderEnc = commandBuf.makeRenderCommandEncoder(descriptor: renderPass),
+            let renderPipe {
 
             let vx = Double(viewSize.x)
             let vy = Double(viewSize.y)
-            let viewPort = MTLViewport(originX: 0, originY: 0,
-                                       width: vx, height: vy,
-                                       znear: 0, zfar: 1)
+            let viewPort = MTLViewport(originX :  0, originY :  0,
+                                       width   : vx, height  : vy,
+                                       znear   :  0, zfar    :  1)
             renderEnc.setViewport(viewPort)
-            renderEnc.setRenderPipelineState(renderPipeline)
+            renderEnc.setRenderPipelineState(renderPipe)
 
             // vertex
             renderEnc.setVertexBuffer(vertices, offset: 0, index: 0)
-            renderEnc.setVertexBytes(&viewSize, length: MemoryLayout<SIMD2<Float>>.size, index: 1)
-            renderEnc.setVertexBytes(&clipFrame, length: MemoryLayout<SIMD4<Float>>.size, index: 2)
+            renderEnc.setVertexBytes(&viewSize , length: Float2Len, index: 1)
+            renderEnc.setVertexBytes(&clipFrame, length: Float4Len, index: 2)
 
             // fragment
             renderEnc.setFragmentTexture(inTex, index: 0)
             renderEnc.setFragmentSamplerState(samplr, index: 0)
-            
+
             for buf in nameBuffer.values {
                 renderEnc.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
             }
             renderEnc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: vertexCount)
             renderEnc.endEncoding()
-            
+
             if let currentDrawable = mtkView.currentDrawable {
 
-                command.present(currentDrawable)
-                command.commit()
-                command.waitUntilCompleted()
+                commandBuf.present(currentDrawable)
+                commandBuf.commit()
+                commandBuf.waitUntilCompleted()
 
             } else {
                 print("🚫 MetaKernalRender could not get mtkView.currentDrawable")
             }
         }
-        outNode?.nextCommand(command)
     }
 }
