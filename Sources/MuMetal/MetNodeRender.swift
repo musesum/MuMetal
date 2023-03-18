@@ -22,15 +22,13 @@ public class MetNodeRender: MetNode {
     private var vertices: MTLBuffer? // Metal buffer for vertex data
     private var viewSize  = SIMD2<Float>(repeating: 0)
     private var clipFrame = SIMD4<Float>(repeating: 0) // clip rect
-    private var pipeline: MetPipeline
 
     public init(_ pipeline: MetPipeline,
                 _ metItem: MetItem,
                 _ mtkView:  MTKView) {
 
-        self.pipeline = pipeline
         self.mtkView = mtkView
-        super.init(metItem)
+        super.init(pipeline, metItem)
         nameBufId["frame"] = 0
         nameBufId["repeat"] = 1
         nameBufId["mirror"] = 2
@@ -108,17 +106,16 @@ public class MetNodeRender: MetNode {
             renderEnc.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
         }
         renderEnc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6) //metVertices.count
-        renderEnc.endEncoding()
     }
-    override public func execCommand(_ commandBuf: MTLCommandBuffer) {
+    override public func execCommand(_ pipeline: MetPipeline) {
         
         if let currentDrawable = mtkView.currentDrawable,
-           let renderEnc = pipeline.getRender(commandBuf, renderPass(currentDrawable))
+           let renderEnc = pipeline.getRender(renderPass(currentDrawable))
         {
             
             draw(renderEnc)
             
-            pipeline.commitRender(commandBuf, currentDrawable)
+            pipeline.commitRender(currentDrawable)
             
         } else {
             print("🚫 MetaKernalRender could not get mtkView.currentDrawable")

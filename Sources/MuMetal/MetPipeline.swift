@@ -24,6 +24,7 @@ open class MetPipeline: NSObject {
 
     public var settingUp = true        // ignore swapping in new shaders
 
+    var commandBuf: MTLCommandBuffer?
     private var renderEnc: MTLRenderCommandEncoder?
 
     public override init() {
@@ -70,22 +71,21 @@ open class MetPipeline: NSObject {
         print("\(#function) override me")
     }
 
-    public func getRender(_ commandBuf: MTLCommandBuffer,
-                          _ renderPass: MTLRenderPassDescriptor) -> MTLRenderCommandEncoder? {
+    public func getRender(_ renderPass: MTLRenderPassDescriptor) -> MTLRenderCommandEncoder? {
 
         if let renderEnc {
             print("getRender 👍", terminator: " ")
             return renderEnc }
-        renderEnc = commandBuf.makeRenderCommandEncoder(descriptor: renderPass)
+        renderEnc = commandBuf?.makeRenderCommandEncoder(descriptor: renderPass)
         print("getRender 🟡", terminator: " ")
         return renderEnc
     }
-    public func commitRender(_ commandBuf: MTLCommandBuffer,
-                             _ drawable: CAMetalDrawable?) {
+    public func commitRender(_ drawable: CAMetalDrawable?) {
 
-        if let renderEnc,
+        if let commandBuf,
            let drawable {
-
+            
+            renderEnc?.endEncoding()
             commandBuf.present(drawable)
             commandBuf.commit()
             commandBuf.waitUntilCompleted()
@@ -110,11 +110,12 @@ extension MetPipeline: MTKViewDelegate {
         if settingUp { return }
         if nodeNamed.isEmpty { return } // nothing to draw yet
 
-        if let commandBuf = mtlCommand?.makeCommandBuffer(),
+        commandBuf = mtlCommand?.makeCommandBuffer()
+        if let commandBuf,
            let firstNode {
 
             commandBuf.label = "command"
-            firstNode.nextCommand(commandBuf)
+            firstNode.nextCommand(self)
 
         } else {
             print("⁉️ err \(#function): firstNode.nextCommand(command)")

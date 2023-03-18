@@ -12,10 +12,11 @@ public class MetNodeColor: MetNode {
 
     private var getPal: GetTextureFunc?
 
-    public init(_ metItem: MetItem,
+    public init(_ pipeline: MetPipeline,
+                _ metItem: MetItem,
                 _ getPal: @escaping GetTextureFunc) {
 
-        super.init(metItem)
+        super.init(pipeline, metItem)
         nameBufId["color"] = 0
         self.getPal = getPal
     }

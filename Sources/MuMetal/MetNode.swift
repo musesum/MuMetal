@@ -32,6 +32,7 @@ open class MetNode: Equatable {
 
     public var loops = 1
     public var isOn = false
+    public var pipeline: MetPipeline
 
     // can override to trigger behaviors, such as turning on  camera
     public func setMetalNodeOn(_ isOn: Bool,
@@ -42,7 +43,9 @@ open class MetNode: Equatable {
         }
     }
 
-    public init(_ metItem: MetItem) {
+    public init(_ pipeline: MetPipeline,
+                _ metItem: MetItem) {
+        self.pipeline = pipeline
         self.metItem = metItem
         compileKernelFunction()
         //??? setupInOutTextures(via: metItem.name)
@@ -103,37 +106,6 @@ open class MetNode: Equatable {
         outNode?.printMetaNodes()
     }
 
-    open func setupInOutTextures(via: String) {
-
-        inTex = inNode?.outTex ?? makeNewTex(via)
-        outTex = outTex ?? makeNewTex(via)
-    }
-
-    open func execCommand(_ commandBuf: MTLCommandBuffer) {
-        // setup and execute compute textures
-
-        if let cc = commandBuf.makeComputeCommandEncoder(),
-           let computePipeline {
-
-            if let inTex  { cc.setTexture(inTex,  index: 0) }
-            if let outTex { cc.setTexture(outTex, index: 1) }
-            if let altTex { cc.setTexture(altTex, index: 2) }
-
-            cc.setSamplerState(samplr, index: 0)
-
-            // compute buffer index is in order of declaration in flo script
-            for buf in nameBuffer.values {
-                cc.setBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
-            }
-            // execute the compute pipeline threads
-            cc.setComputePipelineState(computePipeline)
-            cc.dispatchThreadgroups(threadCount, threadsPerThreadgroup: threadSize)
-            cc.endEncoding()
-        }
-    }
-
-
-
     public func updateDepthBuffer(_ size: CGSize)  {
         
         let width = Int(size.width)
@@ -158,7 +130,7 @@ open class MetNode: Equatable {
             self.depthTexture = metItem.device.makeTexture(descriptor: depthTexDesc)
         }
     }
-    public func  makeDepthStencil() -> MTLDepthStencilState {
+    public func makeDepthStencil() -> MTLDepthStencilState {
         let depth = MTLDepthStencilDescriptor()
         depth.depthCompareFunction = .less
         depth.isDepthWriteEnabled = false
@@ -180,10 +152,41 @@ open class MetNode: Equatable {
 
         return rp
     }
-    func nextCommand(_ commandBuf: MTLCommandBuffer) {
+
+    open func setupInOutTextures(via: String) {
+
+        inTex = inNode?.outTex ?? makeNewTex(via)
+        outTex = outTex ?? makeNewTex(via)
+    }
+
+    open func execCommand(_ pipeline: MetPipeline) {
+        // setup and execute compute textures
+
+        if let cc = pipeline.commandBuf?.makeComputeCommandEncoder(),
+           let computePipeline {
+
+            if let inTex  { cc.setTexture(inTex,  index: 0) }
+            if let outTex { cc.setTexture(outTex, index: 1) }
+            if let altTex { cc.setTexture(altTex, index: 2) }
+
+            cc.setSamplerState(samplr, index: 0)
+
+            // compute buffer index is in order of declaration in flo script
+            for buf in nameBuffer.values {
+                cc.setBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
+            }
+            // execute the compute pipeline threads
+            cc.setComputePipelineState(computePipeline)
+            cc.dispatchThreadgroups(threadCount, threadsPerThreadgroup: threadSize)
+            cc.endEncoding()
+        }
+    }
+
+
+    func nextCommand(_ pipeline: MetPipeline) {
         print(metItem.name, terminator: "🟢 ")
         setupInOutTextures(via: metItem.name)
-        execCommand(commandBuf)
-        outNode?.nextCommand(commandBuf)
+        execCommand(pipeline)
+        outNode?.nextCommand(pipeline)
     }
 }
