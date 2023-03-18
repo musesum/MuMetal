@@ -24,6 +24,8 @@ open class MetPipeline: NSObject {
 
     public var settingUp = true        // ignore swapping in new shaders
 
+    private var renderEnc: MTLRenderCommandEncoder?
+
     public override init() {
         super.init()
 
@@ -67,6 +69,30 @@ open class MetPipeline: NSObject {
     open func setupPipeline() {
         print("\(#function) override me")
     }
+
+    public func getRender(_ commandBuf: MTLCommandBuffer,
+                          _ renderPass: MTLRenderPassDescriptor) -> MTLRenderCommandEncoder? {
+
+        if let renderEnc {
+            print("getRender 👍", terminator: " ")
+            return renderEnc }
+        renderEnc = commandBuf.makeRenderCommandEncoder(descriptor: renderPass)
+        print("getRender 🟡", terminator: " ")
+        return renderEnc
+    }
+    public func commitRender(_ commandBuf: MTLCommandBuffer,
+                             _ drawable: CAMetalDrawable?) {
+
+        if let renderEnc,
+           let drawable {
+
+            commandBuf.present(drawable)
+            commandBuf.commit()
+            commandBuf.waitUntilCompleted()
+        }
+        print("commitRender 🔴", terminator: " ")
+        self.renderEnc = nil
+    }
 }
 
 extension MetPipeline: MTKViewDelegate {
@@ -75,31 +101,20 @@ extension MetPipeline: MTKViewDelegate {
 
         if size.width == 0 { return }
         viewSize = size // view.frame.size
-        clipRect = MuAspect
-            .fillClip(from: drawSize, to: viewSize)
-            .normalize()
-
-        if  settingUp {
-            settingUp = false
-            setupPipeline()
-            mtkView.autoResizeDrawable = false
-
-        } else {
-            //TODO: setup resize for all active MtlNodes
-        }
+        clipRect = MuAspect.fillClip(from: drawSize, to: viewSize).normalize()
+        mtkView.autoResizeDrawable = false
     }
     /// Called whenever the view needs to render a frame
     public func draw(in inView: MTKView) {
 
+        if settingUp { return }
         if nodeNamed.isEmpty { return } // nothing to draw yet
 
-        settingUp = false // done setting up
-
-        if let command = mtlCommand?.makeCommandBuffer(),
+        if let commandBuf = mtlCommand?.makeCommandBuffer(),
            let firstNode {
 
-            command.label = "command"
-            firstNode.nextCommand(command)
+            commandBuf.label = "command"
+            firstNode.nextCommand(commandBuf)
 
         } else {
             print("⁉️ err \(#function): firstNode.nextCommand(command)")

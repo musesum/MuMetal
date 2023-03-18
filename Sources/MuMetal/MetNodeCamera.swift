@@ -2,6 +2,7 @@
 import Foundation
 import Metal
 import UIKit
+
 public class MetNodeCamera: MetNode {
 
     private var bypassTex: MTLTexture?  // bypass outTex when not on
@@ -57,13 +58,13 @@ public class MetNodeCamera: MetNode {
     }
     
 
-    override func setupInOutTextures(via: String) {
+    override public func setupInOutTextures(via: String) {
 
         inTex = inNode?.outTex ?? makeNewTex(via)
         outTex = isOn ? outTex ?? makeNewTex(via) : inTex
     }
 
-    public override func execCommand(_ commandBuf: MTLCommandBuffer) {
+    override public func execCommand(_ commandBuf: MTLCommandBuffer) {
         if isOn {
             let cameraSession = CameraSession.shared
             altTex = cameraSession.cameraTexture

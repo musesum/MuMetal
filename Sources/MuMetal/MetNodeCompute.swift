@@ -7,7 +7,7 @@ import MetalKit
 public class MetNodeCompute: MetNode {
     
     // cellular automata uses double buffering
-    override func setupInOutTextures(via: String) {
+    override public func setupInOutTextures(via: String) {
 
         if !isOn && outTex != nil { return }
         nameBufId[""] = 0
@@ -15,7 +15,7 @@ public class MetNodeCompute: MetNode {
         outTex = outTex ?? makeNewTex(via)
     }
 
-    override func execCommand(_ commandBuf: MTLCommandBuffer) {
+    override public func execCommand(_ commandBuf: MTLCommandBuffer) {
 
         if isOn {
             super.execCommand(commandBuf)

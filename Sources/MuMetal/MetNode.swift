@@ -5,7 +5,7 @@ import MetalKit
 import QuartzCore
 import MuPar
 
-public class MetNode: Equatable {
+open class MetNode: Equatable {
 
     var id = Visitor.nextId()
     public static func == (lhs: MetNode, rhs: MetNode) -> Bool { return lhs.id == rhs.id }
@@ -25,8 +25,10 @@ public class MetNode: Equatable {
     internal var nameBuffer = [String: MetBuffer]()
 
     var computePipeline: MTLComputePipelineState? // _cellRulePipeline;
-    var threadgroupSize = MTLSize()
-    var threadgroupCount = MTLSize()
+    var threadSize = MTLSize()
+    var threadCount = MTLSize()
+
+    var depthTexture: MTLTexture!
 
     public var loops = 1
     public var isOn = false
@@ -43,8 +45,8 @@ public class MetNode: Equatable {
     public init(_ metItem: MetItem) {
         self.metItem = metItem
         compileKernelFunction()
-        setupInOutTextures(via: metItem.name)
-        determineThreadGroupSize()
+        //??? setupInOutTextures(via: metItem.name)
+        setupThreadGroup()
     }
 
     func makeNewTex(_ via: String) -> MTLTexture? {
@@ -55,8 +57,9 @@ public class MetNode: Equatable {
         }
         return nil
     }
+
     func compileKernelFunction() {
-        if  let defaultLib = metItem.device.makeDefaultLibrary(),
+        if  let defaultLib = metItem.device.makeDefaultLibrary(), //?? 
             let mtlFunction = defaultLib.makeFunction(name: metItem.name) {
 
             do { computePipeline = try metItem.device.makeComputePipelineState(function: mtlFunction)  }
@@ -64,16 +67,16 @@ public class MetNode: Equatable {
         }
     }
 
-    func determineThreadGroupSize() {
+    func setupThreadGroup() {
 
-        threadgroupSize = MTLSizeMake(16, 16, 1)
-        let sizeW = metItem.size.width
-        let sizeH = metItem.size.height
-        let threadW = CGFloat(threadgroupSize.width)
-        let threadH = CGFloat(threadgroupSize.height)
-        threadgroupCount.width  = Int((sizeW + threadW - 1.0) / threadW)
-        threadgroupCount.height = Int((sizeH + threadH - 1.0) / threadH)
-        threadgroupCount.depth  = 1
+        threadSize = MTLSizeMake(16, 16, 1)
+        let itemW = metItem.size.width
+        let itemH = metItem.size.height
+        let threadW = CGFloat(threadSize.width)
+        let threadH = CGFloat(threadSize.height)
+        threadCount.width  = Int((itemW + threadW - 1.0) / threadW)
+        threadCount.height = Int((itemH + threadH - 1.0) / threadH)
+        threadCount.depth  = 1
     }
 
     func setupSampler() {
@@ -100,13 +103,13 @@ public class MetNode: Equatable {
         outNode?.printMetaNodes()
     }
 
-    func setupInOutTextures(via: String) {
+    open func setupInOutTextures(via: String) {
 
         inTex = inNode?.outTex ?? makeNewTex(via)
         outTex = outTex ?? makeNewTex(via)
     }
 
-    func execCommand(_ commandBuf: MTLCommandBuffer) {
+    open func execCommand(_ commandBuf: MTLCommandBuffer) {
         // setup and execute compute textures
 
         if let cc = commandBuf.makeComputeCommandEncoder(),
@@ -124,12 +127,61 @@ public class MetNode: Equatable {
             }
             // execute the compute pipeline threads
             cc.setComputePipelineState(computePipeline)
-            cc.dispatchThreadgroups(threadgroupCount, threadsPerThreadgroup: threadgroupSize)
+            cc.dispatchThreadgroups(threadCount, threadsPerThreadgroup: threadSize)
             cc.endEncoding()
         }
     }
 
-    public func nextCommand(_ commandBuf: MTLCommandBuffer) {
+
+
+    public func updateDepthBuffer(_ size: CGSize)  {
+        
+        let width = Int(size.width)
+        let height = Int(size.height)
+
+        if (depthTexture == nil ||
+            depthTexture.width != width ||
+            depthTexture.height != height) {
+
+            buildDepthBuffer()
+        }
+        func buildDepthBuffer() {
+
+            let depthTexDesc = MTLTextureDescriptor.texture2DDescriptor(
+                pixelFormat: .depth32Float,
+                width:  Int(size.width),
+                height: Int(size.height),
+                mipmapped: false)
+
+            depthTexDesc.usage = .renderTarget
+            depthTexDesc.storageMode = .private
+            self.depthTexture = metItem.device.makeTexture(descriptor: depthTexDesc)
+        }
+    }
+    public func  makeDepthStencil() -> MTLDepthStencilState {
+        let depth = MTLDepthStencilDescriptor()
+        depth.depthCompareFunction = .less
+        depth.isDepthWriteEnabled = false
+        return metItem.device.makeDepthStencilState(descriptor: depth)!
+    }
+    public func renderPass(_ drawable: CAMetalDrawable) -> MTLRenderPassDescriptor {
+
+        let rp = MTLRenderPassDescriptor()
+
+        rp.colorAttachments[0].texture = drawable.texture
+        rp.colorAttachments[0].loadAction = .clear
+        rp.colorAttachments[0].storeAction = .store
+        rp.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 1)
+
+        rp.depthAttachment.texture = self.depthTexture
+        rp.depthAttachment.loadAction = .clear
+        rp.depthAttachment.storeAction = .dontCare
+        rp.depthAttachment.clearDepth = 1
+
+        return rp
+    }
+    func nextCommand(_ commandBuf: MTLCommandBuffer) {
+        print(metItem.name, terminator: "🟢 ")
         setupInOutTextures(via: metItem.name)
         execCommand(commandBuf)
         outNode?.nextCommand(commandBuf)
