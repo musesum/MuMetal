@@ -6,7 +6,7 @@ import UIKit
 /// x,y clips inside width,height
 public typealias ClipRect = CGRect
 
-public class MuAspect {
+public class MetAspect {
 
     /** create a clipping rect where x,y is inside boundary, not offset
     - Parameters:

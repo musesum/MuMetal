@@ -23,9 +23,9 @@ public class MetNodeRender: MetNode {
     private var viewSize  = SIMD2<Float>(repeating: 0)
     private var clipFrame = SIMD4<Float>(repeating: 0) // clip rect
 
-    public init(_ pipeline: MetPipeline,
-                _ metItem: MetItem,
-                _ mtkView:  MTKView) {
+    public init(_ pipeline : MetPipeline,
+                _ metItem  : MetItem,
+                _ mtkView  : MTKView) {
 
         self.mtkView = mtkView
         super.init(pipeline, metItem)
@@ -40,16 +40,16 @@ public class MetNodeRender: MetNode {
     func setupRenderPipeline(_ viewSize: CGSize, _ drawSize: CGSize) {
         
         self.viewSize = SIMD2<Float>(viewSize.floats())
-        let clip = MuAspect.fillClip(from: drawSize, to: viewSize).normalize()
+        let clip = MetAspect.fillClip(from: drawSize, to: viewSize).normalize()
         clipFrame = SIMD4<Float>(clip.floats())
 
-        print("  MetNodeRender::fillClip: \(clip)")
+        //print(" MetNodeRender::clipFrame: \(clipFrame)")
 
         let w2 = Float(viewSize.width / 2)
         let h2 = Float(viewSize.height / 2)
 
         let metVertices: [MetVertex] = [
-            //      (position texCoord)
+            // (position texCoord)
             MetVertex( w2,-h2,  1, 1),
             MetVertex(-w2,-h2,  0, 1),
             MetVertex(-w2, h2,  0, 0),
@@ -89,6 +89,7 @@ public class MetNodeRender: MetNode {
     }
     func draw(_ renderEnc: MTLRenderCommandEncoder) {
         guard let renderState else { return }
+
         let viewPort = MTLViewport(viewSize)
         renderEnc.setViewport(viewPort)
         renderEnc.setRenderPipelineState(renderState)
@@ -109,16 +110,15 @@ public class MetNodeRender: MetNode {
     }
     override public func execCommand(_ pipeline: MetPipeline) {
         
-        if let currentDrawable = mtkView.currentDrawable,
-           let renderEnc = pipeline.getRender(renderPass(currentDrawable))
-        {
+        if let drawable  = mtkView.currentDrawable,
+           let renderEnc = pipeline.getRender(renderPass(drawable)) {
             
             draw(renderEnc)
             
-            pipeline.commitRender(currentDrawable)
+            pipeline.commitRender(drawable)
             
         } else {
-            print("🚫 MetaKernalRender could not get mtkView.currentDrawable")
+            print("🚫 MetNodeRender::execCommand could not get drawable")
         }
     }
 }

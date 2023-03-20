@@ -101,7 +101,7 @@ extension MetPipeline: MTKViewDelegate {
 
         if size.width == 0 { return }
         viewSize = size // view.frame.size
-        clipRect = MuAspect.fillClip(from: drawSize, to: viewSize).normalize()
+        clipRect = MetAspect.fillClip(from: drawSize, to: viewSize).normalize()
         mtkView.autoResizeDrawable = false
     }
     /// Called whenever the view needs to render a frame

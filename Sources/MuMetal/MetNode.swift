@@ -34,21 +34,12 @@ open class MetNode: Equatable {
     public var isOn = false
     public var pipeline: MetPipeline
 
-    // can override to trigger behaviors, such as turning on  camera
-    public func setMetalNodeOn(_ isOn: Bool,
-                        _ completion: @escaping ()->()) {
-        if self.isOn != isOn {
-            self.isOn = isOn
-            completion()
-        }
-    }
 
     public init(_ pipeline: MetPipeline,
                 _ metItem: MetItem) {
         self.pipeline = pipeline
         self.metItem = metItem
         compileKernelFunction()
-        //??? setupInOutTextures(via: metItem.name)
         setupThreadGroup()
     }
 
@@ -153,6 +144,14 @@ open class MetNode: Equatable {
         return rp
     }
 
+    // can override to trigger behaviors, such as turning on  camera
+    public func setMetalNodeOn(_ isOn: Bool,
+                               _ completion: @escaping ()->()) {
+        if self.isOn != isOn {
+            self.isOn = isOn
+            completion()
+        }
+    }
     open func setupInOutTextures(via: String) {
 
         inTex = inNode?.outTex ?? makeNewTex(via)

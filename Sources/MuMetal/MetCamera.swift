@@ -3,77 +3,80 @@ import AVFoundation
 import Metal
 import UIKit
 
-public final class CameraSession: NSObject {
+public final class MetCamera: NSObject {
 
-    public static var shared = CameraSession()
-    public override init() {
-
-        super.init()
-        NotificationCenter.default.addObserver(self, selector: #selector(captureSessionRuntimeError), name: NSNotification.Name.AVCaptureSessionRuntimeError, object: nil)
-        cameraCallback = self
-    }
+    public static var shared = MetCamera(nil, position: .front)
+    
     var uiOrientation: UIInterfaceOrientation { get {
         UIApplication.shared.connectedScenes
             .flatMap { ($0 as? UIWindowScene)?.windows ?? [] }
             .first { $0.isKeyWindow }?.windowScene?.interfaceOrientation ?? .portrait
     }}
 
-    var cameraTexture: MTLTexture?  // optional texture 2
-    var cameraPosition: AVCaptureDevice.Position = .front
-    var cameraState: CameraState = .waiting
+    var camTex: MTLTexture?  // optional texture 2
+    var camPos: AVCaptureDevice.Position = .front
+    var camState: MetCameraState = .waiting
 
-    private var cameraSession = AVCaptureSession()
-    private var cameraQueue = DispatchQueue(label: "CameraQueue", attributes: [])
+    private var camSession = AVCaptureSession()
+    private var camQueue = DispatchQueue(label: "CameraQueue", attributes: [])
     internal var textureCache: CVMetalTextureCache?
 
     private var device = MTLCreateSystemDefaultDevice()
-    var cameraCallback: AVCaptureVideoDataOutputSampleBufferDelegate?
+    var camDelegate: AVCaptureVideoDataOutputSampleBufferDelegate?
 
-    init(_ delegate: AVCaptureVideoDataOutputSampleBufferDelegate? = nil) {
-        self.cameraCallback = delegate
+    public init(_ delegate: AVCaptureVideoDataOutputSampleBufferDelegate?,
+         position: AVCaptureDevice.Position ) {
+
+        self.camDelegate = delegate
+        self.camPos = position
+        super.init()
+
+        camDelegate = camDelegate ?? self
+
+        NotificationCenter.default.addObserver(self, selector: #selector(captureSessionRuntimeError), name: NSNotification.Name.AVCaptureSessionRuntimeError, object: nil)
     }
 
     public func startCamera() {
         
-        print("startCamera state: \(cameraState)")
+        print("startCamera state: \(camState)")
 
-        switch cameraState {
+        switch camState {
             case .waiting:
 
                 requestCameraAccess()
-                cameraQueue.async(execute: initCamera)
+                camQueue.async(execute: initCamera)
 
             case .ready, .stopped:
 
-                cameraQueue.async {
-                    self.cameraSession.startRunning()
+                camQueue.async {
+                    self.camSession.startRunning()
                     self.updateOrientation()
                 }
-                cameraState = .streaming
+                camState = .streaming
 
             case .streaming: break
         }
         func initCamera() {
 
-            cameraSession.beginConfiguration()
+            camSession.beginConfiguration()
             initCaptureInput()
             initCaptureOutput()
             updateOrientation()
-            cameraSession.commitConfiguration()
+            camSession.commitConfiguration()
 
             initTextureCache()
-            cameraSession.startRunning()
-            cameraState = .streaming
+            camSession.startRunning()
+            camState = .streaming
         }
     }
 
     /// Stop the capture session.
     public func stopCamera() {
-        cameraQueue.async {
-            if self.cameraState != .stopped {
+        camQueue.async {
+            if self.camState != .stopped {
 
-                self.cameraSession.stopRunning()
-                self.cameraState = .stopped
+                self.camSession.stopRunning()
+                self.camState = .stopped
             }
         }
     }
@@ -81,11 +84,11 @@ public final class CameraSession: NSObject {
     public func setCameraOn(_ isOn: Bool) {
 
         if isOn {
-            if cameraState != .streaming {
+            if camState != .streaming {
                 startCamera()
             }
         } else {
-            if cameraState == .streaming {
+            if camState == .streaming {
                 stopCamera()
             }
         }
@@ -93,14 +96,14 @@ public final class CameraSession: NSObject {
 
     public func flipCamera() {
 
-        cameraPosition = (cameraPosition == .front) ? .back : .front
-        cameraSession.beginConfiguration()
-        if let deviceInput = cameraSession.inputs.first as? AVCaptureDeviceInput {
-            cameraSession.removeInput(deviceInput)
+        camPos = (camPos == .front) ? .back : .front
+        camSession.beginConfiguration()
+        if let deviceInput = camSession.inputs.first as? AVCaptureDeviceInput {
+            camSession.removeInput(deviceInput)
             initCaptureInput()
             updateOrientation()
         }
-        cameraSession.commitConfiguration()
+        camSession.commitConfiguration()
     }
 
     /// Current capture input device.
@@ -108,10 +111,10 @@ public final class CameraSession: NSObject {
         didSet {
             if let oldValue {
                 print("   \(#function): \(oldValue) -> \(inputDevice!)")
-                cameraSession.removeInput(oldValue)
+                camSession.removeInput(oldValue)
             }
             if let inputDevice {
-                cameraSession.addInput(inputDevice)
+                camSession.addInput(inputDevice)
             }
         }
     }
@@ -121,10 +124,10 @@ public final class CameraSession: NSObject {
         didSet {
             if let oldValue {
                 print("   \(#function): \(oldValue) -> \(output!)")
-                cameraSession.removeOutput(oldValue)
+                camSession.removeOutput(oldValue)
             }
             if let output {
-                cameraSession.addOutput(output)
+                camSession.addOutput(output)
             }
         }
     }
@@ -134,8 +137,8 @@ public final class CameraSession: NSObject {
         AVCaptureDevice.requestAccess(for: .video) { granted in
             if !granted {
                 print("⁉️ \(#function) not granted")
-            }  else if self.cameraState != .streaming {
-                self.cameraState = .ready
+            }  else if self.camState != .streaming {
+                self.camState = .ready
             }
         }
     }
@@ -153,17 +156,17 @@ public final class CameraSession: NSObject {
     //// initializes capture input device with media type and device position.
     fileprivate func initCaptureInput() {
 
-        cameraSession.sessionPreset = .hd1920x1080
+        camSession.sessionPreset = .hd1920x1080
 
         guard let device = AVCaptureDevice.default(.builtInWideAngleCamera,
                                                    for: AVMediaType.video,
-                                                   position: cameraPosition)
+                                                   position: camPos)
         else { return err ("AVCaptureDevice") }
 
         guard let captureInput = try? AVCaptureDeviceInput(device: device)
         else { return err ("AVCaptureDeviceInput") }
 
-        guard cameraSession.canAddInput(captureInput)
+        guard camSession.canAddInput(captureInput)
         else { return err ("canAddInput") }
 
         self.inputDevice = captureInput
@@ -187,7 +190,7 @@ public final class CameraSession: NSObject {
                 default: return err("\(self.uiOrientation)")
             }
             connection.videoOrientation = orientation
-            connection.isVideoMirrored = (self.cameraPosition == .front)
+            connection.isVideoMirrored = (self.camPos == .front)
         }
         func err(_ str: String) {
             print("⁉️ err \(#function): \(str)")
@@ -196,13 +199,13 @@ public final class CameraSession: NSObject {
 
     /// initialize capture output data stream.
     fileprivate func initCaptureOutput() {
-        guard let cameraCallback else { return err("delegate == nil")}
+        guard let camDelegate else { return err("delegate == nil")}
         let out = AVCaptureVideoDataOutput()
         out.videoSettings =  [ kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA ]
         out.alwaysDiscardsLateVideoFrames = true
-        out.setSampleBufferDelegate(cameraCallback,
-                                    queue: cameraQueue)
-        if cameraSession.canAddOutput(out) {
+        out.setSampleBufferDelegate(camDelegate,
+                                    queue: camQueue)
+        if camSession.canAddOutput(out) {
             self.output = out
         } else {
             err("add output failed")
@@ -212,7 +215,7 @@ public final class CameraSession: NSObject {
     /// `AVCaptureSessionRuntimeErrorNotification` callback.
     @objc fileprivate func captureSessionRuntimeError() {
 
-        if cameraState == .streaming {
+        if camState == .streaming {
             print("⁉️ err \(#function)") }
     }
     deinit {

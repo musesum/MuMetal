@@ -1,7 +1,7 @@
 
 import AVFoundation
 
-public enum CameraState {
+public enum MetCameraState {
     case ready      // Ready to start capturing
     case streaming  // Capture in progress
     case stopped    // Capturing stopped

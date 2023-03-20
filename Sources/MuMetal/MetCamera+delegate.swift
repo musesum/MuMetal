@@ -9,7 +9,7 @@
 import Foundation
 import AVFoundation
 
-extension CameraSession: AVCaptureVideoDataOutputSampleBufferDelegate {
+extension MetCamera: AVCaptureVideoDataOutputSampleBufferDelegate {
     
     /**
      Converts a sample buffer received from camera to a Metal texture
@@ -52,7 +52,7 @@ extension CameraSession: AVCaptureVideoDataOutputSampleBufferDelegate {
                               from connection: AVCaptureConnection) {
         
         if let tex = texture(sampleBuf, textureCache) {
-            self.cameraTexture = tex
+            self.camTex = tex
         }
     }
     

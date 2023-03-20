@@ -67,10 +67,10 @@ public class MetNodeCamera: MetNode {
 
     override public func execCommand(_ pipeline: MetPipeline) {
         if isOn {
-            let cameraSession = CameraSession.shared
-            altTex = cameraSession.cameraTexture
+            let camSession = MetCamera.shared
+            altTex = camSession.camTex
 
-            if let _ = altTex, cameraSession.cameraState == .streaming {
+            if let _ = altTex, camSession.camState == .streaming {
 
                 let frame = getAspectFill()
                 if frame != .zero {
