@@ -9,10 +9,9 @@ public class MetNodeDraw: MetNode {
     public var drawFunc: DrawTextureFunc?
 
     public init(_ pipeline: MetPipeline,
-                _ metItem: MetItem,
                 _ drawFunc: @escaping DrawTextureFunc) {
 
-        super.init(pipeline, metItem)
+        super.init(pipeline, MetItem("draw"))
         nameBufId["draw"] = 0
         self.drawFunc = drawFunc
     }

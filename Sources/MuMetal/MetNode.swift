@@ -133,7 +133,6 @@ open class MetNode: Equatable {
         }
     }
 
-
     func nextCommand(_ commandBuf: MTLCommandBuffer) {
         setupInOutTextures(via: metItem.name)
         execCommand(commandBuf)

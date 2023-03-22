@@ -3,12 +3,23 @@ import Foundation
 import Metal
 import UIKit
 
+
+public class MetNodeCamix: MetNodeCamera {
+
+    public init(_ pipeline: MetPipeline) {
+        super.init(pipeline, "camix")
+    }
+
+}
+
+
 public class MetNodeCamera: MetNode {
 
     private var bypassTex: MTLTexture?  // bypass outTex when not on
     
-    public init(_ pipeline: MetPipeline) {
-        super.init(pipeline,  MetItem("camera"))
+    public init(_ pipeline: MetPipeline,
+                _ name: String = "camera") {
+        super.init(pipeline,  MetItem(name))
         nameBufId["mix"] = 0
         nameBufId["frame"] = 1
         setupSampler()

@@ -20,7 +20,7 @@ open class MetPipeline: NSObject {
     public var mtlCommand: MTLCommandQueue!  // queue w/ command buffers
 
     public var nodes = [MetNode]()
-    //??? public var nodeNamed = [String: MetNode]() // find node by name
+    public var nodeNamed = [String: MetNode]() //???  find node by name
     public var firstNode: MetNode?    // 1st node in renderer chain
 
     public var drawSize = CGSize.zero  // size of draw surface
@@ -28,9 +28,10 @@ open class MetPipeline: NSObject {
     public var clipRect = CGRect.zero
 
     public var settingUp = true        // ignore swapping in new shaders
+    private var drawable: CAMetalDrawable?
+    private var commandBuf: MTLCommandBuffer?
 
     var depthTex: MTLTexture!
-    public var renderEnc: MTLRenderCommandEncoder?
 
     public override init() {
         super.init()
@@ -124,8 +125,8 @@ extension MetPipeline: MTKViewDelegate {
         return rp
     }
     public func assemblePipeline() {
-
-        if let firstNode = nodes.first {
+        firstNode = nodes.first
+        if let firstNode {
             var prevNode = firstNode
             for i in 1 ..< nodes.count {
                 let node = nodes[i]
@@ -157,26 +158,29 @@ extension MetPipeline: MTKViewDelegate {
         return depthStencil
     }
 
+    public func getRenderEnc() -> MTLRenderCommandEncoder? {
+        if let commandBuf,
+           let drawable {
+            return commandBuf.makeRenderCommandEncoder(descriptor:  makeRenderPass(drawable))
+        }
+        return nil
+    }
+
     /// Called whenever the view needs to render a frame
     public func draw(in inView: MTKView) {
 
         if settingUp { return }
-        if nodes.isEmpty { return } // nothing in pipeline
-                                    //if drawable != nil { return }
 
-        updateDepthTex(metalLayer.drawableSize)
+        drawable = metalLayer.nextDrawable()
+        commandBuf = mtlCommand?.makeCommandBuffer()
 
-        if let drawable = metalLayer.nextDrawable(),
-           let commandBuf = mtlCommand?.makeCommandBuffer(),
-           let renderEnc = commandBuf.makeRenderCommandEncoder(descriptor:  makeRenderPass(drawable)) {
+        if let firstNode,
+           let drawable,
+           let commandBuf {
 
-            self.renderEnc = renderEnc
-            renderEnc.setFrontFacing(.counterClockwise)
+            updateDepthTex(metalLayer.drawableSize)
+            firstNode.nextCommand(commandBuf)
 
-            nodes.first?.nextCommand(commandBuf)
-
-            renderEnc.endEncoding()
-            self.renderEnc = nil
             commandBuf.present(drawable)
             commandBuf.commit()
             commandBuf.waitUntilCompleted()

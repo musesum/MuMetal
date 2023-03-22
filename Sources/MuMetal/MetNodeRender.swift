@@ -109,10 +109,12 @@ public class MetNodeRender: MetNode {
         renderEnc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6) //metVertices.count
     }
     override public func execCommand(_ commandBuf: MTLCommandBuffer) {
-        
-       if let renderEnc = pipeline.renderEnc {
-            
+
+        if let renderEnc = pipeline.getRenderEnc() {
+
+            renderEnc.setFrontFacing(.counterClockwise)
             draw(renderEnc)
+            renderEnc.endEncoding()
             
         } else {
             print("🚫 MetNodeRender::execCommand could not get drawable")
