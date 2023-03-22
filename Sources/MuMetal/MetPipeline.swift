@@ -6,16 +6,21 @@
 
 
 import Foundation
+import Collections
 import MetalKit
+
 
 open class MetPipeline: NSObject {
 
     public var mtkView = MTKView()           // MetalKit render view
     public var metalLayer = CAMetalLayer()
     public var device = MTLCreateSystemDefaultDevice()!
+    public var library: MTLLibrary!
+
     public var mtlCommand: MTLCommandQueue!  // queue w/ command buffers
 
-    public var nodeNamed = [String: MetNode]() // find node by name
+    public var nodes = [MetNode]()
+    //??? public var nodeNamed = [String: MetNode]() // find node by name
     public var firstNode: MetNode?    // 1st node in renderer chain
 
     public var drawSize = CGSize.zero  // size of draw surface
@@ -24,8 +29,8 @@ open class MetPipeline: NSObject {
 
     public var settingUp = true        // ignore swapping in new shaders
 
-    var commandBuf: MTLCommandBuffer?
-    private var renderEnc: MTLRenderCommandEncoder?
+    var depthTex: MTLTexture!
+    public var renderEnc: MTLRenderCommandEncoder?
 
     public override init() {
         super.init()
@@ -36,6 +41,7 @@ open class MetPipeline: NSObject {
                     ? CGSize(width: 1920, height: 1080)
                     : CGSize(width: 1080, height: 1920))
 
+        library = device.makeDefaultLibrary()
         mtkView.delegate = self
         mtkView.enableSetNeedsDisplay = true
         mtkView.isPaused = true
@@ -70,29 +76,6 @@ open class MetPipeline: NSObject {
     open func setupPipeline() {
         print("\(#function) override me")
     }
-
-    public func getRender(_ renderPass: MTLRenderPassDescriptor) -> MTLRenderCommandEncoder? {
-
-        if let renderEnc {
-            print("getRender 👍", terminator: " ")
-            return renderEnc }
-        renderEnc = commandBuf?.makeRenderCommandEncoder(descriptor: renderPass)
-        print("getRender 🟡", terminator: " ")
-        return renderEnc
-    }
-    public func commitRender(_ drawable: CAMetalDrawable?) {
-
-        if let commandBuf,
-           let drawable {
-            
-            renderEnc?.endEncoding()
-            commandBuf.present(drawable)
-            commandBuf.commit()
-            commandBuf.waitUntilCompleted()
-        }
-        print("commitRender 🔴", terminator: " ")
-        self.renderEnc = nil
-    }
 }
 
 extension MetPipeline: MTKViewDelegate {
@@ -104,21 +87,99 @@ extension MetPipeline: MTKViewDelegate {
         clipRect = MetAspect.fillClip(from: drawSize, to: viewSize).normalize()
         mtkView.autoResizeDrawable = false
     }
+    public func updateDepthTex(_ size: CGSize)  {
+
+        let width = Int(size.width)
+        let height = Int(size.height)
+
+        if (depthTex == nil ||
+            depthTex.width != width ||
+            depthTex.height != height) {
+
+            let td = MTLTextureDescriptor.texture2DDescriptor(
+                pixelFormat: .depth32Float,
+                width:  Int(size.width),
+                height: Int(size.height),
+                mipmapped: false)
+            td.usage = .renderTarget
+            td.storageMode = .memoryless
+
+            depthTex = device.makeTexture(descriptor: td)
+        }
+    }
+    public func makeRenderPass(_ drawable: CAMetalDrawable) -> MTLRenderPassDescriptor {
+
+        let rp = MTLRenderPassDescriptor()
+
+        rp.colorAttachments[0].texture = drawable.texture
+        rp.colorAttachments[0].loadAction = .clear
+        rp.colorAttachments[0].storeAction = .store
+        rp.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 1)
+
+        rp.depthAttachment.texture = self.depthTex
+        rp.depthAttachment.loadAction = .clear
+        rp.depthAttachment.storeAction = .dontCare
+        rp.depthAttachment.clearDepth = 1
+
+        return rp
+    }
+    public func assemblePipeline() {
+
+        if let firstNode = nodes.first {
+            var prevNode = firstNode
+            for i in 1 ..< nodes.count {
+                let node = nodes[i]
+
+                node.inNode = prevNode
+                prevNode.outNode = node
+                prevNode = node
+            }
+        }
+    }
+
+    public func perspective() -> simd_float4x4 {
+        let size = metalLayer.drawableSize
+        let aspect = Float(size.width / size.height)
+        let FOV = aspect > 1 ? 60.0 : 90.0
+        let FOVPI = Float(FOV * .pi / 180.0)
+        let near = Float(0.1)
+        let far = Float(100)
+
+        let perspective = perspective4x4(aspect, FOVPI, near, far)
+        return perspective
+    }
+
+    public func depthStencil(write: Bool) -> MTLDepthStencilState {
+        let depth = MTLDepthStencilDescriptor()
+        depth.depthCompareFunction = .less
+        depth.isDepthWriteEnabled = write
+        let depthStencil = device.makeDepthStencilState(descriptor: depth)!
+        return depthStencil
+    }
+
     /// Called whenever the view needs to render a frame
     public func draw(in inView: MTKView) {
 
         if settingUp { return }
-        if nodeNamed.isEmpty { return } // nothing to draw yet
+        if nodes.isEmpty { return } // nothing in pipeline
+                                    //if drawable != nil { return }
 
-        commandBuf = mtlCommand?.makeCommandBuffer()
-        if let commandBuf,
-           let firstNode {
+        updateDepthTex(metalLayer.drawableSize)
 
-            commandBuf.label = "command"
-            firstNode.nextCommand(self)
+        if let drawable = metalLayer.nextDrawable(),
+           let commandBuf = mtlCommand?.makeCommandBuffer(),
+           let renderEnc = commandBuf.makeRenderCommandEncoder(descriptor:  makeRenderPass(drawable)) {
 
-        } else {
-            print("⁉️ err \(#function): firstNode.nextCommand(command)")
+            self.renderEnc = renderEnc
+            renderEnc.setFrontFacing(.counterClockwise)
+
+            nodes.first?.nextCommand(commandBuf)
+
+            renderEnc.endEncoding()
+            self.renderEnc = nil
+            commandBuf.present(drawable)
+            commandBuf.commit()
+            commandBuf.waitUntilCompleted()
         }
     }
 }

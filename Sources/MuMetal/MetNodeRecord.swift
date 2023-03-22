@@ -41,7 +41,7 @@ public class MetNodeRecord: MetNode {
         outTex = inTex
     }
 
-    override public func execCommand(_ pipeline: MetPipeline) {
+    override public func execCommand(_ commandBuf: MTLCommandBuffer) {
         if isRecording, let inTex = inTex {
             writeFrame(inTex)
         }

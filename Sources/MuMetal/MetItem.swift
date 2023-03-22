@@ -11,18 +11,12 @@ import Metal
 public struct MetItem {
     
     public var name = ""
-    public var size = CGSize.zero
-    public var device: MTLDevice
     public var type = ""
     
-    public init(_ name   : String,
-                _ device : MTLDevice,
-                _ size   : CGSize,
-                _ type   : String) {
+    public init(_ name: String,
+                _ type: String? = nil) {
         
         self.name   = name
-        self.size   = size
-        self.device = device
-        self.type   = type
+        self.type   = type ?? name
     }
 }

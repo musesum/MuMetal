@@ -29,8 +29,8 @@ extension MetNodeRecord {
 
         let outputSettings: [String: Any] =
         [ AVVideoCodecKey: AVVideoCodecType.h264,
-          AVVideoWidthKey: metItem.size.width,
-         AVVideoHeightKey: metItem.size.height ]
+          AVVideoWidthKey: pipeline.drawSize.width,
+         AVVideoHeightKey: pipeline.drawSize.height ]
 
         assetWriterInput = AVAssetWriterInput(mediaType: AVMediaType.video, outputSettings: outputSettings)
         guard let assetWriterInput = assetWriterInput else { bail("assetWriterInput: nil"); return assetWriter }
@@ -38,8 +38,8 @@ extension MetNodeRecord {
 
         let sourcePixelBufferAttributes: [String: Any] = [
             kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-            kCVPixelBufferWidthKey as String: metItem.size.width,
-            kCVPixelBufferHeightKey as String: metItem.size.height ]
+            kCVPixelBufferWidthKey as String: pipeline.drawSize.width,
+            kCVPixelBufferHeightKey as String: pipeline.drawSize.height ]
 
         inputPixelBufferAdaptor = AVAssetWriterInputPixelBufferAdaptor(
             assetWriterInput: assetWriterInput,

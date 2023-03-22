@@ -17,7 +17,7 @@ public class MetNodeDraw: MetNode {
         self.drawFunc = drawFunc
     }
 
-    public override func execCommand(_ pipeline: MetPipeline) {
+    public override func execCommand(_ commandBuf: MTLCommandBuffer) {
 
         if let inTex,
            let outTex {
@@ -31,7 +31,7 @@ public class MetNodeDraw: MetNode {
             // get universe
             inTex.getBytes(cellBytes, bytesPerRow: bytesPerRow, from: region, mipmapLevel: 0)
             // draw in uninverse
-            let filled = drawFunc?(cellBytes, metItem.size) ?? false
+            let filled = drawFunc?(cellBytes, pipeline.drawSize) ?? false
             // put back universe
             inTex.replace(region: region, mipmapLevel: 0, withBytes: cellBytes, bytesPerRow: bytesPerRow)
             // fill both text textures
@@ -40,6 +40,6 @@ public class MetNodeDraw: MetNode {
             }
             free(cellBytes)
         }
-        super.execCommand(pipeline)
+        super.execCommand(commandBuf)
     }
 }

@@ -17,34 +17,33 @@ open class MetNode: Equatable {
     public var altTex: MTLTexture?  // optional texture 2
     public var samplr: MTLSamplerState?
 
-    public var inNode: MetNode?    // optional input kernel
-    public var outNode: MetNode?   // optional output kernel
+    public var inNode: MetNode?    // input node
+    public var outNode: MetNode?   // output node
 
     typealias BufId = Int
     internal var nameBufId = [String: BufId]()
     internal var nameBuffer = [String: MetBuffer]()
 
-    var computePipeline: MTLComputePipelineState? // _cellRulePipeline;
+    var computeState: MTLComputePipelineState? // _cellRulePipeline;
     var threadSize = MTLSize()
     var threadCount = MTLSize()
 
-    var depthTexture: MTLTexture!
-
     public var loops = 1
-    public var isOn = false
+    public var isOn = true //??? debugging
     public var pipeline: MetPipeline
-
 
     public init(_ pipeline: MetPipeline,
                 _ metItem: MetItem) {
+
         self.pipeline = pipeline
         self.metItem = metItem
+
         compileKernelFunction()
         setupThreadGroup()
     }
 
     func makeNewTex(_ via: String) -> MTLTexture? {
-        if let tex = MetTexCache.makeTexturePixelFormat(.bgra8Unorm, size: metItem.size, device: metItem.device) {
+        if let tex = MetTexCache.makeTexturePixelFormat(.bgra8Unorm, size: pipeline.drawSize, device: pipeline.device) {
             let texPtr = String.pointer(tex)
             print("makeNewTex via: \(via) => \(texPtr)")
             return tex
@@ -53,10 +52,10 @@ open class MetNode: Equatable {
     }
 
     func compileKernelFunction() {
-        if  let defaultLib = metItem.device.makeDefaultLibrary(), //?? 
+        if  let defaultLib = pipeline.device.makeDefaultLibrary(), //??
             let mtlFunction = defaultLib.makeFunction(name: metItem.name) {
 
-            do { computePipeline = try metItem.device.makeComputePipelineState(function: mtlFunction)  }
+            do { computeState = try pipeline.device.makeComputePipelineState(function: mtlFunction)  }
             catch { print("Failed to create _pipeline for \(metItem.name), error \(error)") }
         }
     }
@@ -64,8 +63,8 @@ open class MetNode: Equatable {
     func setupThreadGroup() {
 
         threadSize = MTLSizeMake(16, 16, 1)
-        let itemW = metItem.size.width
-        let itemH = metItem.size.height
+        let itemW = pipeline.drawSize.width
+        let itemH = pipeline.drawSize.height
         let threadW = CGFloat(threadSize.width)
         let threadH = CGFloat(threadSize.height)
         threadCount.width  = Int((itemW + threadW - 1.0) / threadW)
@@ -81,10 +80,10 @@ open class MetNode: Equatable {
         sd.sAddressMode = .repeat
         sd.tAddressMode = .repeat
         sd.rAddressMode = .repeat
-        samplr = metItem.device.makeSamplerState(descriptor: sd)
+        samplr = pipeline.device.makeSamplerState(descriptor: sd)
     }
     
-    func printMetaNodes() {
+    func logMetaNodes() {
 
         let inName = inNode?.metItem.name ?? "nil"
         var inTexNow = ""
@@ -93,55 +92,8 @@ open class MetNode: Equatable {
         if let t = inTex  { inTexNow  = "\(Unmanaged.passUnretained(t).toOpaque())" }
         if let t = outTex { outTexNow = "\(Unmanaged.passUnretained(t).toOpaque())" }
 
-        print(String(format:"MetaKernal:\(metItem.name) in:\(inName) tex:\(inTexNow) outTex:\(outTexNow)"))
-        outNode?.printMetaNodes()
-    }
-
-    public func updateDepthBuffer(_ size: CGSize)  {
-        
-        let width = Int(size.width)
-        let height = Int(size.height)
-
-        if (depthTexture == nil ||
-            depthTexture.width != width ||
-            depthTexture.height != height) {
-
-            buildDepthBuffer()
-        }
-        func buildDepthBuffer() {
-
-            let depthTexDesc = MTLTextureDescriptor.texture2DDescriptor(
-                pixelFormat: .depth32Float,
-                width:  Int(size.width),
-                height: Int(size.height),
-                mipmapped: false)
-
-            depthTexDesc.usage = .renderTarget
-            depthTexDesc.storageMode = .private
-            self.depthTexture = metItem.device.makeTexture(descriptor: depthTexDesc)
-        }
-    }
-    public func makeDepthStencil() -> MTLDepthStencilState {
-        let depth = MTLDepthStencilDescriptor()
-        depth.depthCompareFunction = .less
-        depth.isDepthWriteEnabled = false
-        return metItem.device.makeDepthStencilState(descriptor: depth)!
-    }
-    public func renderPass(_ drawable: CAMetalDrawable) -> MTLRenderPassDescriptor {
-
-        let rp = MTLRenderPassDescriptor()
-
-        rp.colorAttachments[0].texture = drawable.texture
-        rp.colorAttachments[0].loadAction = .clear
-        rp.colorAttachments[0].storeAction = .store
-        rp.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 1)
-
-        rp.depthAttachment.texture = self.depthTexture
-        rp.depthAttachment.loadAction = .clear
-        rp.depthAttachment.storeAction = .dontCare
-        rp.depthAttachment.clearDepth = 1
-
-        return rp
+        print(String(format:"MetNode:\(metItem.name) in:\(inName) tex:\(inTexNow) outTex:\(outTexNow)"))
+        outNode?.logMetaNodes()
     }
 
     // can override to trigger behaviors, such as turning on  camera
@@ -158,34 +110,33 @@ open class MetNode: Equatable {
         outTex = outTex ?? makeNewTex(via)
     }
 
-    open func execCommand(_ pipeline: MetPipeline) {
+    open func execCommand(_ commandBuf: MTLCommandBuffer) {
         // setup and execute compute textures
 
-        if let cc = pipeline.commandBuf?.makeComputeCommandEncoder(),
-           let computePipeline {
+        if let computeEnc = commandBuf.makeComputeCommandEncoder(),
+           let computeState {
 
-            if let inTex  { cc.setTexture(inTex,  index: 0) }
-            if let outTex { cc.setTexture(outTex, index: 1) }
-            if let altTex { cc.setTexture(altTex, index: 2) }
+            if let inTex  { computeEnc.setTexture(inTex,  index: 0) }
+            if let outTex { computeEnc.setTexture(outTex, index: 1) }
+            if let altTex { computeEnc.setTexture(altTex, index: 2) }
 
-            cc.setSamplerState(samplr, index: 0)
+            computeEnc.setSamplerState(samplr, index: 0)
 
             // compute buffer index is in order of declaration in flo script
             for buf in nameBuffer.values {
-                cc.setBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
+                computeEnc.setBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
             }
             // execute the compute pipeline threads
-            cc.setComputePipelineState(computePipeline)
-            cc.dispatchThreadgroups(threadCount, threadsPerThreadgroup: threadSize)
-            cc.endEncoding()
+            computeEnc.setComputePipelineState(computeState)
+            computeEnc.dispatchThreadgroups(threadCount, threadsPerThreadgroup: threadSize)
+            computeEnc.endEncoding()
         }
     }
 
 
-    func nextCommand(_ pipeline: MetPipeline) {
-        print(metItem.name, terminator: "🟢 ")
+    func nextCommand(_ commandBuf: MTLCommandBuffer) {
         setupInOutTextures(via: metItem.name)
-        execCommand(pipeline)
-        outNode?.nextCommand(pipeline)
+        execCommand(commandBuf)
+        outNode?.nextCommand(commandBuf)
     }
 }

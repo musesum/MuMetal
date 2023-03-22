@@ -7,10 +7,8 @@ public class MetNodeCamera: MetNode {
 
     private var bypassTex: MTLTexture?  // bypass outTex when not on
     
-    override public init(_ pipeline: MetPipeline,
-                         _ metItem: MetItem) {
-
-        super.init(pipeline, metItem)
+    public init(_ pipeline: MetPipeline) {
+        super.init(pipeline,  MetItem("camera"))
         nameBufId["mix"] = 0
         nameBufId["frame"] = 1
         setupSampler()
@@ -65,7 +63,7 @@ public class MetNodeCamera: MetNode {
         outTex = isOn ? outTex ?? makeNewTex(via) : inTex
     }
 
-    override public func execCommand(_ pipeline: MetPipeline) {
+    override public func execCommand(_ commandBuf: MTLCommandBuffer) {
         if isOn {
             let camSession = MetCamera.shared
             altTex = camSession.camTex
@@ -76,7 +74,7 @@ public class MetNodeCamera: MetNode {
                 if frame != .zero {
                     updateBuffer("frame", frame)
                 }
-                super.execCommand(pipeline)
+                super.execCommand(commandBuf)
             }
         }
     }

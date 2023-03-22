@@ -33,7 +33,7 @@ public class MetNodeRender: MetNode {
         nameBufId["repeat"] = 1
         nameBufId["mirror"] = 2
         let viewSize = mtkView.frame.size * mtkView.contentScaleFactor
-        setupRenderPipeline(viewSize, metItem.size)
+        setupRenderPipeline(viewSize, pipeline.drawSize)
     }
 
 
@@ -60,11 +60,11 @@ public class MetNodeRender: MetNode {
         let quadSize = MemoryLayout<MetVertex>.size * metVertices.count
 
         // Create our vertex buffer, and initialize it with our quadVertices array
-        vertices = metItem.device.makeBuffer(bytes: metVertices,
+        vertices = pipeline.device.makeBuffer(bytes: metVertices,
                                              length: quadSize,
                                              options: .storageModeShared)
 
-        if  let defLib = metItem.device.makeDefaultLibrary(),
+        if  let defLib = pipeline.device.makeDefaultLibrary(),
             let vertexFunc   = defLib.makeFunction(name: "vertexShader"),
             let fragmentFunc = defLib.makeFunction(name: "fragmentShader") {
 
@@ -74,9 +74,9 @@ public class MetNodeRender: MetNode {
             pd.vertexFunction = vertexFunc
             pd.fragmentFunction = fragmentFunc
             pd.colorAttachments[0].pixelFormat = mtkView.colorPixelFormat
-            //??? pd.depthAttachmentPixelFormat = .depth32Float
+            pd.depthAttachmentPixelFormat = .depth32Float //??? 
 
-            do { renderState = try metItem.device.makeRenderPipelineState(descriptor: pd) }
+            do { renderState = try pipeline.device.makeRenderPipelineState(descriptor: pd) }
             catch { print("🚫 \(#function) failed to create \(metItem.name), error \(error)") }
         }
         setupSampler()
@@ -85,7 +85,7 @@ public class MetNodeRender: MetNode {
     override public func setupInOutTextures(via: String) {
 
         inTex = inNode?.outTex // render to screen
-                               // not output texture here
+                               // no output texture here
     }
     func draw(_ renderEnc: MTLRenderCommandEncoder) {
         guard let renderState else { return }
@@ -108,14 +108,11 @@ public class MetNodeRender: MetNode {
         }
         renderEnc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6) //metVertices.count
     }
-    override public func execCommand(_ pipeline: MetPipeline) {
+    override public func execCommand(_ commandBuf: MTLCommandBuffer) {
         
-        if let drawable  = mtkView.currentDrawable,
-           let renderEnc = pipeline.getRender(renderPass(drawable)) {
+       if let renderEnc = pipeline.renderEnc {
             
             draw(renderEnc)
-            
-            pipeline.commitRender(drawable)
             
         } else {
             print("🚫 MetNodeRender::execCommand could not get drawable")

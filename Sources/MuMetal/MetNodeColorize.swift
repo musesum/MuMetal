@@ -42,7 +42,7 @@ public class MetNodeColor: MetNode {
             let paletteTex = MetTexCache
                 .makeTexturePixelFormat(.bgra8Unorm,
                                         size: CGSize(width: 256, height: 1),
-                                        device: metItem.device)
+                                        device: pipeline.device)
             return paletteTex
         }
     }

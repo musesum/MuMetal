@@ -74,7 +74,7 @@ extension MetNode {
             n.altTex = altTex
             n.outNode = outNode
             n.inNode = inNode
-            n.metItem.size = metItem.size
+            n.pipeline.drawSize = pipeline.drawSize
 
             if  inNode?.outNode?.id == id {
                 inNode?.outNode = newNode

@@ -17,23 +17,20 @@ public protocol MetFacePoseDelegate {
 
 open class MetFacePose: NSObject {
 
-    let device: MTLDevice
-    let pipeline: MetPipeline
-   public let delegate: MetFacePoseDelegate?
+    private let pipeline: MetPipeline
+    private let delegate: MetFacePoseDelegate?
+    private var faceMask: Bool
 
     // The Vision requests and the handler to perform them.
     private var visionSequence: VNSequenceRequestHandler!
     private var faceRectangles: VNDetectFaceRectanglesRequest!
     private var personSegment: VNGeneratePersonSegmentationRequest!
-    public var session: AVCaptureSession?
-
-    private var didUpdate: MetFacePoseDelegate?
     private var angleColors: MetFaceAngleColors?
+    private var ciContext: CIContext!
+    private var camSession: MetCamera!
 
-    public var ciContext: CIContext!
-    var camSession: MetCamera!
 
-    public var ciImage: CIImage? {
+    var ciImage: CIImage? {
         didSet {
             if let ciImage {
                 delegate?.didUpdate(ciImage)
@@ -42,15 +39,16 @@ open class MetFacePose: NSObject {
     }
 
     public init(_ pipeline: MetPipeline,
-         _ delegate: MetFacePoseDelegate? = nil) {
+                _ faceMask: Bool,
+                _ delegate: MetFacePoseDelegate? = nil) {
 
         self.pipeline = pipeline
-        self.device = pipeline.device
+        self.faceMask = faceMask
         self.delegate = delegate
 
         super.init()
         
-        ciContext = CIContext(mtlDevice: device)
+        ciContext = CIContext(mtlDevice: pipeline.device)
         camSession = MetCamera(self, position: .front)
         camSession.startCamera()
 

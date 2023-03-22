@@ -73,7 +73,8 @@ public final class MetCamera: NSObject {
     /// Stop the capture session.
     public func stopCamera() {
         camQueue.async {
-            if self.camState != .stopped {
+
+            if  self.camState != .stopped {
 
                 self.camSession.stopRunning()
                 self.camState = .stopped
