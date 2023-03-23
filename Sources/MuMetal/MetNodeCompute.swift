@@ -15,14 +15,14 @@ public class MetNodeCompute: MetNode {
         outTex = outTex ?? makeNewTex(via)
     }
 
-    override public func execCommand(_ commandBuf: MTLCommandBuffer) {
+    override public func computeCommand(_ commandBuf: MTLCommandBuffer) {
 
         if isOn {
-            super.execCommand(commandBuf)
+            super.computeCommand(commandBuf)
 
             for _ in 1 ..< loops {
                 flipInOutTextures()
-                super.execCommand(commandBuf)
+                super.computeCommand(commandBuf)
             }
         }
         // cellular automata uses double buffering

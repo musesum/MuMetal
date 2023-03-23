@@ -30,6 +30,7 @@ open class MetPipeline: NSObject {
     public var settingUp = true        // ignore swapping in new shaders
     private var drawable: CAMetalDrawable?
     private var commandBuf: MTLCommandBuffer?
+    private var renderEnc: MTLRenderCommandEncoder?
 
     var depthTex: MTLTexture!
 
@@ -61,7 +62,7 @@ open class MetPipeline: NSObject {
         var node = firstNode
         while node != nil {
             if let node {
-                str += "\n" + node.metItem.name.pad(10) + "<- " + String.pointer(node.inTex) + " -> " + String.pointer(node.outTex)
+                str += "\n" + node.name.pad(10) + "<- " + String.pointer(node.inTex) + " -> " + String.pointer(node.outTex)
             }
             node = node!.outNode
         }
@@ -161,9 +162,17 @@ extension MetPipeline: MTKViewDelegate {
     public func getRenderEnc() -> MTLRenderCommandEncoder? {
         if let commandBuf,
            let drawable {
-            return commandBuf.makeRenderCommandEncoder(descriptor:  makeRenderPass(drawable))
+
+            if let renderEnc { return renderEnc }
+
+            renderEnc = commandBuf.makeRenderCommandEncoder(descriptor:  makeRenderPass(drawable))
+            return renderEnc
         }
         return nil
+    }
+    public func endRenderEnc() {
+        renderEnc?.endEncoding()
+        renderEnc = nil
     }
 
     /// Called whenever the view needs to render a frame

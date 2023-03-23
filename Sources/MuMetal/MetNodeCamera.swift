@@ -19,7 +19,7 @@ public class MetNodeCamera: MetNode {
     
     public init(_ pipeline: MetPipeline,
                 _ name: String = "camera") {
-        super.init(pipeline,  MetItem(name))
+        super.init(pipeline, name, .compute)
         nameBufId["mix"] = 0
         nameBufId["frame"] = 1
         setupSampler()
@@ -59,7 +59,7 @@ public class MetNodeCamera: MetNode {
         self.isOn = isOn
 
         if isOn {
-            outTex = bypassTex ?? outTex ?? makeNewTex("setMetalNodeOn::\(metItem.name)")
+            outTex = bypassTex ?? outTex ?? makeNewTex("setMetalNodeOn::\(name)")
         } else {
             bypassTex = outTex // push old outTex, restore later
             outTex = inTex // pass through outTex
@@ -74,7 +74,7 @@ public class MetNodeCamera: MetNode {
         outTex = isOn ? outTex ?? makeNewTex(via) : inTex
     }
 
-    override public func execCommand(_ commandBuf: MTLCommandBuffer) {
+    override public func computeCommand(_ commandBuf: MTLCommandBuffer) {
         if isOn {
             let camSession = MetCamera.shared
             altTex = camSession.camTex
@@ -85,7 +85,7 @@ public class MetNodeCamera: MetNode {
                 if frame != .zero {
                     updateBuffer("frame", frame)
                 }
-                super.execCommand(commandBuf)
+                super.computeCommand(commandBuf)
             }
         }
     }

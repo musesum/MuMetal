@@ -10,13 +10,13 @@ import Metal
 
 public struct MetItem {
     
-    public var name = ""
-    public var type = ""
+    public let name: String
+    public let type: MetType
     
     public init(_ name: String,
-                _ type: String? = nil) {
+                _ type: MetType) {
         
-        self.name   = name
-        self.type   = type ?? name
+        self.name = name
+        self.type = type
     }
 }

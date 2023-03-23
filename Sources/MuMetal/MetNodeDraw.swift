@@ -11,12 +11,12 @@ public class MetNodeDraw: MetNode {
     public init(_ pipeline: MetPipeline,
                 _ drawFunc: @escaping DrawTextureFunc) {
 
-        super.init(pipeline, MetItem("draw"))
+        super.init(pipeline, "draw", .compute)
         nameBufId["draw"] = 0
         self.drawFunc = drawFunc
     }
 
-    public override func execCommand(_ commandBuf: MTLCommandBuffer) {
+    override public func computeCommand(_ commandBuf: MTLCommandBuffer) {
 
         if let inTex,
            let outTex {
@@ -39,6 +39,6 @@ public class MetNodeDraw: MetNode {
             }
             free(cellBytes)
         }
-        super.execCommand(commandBuf)
+        super.computeCommand(commandBuf)
     }
 }

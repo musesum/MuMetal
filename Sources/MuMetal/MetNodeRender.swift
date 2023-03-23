@@ -24,11 +24,10 @@ public class MetNodeRender: MetNode {
     private var clipFrame = SIMD4<Float>(repeating: 0) // clip rect
 
     public init(_ pipeline : MetPipeline,
-                _ metItem  : MetItem,
                 _ mtkView  : MTKView) {
 
         self.mtkView = mtkView
-        super.init(pipeline, metItem)
+        super.init(pipeline, "render", .render)
         nameBufId["frame"] = 0
         nameBufId["repeat"] = 1
         nameBufId["mirror"] = 2
@@ -77,7 +76,7 @@ public class MetNodeRender: MetNode {
             pd.depthAttachmentPixelFormat = .depth32Float //??? 
 
             do { renderState = try pipeline.device.makeRenderPipelineState(descriptor: pd) }
-            catch { print("🚫 \(#function) failed to create \(metItem.name), error \(error)") }
+            catch { print("🚫 \(#function) failed to create \(name), error \(error)") }
         }
         setupSampler()
     }
@@ -87,7 +86,7 @@ public class MetNodeRender: MetNode {
         inTex = inNode?.outTex // render to screen
                                // no output texture here
     }
-    func draw(_ renderEnc: MTLRenderCommandEncoder) {
+    override open func renderCommand(_ renderEnc: MTLRenderCommandEncoder) {
         guard let renderState else { return }
 
         let viewPort = MTLViewport(viewSize)
@@ -107,17 +106,5 @@ public class MetNodeRender: MetNode {
             renderEnc.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
         }
         renderEnc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6) //metVertices.count
-    }
-    override public func execCommand(_ commandBuf: MTLCommandBuffer) {
-
-        if let renderEnc = pipeline.getRenderEnc() {
-
-            renderEnc.setFrontFacing(.counterClockwise)
-            draw(renderEnc)
-            renderEnc.endEncoding()
-            
-        } else {
-            print("🚫 MetNodeRender::execCommand could not get drawable")
-        }
     }
 }

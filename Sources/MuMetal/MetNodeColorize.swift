@@ -5,7 +5,9 @@ import Foundation
 import Metal
 import MetalKit
 
-public typealias DrawTextureFunc = ((_ bytes: UnsafeMutablePointer<UInt32>, _ size: CGSize)->(Bool))
+public typealias DrawTextureFunc = ((_ bytes: UnsafeMutablePointer<UInt32>,
+                                     _ size: CGSize)->(Bool))
+
 public typealias GetTextureFunc = ((_ size: Int) -> (UnsafeMutablePointer<UInt32>))
 
 public class MetNodeColor: MetNode {
@@ -15,7 +17,7 @@ public class MetNodeColor: MetNode {
     public init(_ pipeline: MetPipeline,
                 _ getPal: @escaping GetTextureFunc) {
 
-        super.init(pipeline, MetItem("color"))
+        super.init(pipeline, "color", .compute)
         nameBufId["color"] = 0
         self.getPal = getPal
     }

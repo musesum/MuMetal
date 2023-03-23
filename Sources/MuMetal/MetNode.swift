@@ -5,12 +5,15 @@ import MetalKit
 import QuartzCore
 import MuPar
 
+public enum MetType { case compute, render }
+
 open class MetNode: Equatable {
 
     var id = Visitor.nextId()
     public static func == (lhs: MetNode, rhs: MetNode) -> Bool { return lhs.id == rhs.id }
     
-    public var metItem: MetItem
+    public var name: String
+    public var type: MetType
     public var filename = "" // optional filename for runtime compile of shader file
     public var inTex: MTLTexture?   // input texture 0
     public var outTex: MTLTexture?  // output texture 1
@@ -20,8 +23,8 @@ open class MetNode: Equatable {
     public var inNode: MetNode?    // input node
     public var outNode: MetNode?   // output node
 
-    typealias BufId = Int
-    internal var nameBufId = [String: BufId]()
+    typealias MetBufId = Int
+    internal var nameBufId = [String: MetBufId]()
     internal var nameBuffer = [String: MetBuffer]()
 
     var computeState: MTLComputePipelineState? // _cellRulePipeline;
@@ -29,14 +32,16 @@ open class MetNode: Equatable {
     var threadCount = MTLSize()
 
     public var loops = 1
-    public var isOn = true //??? debugging
+    public var isOn = false
     public var pipeline: MetPipeline
 
     public init(_ pipeline: MetPipeline,
-                _ metItem: MetItem) {
+                _ name: String,
+                _ type: MetType) {
 
         self.pipeline = pipeline
-        self.metItem = metItem
+        self.name = name
+        self.type = type
 
         compileKernelFunction()
         setupThreadGroup()
@@ -52,11 +57,11 @@ open class MetNode: Equatable {
     }
 
     func compileKernelFunction() {
-        if  let defaultLib = pipeline.device.makeDefaultLibrary(), //??
-            let mtlFunction = defaultLib.makeFunction(name: metItem.name) {
+        if  let defaultLib = pipeline.device.makeDefaultLibrary(),
+            let mtlFunction = defaultLib.makeFunction(name: name) {
 
             do { computeState = try pipeline.device.makeComputePipelineState(function: mtlFunction)  }
-            catch { print("Failed to create _pipeline for \(metItem.name), error \(error)") }
+            catch { print("Failed to create _pipeline for \(name), error \(error)") }
         }
     }
 
@@ -85,14 +90,14 @@ open class MetNode: Equatable {
     
     func logMetaNodes() {
 
-        let inName = inNode?.metItem.name ?? "nil"
+        let inName = inNode?.name ?? "nil"
         var inTexNow = ""
         var outTexNow = ""
         
         if let t = inTex  { inTexNow  = "\(Unmanaged.passUnretained(t).toOpaque())" }
         if let t = outTex { outTexNow = "\(Unmanaged.passUnretained(t).toOpaque())" }
 
-        print(String(format:"MetNode:\(metItem.name) in:\(inName) tex:\(inTexNow) outTex:\(outTexNow)"))
+        print(String(format:"MetNode:\(name) in:\(inName) tex:\(inTexNow) outTex:\(outTexNow)"))
         outNode?.logMetaNodes()
     }
 
@@ -110,7 +115,7 @@ open class MetNode: Equatable {
         outTex = outTex ?? makeNewTex(via)
     }
 
-    open func execCommand(_ commandBuf: MTLCommandBuffer) {
+    open func computeCommand(_ commandBuf: MTLCommandBuffer) {
         // setup and execute compute textures
 
         if let computeEnc = commandBuf.makeComputeCommandEncoder(),
@@ -132,10 +137,29 @@ open class MetNode: Equatable {
             computeEnc.endEncoding()
         }
     }
+    open func renderCommand(_ renderEnc: MTLRenderCommandEncoder) {
+    }
 
     func nextCommand(_ commandBuf: MTLCommandBuffer) {
-        setupInOutTextures(via: metItem.name)
-        execCommand(commandBuf)
+
+        setupInOutTextures(via: name)
+
+        switch type {
+            case .compute:
+
+                computeCommand(commandBuf)
+
+            case .render:
+                // uses depth to hide occulded fragments
+                if let renderEnc = pipeline.getRenderEnc() {
+                    renderCommand(renderEnc)
+                    if let outNode, outNode.type == .render {
+                        // continue this render, recycle renderEnc
+                    } else {
+                        pipeline.endRenderEnc()
+                    }
+                }
+        }
         outNode?.nextCommand(commandBuf)
     }
 }
