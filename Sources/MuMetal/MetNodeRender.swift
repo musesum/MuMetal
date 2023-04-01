@@ -24,22 +24,25 @@ public class MetNodeRender: MetNode {
     private var clipFrame = SIMD4<Float>(repeating: 0) // clip rect
 
     public init(_ pipeline : MetPipeline,
-                _ mtkView  : MTKView) {
+                _ mtkView  : MTKView,
+                _ filename: String = "pipe.render") {
 
         self.mtkView = mtkView
-        super.init(pipeline, "render", .render)
+        super.init(pipeline, "render", filename, .render)
         nameBufId["frame"] = 0
         nameBufId["repeat"] = 1
         nameBufId["mirror"] = 2
-        let viewSize = mtkView.frame.size * mtkView.contentScaleFactor
-        setupRenderPipeline(viewSize, pipeline.drawSize)
+
+        buildResources()
+        buildShader()
     }
 
 
-    func setupRenderPipeline(_ viewSize: CGSize, _ drawSize: CGSize) {
-        
+    func buildResources() {
+
+        let viewSize = mtkView.frame.size * mtkView.contentScaleFactor
         self.viewSize = SIMD2<Float>(viewSize.floats())
-        let clip = MetAspect.fillClip(from: drawSize, to: viewSize).normalize()
+        let clip = MetAspect.fillClip(from: pipeline.drawSize, to: viewSize).normalize()
         clipFrame = SIMD4<Float>(clip.floats())
 
         //print(" MetNodeRender::clipFrame: \(clipFrame)")
@@ -60,25 +63,31 @@ public class MetNodeRender: MetNode {
 
         // Create our vertex buffer, and initialize it with our quadVertices array
         vertices = pipeline.device.makeBuffer(bytes: metVertices,
-                                             length: quadSize,
-                                             options: .storageModeShared)
+                                              length: quadSize,
+                                              options: .storageModeShared)
 
-        if  let defLib = pipeline.device.makeDefaultLibrary(),
-            let vertexFunc   = defLib.makeFunction(name: "vertexShader"),
-            let fragmentFunc = defLib.makeFunction(name: "fragmentShader") {
+    }
+    func buildShader() {
 
-            // descriptor pipeline state object
-            let pd = MTLRenderPipelineDescriptor()
-            pd.label = "Texturing Pipeline"
-            pd.vertexFunction = vertexFunc
-            pd.fragmentFunction = fragmentFunc
-            pd.colorAttachments[0].pixelFormat = mtkView.colorPixelFormat
-            pd.depthAttachmentPixelFormat = .depth32Float //??? 
+        guard let vertexFunc = library.makeFunction(name: "vertexShader") else { return err("vertexShader")}
+        guard let fragmentFunc = library.makeFunction(name: "fragmentShader") else { return err("fragmentShader")}
 
-            do { renderState = try pipeline.device.makeRenderPipelineState(descriptor: pd) }
-            catch { print("🚫 \(#function) failed to create \(name), error \(error)") }
-        }
+        // descriptor pipeline state object
+        let pd = MTLRenderPipelineDescriptor()
+        pd.label = "Texturing Pipeline"
+        pd.vertexFunction = vertexFunc
+        pd.fragmentFunction = fragmentFunc
+        pd.colorAttachments[0].pixelFormat = mtkView.colorPixelFormat
+        pd.depthAttachmentPixelFormat = .depth32Float
+
+        do { renderState = try pipeline.device.makeRenderPipelineState(descriptor: pd) }
+        catch { err("\(error)") }
+
         setupSampler()
+
+        func err(_ err: String) {
+            print("🚫 MetNodeRender::buildShader err: \(err)")
+        }
     }
 
     override public func setupInOutTextures(via: String) {
@@ -92,16 +101,16 @@ public class MetNodeRender: MetNode {
         let viewPort = MTLViewport(viewSize)
         renderEnc.setViewport(viewPort)
         renderEnc.setRenderPipelineState(renderState)
-        
+
         // vertex
         renderEnc.setVertexBuffer(vertices, offset: 0, index: 0)
         renderEnc.setVertexBytes(&viewSize , length: Float2Len, index: 1)
         renderEnc.setVertexBytes(&clipFrame, length: Float4Len, index: 2)
-        
+
         // fragment
         renderEnc.setFragmentTexture(inTex, index: 0)
         renderEnc.setFragmentSamplerState(samplr, index: 0)
-        
+
         for buf in nameBuffer.values {
             renderEnc.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
         }

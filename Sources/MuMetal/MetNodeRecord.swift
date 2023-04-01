@@ -10,9 +10,10 @@ public class MetNodeRecord: MetNode {
     var assetWriterInput: AVAssetWriterInput?
     var inputPixelBufferAdaptor: AVAssetWriterInputPixelBufferAdaptor?
     
-    public init(_ pipeline: MetPipeline) {
+    public init(_ pipeline: MetPipeline,
+                _ filename: String = "pipe.record") {
         
-        super.init(pipeline, "record",.compute)
+        super.init(pipeline, "record", filename, .compute)
         // placeholder nameIndex["record"] = 0
         setupSampler()
     }
@@ -40,7 +41,7 @@ public class MetNodeRecord: MetNode {
         outTex = inTex
     }
 
-    override public func computeCommand(_ commandBuf: MTLCommandBuffer) {
+    override public func computeCommand(_ computeEnc: MTLComputeCommandEncoder) {
         if isRecording, let inTex = inTex {
             writeFrame(inTex)
         }

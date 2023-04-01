@@ -5,26 +5,27 @@ import UIKit
 
 
 public class MetNodeCamix: MetNodeCamera {
-
+    
     public init(_ pipeline: MetPipeline) {
-        super.init(pipeline, "camix")
+        super.init(pipeline, "camix", "pipe.camix")
     }
-
 }
-
 
 public class MetNodeCamera: MetNode {
 
     private var bypassTex: MTLTexture?  // bypass outTex when not on
     
-    public init(_ pipeline: MetPipeline,
-                _ name: String = "camera") {
-        super.init(pipeline, name, .compute)
+    public init(_ pipeline  : MetPipeline,
+                _ name      : String = "camera",
+                _ filename  : String = "pipe.camera") {
+
+        super.init(pipeline, name, filename, .compute)
+    
         nameBufId["mix"] = 0
         nameBufId["frame"] = 1
         setupSampler()
     }
-    
+
     // get clipping frame from altTex
     func getAspectFill() -> CGRect {
 
@@ -70,24 +71,26 @@ public class MetNodeCamera: MetNode {
 
     override public func setupInOutTextures(via: String) {
 
-        inTex = inNode?.outTex ?? makeNewTex(via)
-        outTex = isOn ? outTex ?? makeNewTex(via) : inTex
-    }
-
-    override public func computeCommand(_ commandBuf: MTLCommandBuffer) {
-        if isOn {
-            let camSession = MetCamera.shared
-            altTex = camSession.camTex
-
-            if let _ = altTex, camSession.camState == .streaming {
-
-                let frame = getAspectFill()
-                if frame != .zero {
-                    updateBuffer("frame", frame)
-                }
-                super.computeCommand(commandBuf)
-            }
+        if isOn, MetCamera.shared.hasNewTex {
+            // inTex is used by camix.metal, but ignored by camera.metal
+            inTex = inNode?.outTex
+            outTex = outTex
+            altTex = MetCamera.shared.camTex
+        } else {
+            outTex = inTex
         }
     }
 
+    override public func computeCommand(_ computeEnc: MTLComputeCommandEncoder) {
+
+        if isOn, MetCamera.shared.hasNewTex {
+
+            let frame = getAspectFill()
+            if frame != .zero {
+                updateBuffer("frame", frame)
+                super.computeCommand(computeEnc)
+            }
+        }
+    }
+    
 }

@@ -25,7 +25,7 @@ public final class MetCamera: NSObject {
     var camDelegate: AVCaptureVideoDataOutputSampleBufferDelegate?
 
     public init(_ delegate: AVCaptureVideoDataOutputSampleBufferDelegate?,
-         position: AVCaptureDevice.Position ) {
+                position: AVCaptureDevice.Position ) {
 
         self.camDelegate = delegate
         self.camPos = position
@@ -35,7 +35,9 @@ public final class MetCamera: NSObject {
 
         NotificationCenter.default.addObserver(self, selector: #selector(captureSessionRuntimeError), name: NSNotification.Name.AVCaptureSessionRuntimeError, object: nil)
     }
-
+    public var hasNewTex: Bool {
+        return camState == .streaming && camTex != nil
+    }
     public func startCamera() {
         
         print("startCamera state: \(camState)")
@@ -194,7 +196,7 @@ public final class MetCamera: NSObject {
             connection.isVideoMirrored = (self.camPos == .front)
         }
         func err(_ str: String) {
-            print("⁉️ err \(#function): \(str)")
+            print("⁉️ err updateOrientation: \(str)")
         }
     }
 
@@ -211,13 +213,13 @@ public final class MetCamera: NSObject {
         } else {
             err("add output failed")
         }
-        func err(_ str: String) { print("⁉️ err \(#function): \(str)") }
+        func err(_ str: String) { print("⁉️ err initCaptureOutput: \(str)") }
     }
     /// `AVCaptureSessionRuntimeErrorNotification` callback.
     @objc fileprivate func captureSessionRuntimeError() {
 
         if camState == .streaming {
-            print("⁉️ err \(#function)") }
+            print("⁉️ captureSessionRuntimeError") }
     }
     deinit {
         NotificationCenter.default.removeObserver(self)

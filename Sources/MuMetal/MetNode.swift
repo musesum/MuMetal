@@ -19,6 +19,7 @@ open class MetNode: Equatable {
     public var outTex: MTLTexture?  // output texture 1
     public var altTex: MTLTexture?  // optional texture 2
     public var samplr: MTLSamplerState?
+    public var library: MTLLibrary!
 
     public var inNode: MetNode?    // input node
     public var outNode: MetNode?   // output node
@@ -37,12 +38,15 @@ open class MetNode: Equatable {
 
     public init(_ pipeline: MetPipeline,
                 _ name: String,
-                _ type: MetType) {
+                _ filename: String = "",
+                _ type: MetType = .compute) {
 
         self.pipeline = pipeline
         self.name = name
+        self.filename = filename
         self.type = type
 
+        makeLibrary()
         compileKernelFunction()
         setupThreadGroup()
     }
@@ -56,12 +60,39 @@ open class MetNode: Equatable {
         return nil
     }
 
-    func compileKernelFunction() {
-        if  let defaultLib = pipeline.device.makeDefaultLibrary(),
-            let mtlFunction = defaultLib.makeFunction(name: name) {
+    public func makeLibrary() {
 
-            do { computeState = try pipeline.device.makeComputePipelineState(function: mtlFunction)  }
-            catch { print("Failed to create _pipeline for \(name), error \(error)") }
+        if pipeline.library?.functionNames.contains(name) ?? false {
+            library = pipeline.library
+            return
+        }
+        if let data = MuMetal.read(filename, "metal") {
+            do {
+                library = try pipeline.device
+                    .makeLibrary(source: data,
+                                 options: MTLCompileOptions())
+                return
+            }
+            catch {
+                print("⁉️ err makeLibrary: \(name) \(error)")
+            }
+        }
+        self.library = pipeline.library
+    }
+    func compileKernelFunction() {
+        guard let device = pipeline.device else { return err("pipeline device == nil")}
+
+        if let fn = (library.makeFunction(name: name) ??
+                     pipeline.library?.makeFunction(name: name))
+        {
+            do {
+                computeState = try device.makeComputePipelineState(function: fn)
+            } catch {
+                err("\(error)")
+            }
+        }
+        func err(_ str: String) {
+            print("⁉️ compileKernelFunction: \(name) error: \(str)")
         }
     }
 
@@ -115,11 +146,10 @@ open class MetNode: Equatable {
         outTex = outTex ?? makeNewTex(via)
     }
 
-    open func computeCommand(_ commandBuf: MTLCommandBuffer) {
+    open func computeCommand(_ computeEnc: MTLComputeCommandEncoder) {
         // setup and execute compute textures
 
-        if let computeEnc = commandBuf.makeComputeCommandEncoder(),
-           let computeState {
+        if let computeState {
 
             if let inTex  { computeEnc.setTexture(inTex,  index: 0) }
             if let outTex { computeEnc.setTexture(outTex, index: 1) }
@@ -134,7 +164,6 @@ open class MetNode: Equatable {
             // execute the compute pipeline threads
             computeEnc.setComputePipelineState(computeState)
             computeEnc.dispatchThreadgroups(threadCount, threadsPerThreadgroup: threadSize)
-            computeEnc.endEncoding()
         }
     }
     open func renderCommand(_ renderEnc: MTLRenderCommandEncoder) {
@@ -145,15 +174,22 @@ open class MetNode: Equatable {
         setupInOutTextures(via: name)
 
         switch type {
-            case .compute:
 
-                computeCommand(commandBuf)
+            case .compute:
+                if let computeEnc = pipeline.getComputeEnc() {
+                    computeCommand(computeEnc)
+                }
+                if outNode?.type == .compute {
+                    // continue this compute, recycle computeEnc
+                } else {
+                    pipeline.endComputeEnc()
+                }
 
             case .render:
                 // uses depth to hide occulded fragments
                 if let renderEnc = pipeline.getRenderEnc() {
                     renderCommand(renderEnc)
-                    if let outNode, outNode.type == .render {
+                    if  outNode?.type == .render {
                         // continue this render, recycle renderEnc
                     } else {
                         pipeline.endRenderEnc()

@@ -8,14 +8,15 @@
 import Foundation
 import Collections
 import MetalKit
+import Metal
 
 
 open class MetPipeline: NSObject {
 
     public var mtkView = MTKView()           // MetalKit render view
     public var metalLayer = CAMetalLayer()
-    public var device = MTLCreateSystemDefaultDevice()!
-    public var library: MTLLibrary!
+    public var device: MTLDevice!
+    public var library: MTLLibrary?
 
     public var mtlCommand: MTLCommandQueue!  // queue w/ command buffers
 
@@ -31,10 +32,12 @@ open class MetPipeline: NSObject {
     private var drawable: CAMetalDrawable?
     private var commandBuf: MTLCommandBuffer?
     private var renderEnc: MTLRenderCommandEncoder?
+    private var computeEnc: MTLComputeCommandEncoder?
 
     var depthTex: MTLTexture!
 
     public override init() {
+        
         super.init()
 
         let bounds = UIScreen.main.bounds
@@ -43,7 +46,9 @@ open class MetPipeline: NSObject {
                     ? CGSize(width: 1920, height: 1080)
                     : CGSize(width: 1080, height: 1920))
 
+        device = MTLCreateSystemDefaultDevice()!
         library = device.makeDefaultLibrary()
+
         mtkView.delegate = self
         mtkView.enableSetNeedsDisplay = true
         mtkView.isPaused = true
@@ -55,6 +60,7 @@ open class MetPipeline: NSObject {
         mtkView.device = device
         mtlCommand = device.makeCommandQueue()
         mtkView.frame = bounds
+
     }
 
     public func scriptPipeline() -> String {
@@ -159,14 +165,30 @@ extension MetPipeline: MTKViewDelegate {
         return depthStencil
     }
 
+    public func makeSampler(normalized: Bool) -> MTLSamplerState{
+        let sd = MTLSamplerDescriptor()
+        sd.minFilter = .nearest
+        sd.magFilter = .linear
+
+        // normalized: 0..1, otherwise 0..width, 0..height.
+        sd.supportArgumentBuffers = normalized
+        sd.normalizedCoordinates = normalized
+        return device.makeSamplerState(descriptor: sd)!
+    }
+
     public func getRenderEnc() -> MTLRenderCommandEncoder? {
+
         if let commandBuf,
            let drawable {
 
-            if let renderEnc { return renderEnc }
+            endComputeEnc()
 
-            renderEnc = commandBuf.makeRenderCommandEncoder(descriptor:  makeRenderPass(drawable))
-            return renderEnc
+            if let renderEnc {
+                return renderEnc
+            } else {
+                renderEnc = commandBuf.makeRenderCommandEncoder(descriptor:  makeRenderPass(drawable))
+                return renderEnc
+            }
         }
         return nil
     }
@@ -174,6 +196,29 @@ extension MetPipeline: MTKViewDelegate {
         renderEnc?.endEncoding()
         renderEnc = nil
     }
+
+    public func getComputeEnc() -> MTLComputeCommandEncoder? {
+
+        if let commandBuf {
+
+            endRenderEnc()
+
+            if let computeEnc {
+                return computeEnc
+            } else {
+                computeEnc = commandBuf.makeComputeCommandEncoder()
+                return computeEnc
+            }
+        }
+        return nil
+    }
+
+    public func endComputeEnc() {
+
+        computeEnc?.endEncoding()
+        computeEnc = nil
+    }
+
 
     /// Called whenever the view needs to render a frame
     public func draw(in inView: MTKView) {

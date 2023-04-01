@@ -21,14 +21,12 @@ open class MetFacePose: NSObject {
     private let delegate: MetFacePoseDelegate?
     private var faceMask: Bool
 
-    // The Vision requests and the handler to perform them.
     private var visionSequence: VNSequenceRequestHandler!
     private var faceRectangles: VNDetectFaceRectanglesRequest!
     private var personSegment: VNGeneratePersonSegmentationRequest!
     private var angleColors: MetFaceAngleColors?
     private var ciContext: CIContext!
     private var camSession: MetCamera!
-
 
     var ciImage: CIImage? {
         didSet {
@@ -133,10 +131,10 @@ open class MetFacePose: NSObject {
 // MARK: - Capture Video Data
 
 extension MetFacePose: AVCaptureVideoDataOutputSampleBufferDelegate {
-    @objc public func captureOutput(_ output: AVCaptureOutput,
-                             didOutput sampleBuf: CMSampleBuffer,
-                             from connection: AVCaptureConnection) {
-        // Grab the image buffer frame from the camera output
+    @objc public func captureOutput(_ : AVCaptureOutput,
+                                    didOutput sampleBuf: CMSampleBuffer,
+                                    from _: AVCaptureConnection) {
+
         guard let imageBuf = sampleBuf.imageBuffer else { return }
         processVideoFrame(imageBuf)
     }
