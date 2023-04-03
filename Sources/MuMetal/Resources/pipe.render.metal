@@ -1,5 +1,7 @@
+// pipe.render.metal
+
 #include <metal_stdlib>
-#include <simd/simd.h>h"
+#include <simd/simd.h>
 
 using namespace metal;
 
@@ -16,10 +18,10 @@ typedef struct {
 // Vertex
 vertex VertexData vertexShader
 (
- constant MetVertex*    vertices  [[ buffer(0) ]],
- constant float2&       viewSize  [[ buffer(1) ]],
- constant float4&       clipFrame [[ buffer(2) ]],
- uint                   vertexID  [[ vertex_id ]])
+ constant MetVertex*  vertices  [[ buffer(0) ]],
+ constant float2&     viewSize  [[ buffer(1) ]],
+ constant float4&     clipFrame [[ buffer(2) ]],
+ uint                 vertexID  [[ vertex_id ]])
 {
     float2 pos = vertices[vertexID].position.xy; // distance from origin
     float2 tex = vertices[vertexID].texCoord.xy;
@@ -36,11 +38,11 @@ vertex VertexData vertexShader
 // Fragment
 fragment float4 fragmentShader
 (
- VertexData       in       [[ stage_in   ]],
- texture2d<half>  colorTex [[ texture(0) ]],
- constant float2& repeat   [[ buffer(1)  ]],
- constant float2& mirror   [[ buffer(2)  ]],
- sampler          samplr   [[ sampler(0) ]])
+ VertexData        in       [[ stage_in   ]],
+ texture2d<half>   colorTex [[ texture(0) ]],
+ constant float2&  repeat   [[ buffer(1)  ]],
+ constant float2&  mirror   [[ buffer(2)  ]],
+ sampler           samplr   [[ sampler(0) ]])
 {
     float2 modulo;
     float2 repeati = max(0.005, 1. - repeat);
@@ -51,7 +53,8 @@ fragment float4 fragmentShader
         // mirror repeati x
         modulo.x = fmod(in.texCoord.x, repeati.x * (1 + mirror.x));
         if (modulo.x > repeati.x) {
-            modulo.x = (repeati.x * (1 + mirror.x) - modulo.x) / fmax(0.0001, mirror.x);
+            modulo.x = (  (repeati.x * (1 + mirror.x) - modulo.x)
+                        / fmax(0.0001, mirror.x));
         }
     }
     if (mirror.y < -0.5) {
@@ -59,12 +62,12 @@ fragment float4 fragmentShader
     } else {
         modulo.y = fmod(in.texCoord.y, repeati.y * (1 + mirror.y));
         if (modulo.y > repeati.y) {
-            modulo.y = (repeati.y * (1 + mirror.y) - modulo.y) / fmax(0.0001, mirror.y);
+            modulo.y = ( (repeati.y * (1 + mirror.y) - modulo.y)
+                        / fmax(0.0001, mirror.y));
         }
     }
-    float2 normalized = modulo / repeati; //float2(modulo.x/repeati.x, modulo.y/repeati.y);
-    
-    const half4 colorSample = colorTex.sample(samplr, normalized);
+    float2 modNorm = modulo / repeati;
+    const half4 colorSample = colorTex.sample(samplr, modNorm);
     return float4(colorSample.r, colorSample.g, colorSample.b, 1.0);
 }
 

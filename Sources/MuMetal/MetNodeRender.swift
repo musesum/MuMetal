@@ -41,7 +41,8 @@ public class MetNodeRender: MetNode {
 
         let viewSize = mtkView.frame.size * mtkView.contentScaleFactor
         self.viewSize = SIMD2<Float>(viewSize.floats())
-        let clip = MetAspect.fillClip(from: pipeline.drawSize, to: viewSize).normalize()
+        let clip = MetAspect.fillClip(from: pipeline.drawSize,
+                                      to: viewSize).normalize()
         clipFrame = SIMD4<Float>(clip.floats())
 
         //print(" MetNodeRender::clipFrame: \(clipFrame)")

@@ -6,11 +6,40 @@ import Metal
 
 open class MetNodeCompute: MetNode {
 
+    var computeState: MTLComputePipelineState? // _cellRulePipeline;
+    var threadSize = MTLSize()
+    var threadCount = MTLSize()
+
     public init(_ pipeline: MetPipeline,
                 _ name: String,
                 _ filename: String = "") {
 
         super.init(pipeline, name, filename, .compute)
+        makeComputeState()
+        setupThreadGroup()
+    }
+    func setupThreadGroup() {
+
+        threadSize = MTLSizeMake(16, 16, 1)
+        let itemW = pipeline.drawSize.width
+        let itemH = pipeline.drawSize.height
+        let threadW = CGFloat(threadSize.width)
+        let threadH = CGFloat(threadSize.height)
+        threadCount.width  = Int((itemW + threadW - 1.0) / threadW)
+        threadCount.height = Int((itemH + threadH - 1.0) / threadH)
+        threadCount.depth  = 1
+    }
+
+    func makeComputeState() {
+        if let device = pipeline.device,
+           let function,
+           let state = try? device.makeComputePipelineState(function: function) {
+
+            self.computeState = state
+
+        } else {
+            print("⁉️ makeComputeState: \(name) failed")
+        }
     }
 
     override public func computeCommand(_ computeEnc: MTLComputeCommandEncoder) {

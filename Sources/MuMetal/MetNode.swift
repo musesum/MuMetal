@@ -19,8 +19,10 @@ open class MetNode: Equatable {
     public var inTex: MTLTexture?   // input texture 0
     public var outTex: MTLTexture?  // output texture 1
     public var altTex: MTLTexture?  // optional texture 2
+    
     public var samplr: MTLSamplerState?
     public var library: MTLLibrary!
+    public var function: MTLFunction?
 
     public var inNode: MetNode?    // input node
     public var outNode: MetNode?   // output node
@@ -28,10 +30,6 @@ open class MetNode: Equatable {
     typealias MetBufId = Int
     internal var nameBufId = [String: MetBufId]()
     internal var nameBuffer = [String: MetBuffer]()
-
-    var computeState: MTLComputePipelineState? // _cellRulePipeline;
-    var threadSize = MTLSize()
-    var threadCount = MTLSize()
 
     public var loops = 1
     public var isOn = false
@@ -48,8 +46,7 @@ open class MetNode: Equatable {
         self.type = type
 
         makeLibrary()
-        compileKernelFunction()
-        setupThreadGroup()
+        makeFunction()
     }
 
     func makeNewTex(_ via: String) -> MTLTexture? {
@@ -80,33 +77,14 @@ open class MetNode: Equatable {
         }
         self.library = pipeline.library
     }
-    func compileKernelFunction() {
-        guard let device = pipeline.device else { return err("pipeline device == nil")}
 
+    func makeFunction() {
         if let fn = (library.makeFunction(name: name) ??
-                     pipeline.library?.makeFunction(name: name))
-        {
-            do {
-                computeState = try device.makeComputePipelineState(function: fn)
-            } catch {
-                err("\(error)")
-            }
+                     pipeline.library?.makeFunction(name: name)) {
+            function = fn
+        } else {
+            print("⁉️ MetNode::makeFunction: \(name) not found")
         }
-        func err(_ str: String) {
-            print("⁉️ compileKernelFunction: \(name) error: \(str)")
-        }
-    }
-
-    func setupThreadGroup() {
-
-        threadSize = MTLSizeMake(16, 16, 1)
-        let itemW = pipeline.drawSize.width
-        let itemH = pipeline.drawSize.height
-        let threadW = CGFloat(threadSize.width)
-        let threadH = CGFloat(threadSize.height)
-        threadCount.width  = Int((itemW + threadW - 1.0) / threadW)
-        threadCount.height = Int((itemH + threadH - 1.0) / threadH)
-        threadCount.depth  = 1
     }
 
     func setupSampler() {

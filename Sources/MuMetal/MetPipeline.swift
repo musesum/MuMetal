@@ -28,13 +28,13 @@ open class MetPipeline: NSObject {
     public var viewSize = CGSize.zero  // size of render surface
     public var clipRect = CGRect.zero
 
-    public var settingUp = true        // ignore swapping in new shaders
     private var drawable: CAMetalDrawable?
     private var commandBuf: MTLCommandBuffer?
     private var renderEnc: MTLRenderCommandEncoder?
     private var computeEnc: MTLComputeCommandEncoder?
+    private var depthTex: MTLTexture!
 
-    var depthTex: MTLTexture!
+    public var settingUp = true        // ignore swapping in new shaders
 
     public override init() {
         
@@ -95,27 +95,10 @@ extension MetPipeline: MTKViewDelegate {
         clipRect = MetAspect.fillClip(from: drawSize, to: viewSize).normalize()
         mtkView.autoResizeDrawable = false
     }
-    public func updateDepthTex(_ size: CGSize)  {
 
-        let width = Int(size.width)
-        let height = Int(size.height)
-
-        if (depthTex == nil ||
-            depthTex.width != width ||
-            depthTex.height != height) {
-
-            let td = MTLTextureDescriptor.texture2DDescriptor(
-                pixelFormat: .depth32Float,
-                width:  Int(size.width),
-                height: Int(size.height),
-                mipmapped: false)
-            td.usage = .renderTarget
-            td.storageMode = .memoryless
-
-            depthTex = device.makeTexture(descriptor: td)
-        }
-    }
     public func makeRenderPass(_ drawable: CAMetalDrawable) -> MTLRenderPassDescriptor {
+
+        updateDepthTex()
 
         let rp = MTLRenderPassDescriptor()
 
@@ -130,6 +113,27 @@ extension MetPipeline: MTKViewDelegate {
         rp.depthAttachment.clearDepth = 1
 
         return rp
+
+        func updateDepthTex()  {
+
+            let width = Int(metalLayer.drawableSize.width)
+            let height = Int(metalLayer.drawableSize.height)
+
+            if (depthTex == nil ||
+                depthTex.width != width ||
+                depthTex.height != height) {
+
+                let td = MTLTextureDescriptor.texture2DDescriptor(
+                    pixelFormat: .depth32Float,
+                    width:  width,
+                    height: height,
+                    mipmapped: false)
+                td.usage = .renderTarget
+                td.storageMode = .memoryless
+
+                depthTex = device.makeTexture(descriptor: td)
+            }
+        }
     }
     public func assemblePipeline() {
         firstNode = nodes.first
@@ -232,7 +236,6 @@ extension MetPipeline: MTKViewDelegate {
            let drawable,
            let commandBuf {
 
-            updateDepthTex(metalLayer.drawableSize)
             firstNode.nextCommand(commandBuf)
 
             commandBuf.present(drawable)
