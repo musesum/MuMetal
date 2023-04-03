@@ -11,15 +11,15 @@ public class MetNodeCamix: MetNodeCamera {
     }
 }
 
-public class MetNodeCamera: MetNode {
+public class MetNodeCamera: MetNodeCompute {
 
     private var bypassTex: MTLTexture?  // bypass outTex when not on
     
-    public init(_ pipeline  : MetPipeline,
+    override public init(_ pipeline  : MetPipeline,
                 _ name      : String = "camera",
                 _ filename  : String = "pipe.camera") {
 
-        super.init(pipeline, name, filename, .compute)
+        super.init(pipeline, name, filename)
     
         nameBufId["mix"] = 0
         nameBufId["frame"] = 1

@@ -1,35 +1,36 @@
-//  Created by warren on 2/22/19.
+//  Created by warren on 4/2/23.
+//  Copyright © 2023 DeepMuse. All rights reserved.
 
-import Foundation
+
 import Metal
-import MetalKit
 
-public class MetNodeCompute: MetNode {
-    
-    // cellular automata uses double buffering
-    override public func setupInOutTextures(via: String) {
+open class MetNodeCompute: MetNode {
 
-        if !isOn && outTex != nil { return }
-        nameBufId[""] = 0
-        inTex = inNode?.outTex
-        outTex = outTex ?? makeNewTex(via)
+    public init(_ pipeline: MetPipeline,
+                _ name: String,
+                _ filename: String = "") {
+
+        super.init(pipeline, name, filename, .compute)
     }
 
     override public func computeCommand(_ computeEnc: MTLComputeCommandEncoder) {
+        // setup and execute compute textures
 
-        if isOn {
-            super.computeCommand(computeEnc)
+        if let computeState {
 
-            for _ in 1 ..< loops {
-                flipInOutTextures()
-                super.computeCommand(computeEnc)
+            if let inTex  { computeEnc.setTexture(inTex,  index: 0) }
+            if let outTex { computeEnc.setTexture(outTex, index: 1) }
+            if let altTex { computeEnc.setTexture(altTex, index: 2) }
+
+            computeEnc.setSamplerState(samplr, index: 0)
+
+            // compute buffer index is in order of declaration in flo script
+            for buf in nameBuffer.values {
+                computeEnc.setBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
             }
-        }
-        // cellular automata uses double buffering
-        func flipInOutTextures() {
-            let temp = inTex
-            inTex = outTex
-            outTex = temp
+            // execute the compute pipeline threads
+            computeEnc.setComputePipelineState(computeState)
+            computeEnc.dispatchThreadgroups(threadCount, threadsPerThreadgroup: threadSize)
         }
     }
 }

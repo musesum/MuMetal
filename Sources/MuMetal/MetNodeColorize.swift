@@ -10,14 +10,14 @@ public typealias DrawTextureFunc = ((_ bytes: UnsafeMutablePointer<UInt32>,
 
 public typealias GetTextureFunc = ((_ size: Int) -> (UnsafeMutablePointer<UInt32>))
 
-public class MetNodeColor: MetNode {
+public class MetNodeColor: MetNodeCompute {
 
     private var getPal: GetTextureFunc?
 
     public init(_ pipeline: MetPipeline,
                 _ getPal: @escaping GetTextureFunc) {
 
-        super.init(pipeline, "color", "pipe.color", .compute)
+        super.init(pipeline, "color", "pipe.color")
         nameBufId["color"] = 0
         self.getPal = getPal
     }

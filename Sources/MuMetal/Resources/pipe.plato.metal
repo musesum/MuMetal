@@ -64,7 +64,7 @@ vertex PlatoVertex platoVertex
 /// vert.color is used for creating a shadow mixed texture2d's color
 fragment half4 cubeIndexFragment
 (
- PlatoVertex      vert        [[ stage_in   ]],
+ PlatoVertex          vert        [[ stage_in   ]],
  texturecube<int16_t> cubeTex     [[ texture(0) ]],
  texture2d<half>      imageTex    [[ texture(1) ]],
  sampler              cubeSamplr  [[ sampler(0) ]],

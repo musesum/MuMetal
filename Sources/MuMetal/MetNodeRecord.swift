@@ -1,7 +1,7 @@
 
 import AVKit
 
-public class MetNodeRecord: MetNode {
+public class MetNodeRecord: MetNodeCompute {
     
     var isRecording = false
     var recordingStartTime = TimeInterval(0)
@@ -13,7 +13,7 @@ public class MetNodeRecord: MetNode {
     public init(_ pipeline: MetPipeline,
                 _ filename: String = "pipe.record") {
         
-        super.init(pipeline, "record", filename, .compute)
+        super.init(pipeline, "record", filename)
         // placeholder nameIndex["record"] = 0
         setupSampler()
     }

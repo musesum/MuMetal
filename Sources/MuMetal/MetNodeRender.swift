@@ -23,8 +23,8 @@ public class MetNodeRender: MetNode {
     private var viewSize  = SIMD2<Float>(repeating: 0)
     private var clipFrame = SIMD4<Float>(repeating: 0) // clip rect
 
-    public init(_ pipeline : MetPipeline,
-                _ mtkView  : MTKView,
+    public init(_ pipeline: MetPipeline,
+                _ mtkView: MTKView,
                 _ filename: String = "pipe.render") {
 
         self.mtkView = mtkView
@@ -36,7 +36,6 @@ public class MetNodeRender: MetNode {
         buildResources()
         buildShader()
     }
-
 
     func buildResources() {
 
@@ -52,12 +51,12 @@ public class MetNodeRender: MetNode {
 
         let metVertices: [MetVertex] = [
             // (position texCoord)
-            MetVertex( w2,-h2,  1, 1),
-            MetVertex(-w2,-h2,  0, 1),
-            MetVertex(-w2, h2,  0, 0),
-            MetVertex( w2,-h2,  1, 1),
-            MetVertex(-w2, h2,  0, 0),
-            MetVertex( w2, h2,  1, 0)]
+            MetVertex( w2,-h2, 1, 1),
+            MetVertex(-w2,-h2, 0, 1),
+            MetVertex(-w2, h2, 0, 0),
+            MetVertex( w2,-h2, 1, 1),
+            MetVertex(-w2, h2, 0, 0),
+            MetVertex( w2, h2, 1, 0)]
 
         let quadSize = MemoryLayout<MetVertex>.size * metVertices.count
 
@@ -65,8 +64,8 @@ public class MetNodeRender: MetNode {
         vertices = pipeline.device.makeBuffer(bytes: metVertices,
                                               length: quadSize,
                                               options: .storageModeShared)
-
     }
+
     func buildShader() {
 
         guard let vertexFunc = library.makeFunction(name: "vertexShader") else { return err("vertexShader")}
@@ -95,6 +94,7 @@ public class MetNodeRender: MetNode {
         inTex = inNode?.outTex // render to screen
                                // no output texture here
     }
+
     override open func renderCommand(_ renderEnc: MTLRenderCommandEncoder) {
         guard let renderState else { return }
 

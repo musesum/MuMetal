@@ -16,10 +16,10 @@ typedef struct {
 // Vertex
 vertex VertexData vertexShader
 (
- uint vertexID [[ vertex_id ]],
- constant MetVertex *vertices [[ buffer(0) ]],
- constant float2 &viewSize    [[ buffer(1) ]],
- constant float4 &clipFrame   [[ buffer(2) ]])
+ constant MetVertex*    vertices  [[ buffer(0) ]],
+ constant float2&       viewSize  [[ buffer(1) ]],
+ constant float4&       clipFrame [[ buffer(2) ]],
+ uint                   vertexID  [[ vertex_id ]])
 {
     float2 pos = vertices[vertexID].position.xy; // distance from origin
     float2 tex = vertices[vertexID].texCoord.xy;
@@ -36,10 +36,10 @@ vertex VertexData vertexShader
 // Fragment
 fragment float4 fragmentShader
 (
- VertexData       in       [[ stage_in ]],
+ VertexData       in       [[ stage_in   ]],
  texture2d<half>  colorTex [[ texture(0) ]],
- constant float2& repeat   [[ buffer(1) ]],
- constant float2& mirror   [[ buffer(2) ]],
+ constant float2& repeat   [[ buffer(1)  ]],
+ constant float2& mirror   [[ buffer(2)  ]],
  sampler          samplr   [[ sampler(0) ]])
 {
     float2 modulo;
@@ -47,9 +47,8 @@ fragment float4 fragmentShader
     
     if (mirror.x < -0.5) {
         modulo.x = fmod(in.texCoord.x, repeati.x);
-    }
-    // mirror repeati x
-    else {
+    } else {
+        // mirror repeati x
         modulo.x = fmod(in.texCoord.x, repeati.x * (1 + mirror.x));
         if (modulo.x > repeati.x) {
             modulo.x = (repeati.x * (1 + mirror.x) - modulo.x) / fmax(0.0001, mirror.x);

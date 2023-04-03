@@ -5,7 +5,6 @@ using namespace metal;
 struct CubeVertex {
     float4 position [[ position ]];
     float4 texCoords;
-    //float4 color;
 };
 
 struct Vertex {
@@ -34,19 +33,19 @@ vertex CubeVertex cubemapVertex
 
 fragment half4 cubemapIndexFragment
 (
- CubeVertex           vert         [[ stage_in ]],
- texturecube<int16_t> cubeTex      [[ texture(0) ]],
- texture2d<half>      imageTex     [[ texture(1) ]],
- sampler              cubeSampler  [[ sampler(0) ]],
- sampler              imageSampler [[ sampler(1) ]])
+ CubeVertex           vert        [[ stage_in ]],
+ texturecube<int16_t> cubeTex     [[ texture(0) ]],
+ texture2d<half>      imageTex    [[ texture(1) ]],
+ sampler              cubeSamplr  [[ sampler(0) ]],
+ sampler              imageSamplr [[ sampler(1) ]])
 {
     float3 cubeCoords = float3(vert.texCoords.x,
                                vert.texCoords.y,
                                -vert.texCoords.z);
 
-    short4 index = cubeTex.sample(cubeSampler, cubeCoords);
+    short4 index = cubeTex.sample(cubeSamplr, cubeCoords);
     float2 texCoords = float2(index.xy) / cubeTex.get_width();
-    return imageTex.sample(imageSampler, texCoords);
+    return imageTex.sample(imageSamplr, texCoords);
 }
 
 fragment half4 cubemapColorFragment

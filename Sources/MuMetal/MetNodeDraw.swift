@@ -4,14 +4,14 @@ import Metal
 import MetalKit
 
 
-public class MetNodeDraw: MetNode {
+public class MetNodeDraw: MetNodeCompute {
 
     public var drawFunc: DrawTextureFunc?
 
     public init(_ pipeline: MetPipeline,
                 _ drawFunc: @escaping DrawTextureFunc) {
 
-        super.init(pipeline, "draw", "pipe.draw", .compute)
+        super.init(pipeline, "draw", "pipe.draw")
         nameBufId["draw"] = 0
         self.drawFunc = drawFunc
     }

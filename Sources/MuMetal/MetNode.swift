@@ -15,6 +15,7 @@ open class MetNode: Equatable {
     public var name: String
     public var type: MetType
     public var filename = "" // optional filename for runtime compile of shader file
+    
     public var inTex: MTLTexture?   // input texture 0
     public var outTex: MTLTexture?  // output texture 1
     public var altTex: MTLTexture?  // optional texture 2
@@ -39,7 +40,7 @@ open class MetNode: Equatable {
     public init(_ pipeline: MetPipeline,
                 _ name: String,
                 _ filename: String = "",
-                _ type: MetType = .compute) {
+                _ type: MetType) {
 
         self.pipeline = pipeline
         self.name = name
@@ -132,6 +133,16 @@ open class MetNode: Equatable {
         outNode?.logMetaNodes()
     }
 
+    enum MakeFunctionError: Error { case failed }
+    public func makeFunction(_ name: String) throws -> MTLFunction {
+        if let fn = library.makeFunction(name:name) {
+            return fn
+        } else {
+            throw MakeFunctionError.failed
+        }
+    }
+
+
     // can override to trigger behaviors, such as turning on  camera
     public func setMetalNodeOn(_ isOn: Bool,
                                _ completion: @escaping ()->()) {
@@ -147,24 +158,6 @@ open class MetNode: Equatable {
     }
 
     open func computeCommand(_ computeEnc: MTLComputeCommandEncoder) {
-        // setup and execute compute textures
-
-        if let computeState {
-
-            if let inTex  { computeEnc.setTexture(inTex,  index: 0) }
-            if let outTex { computeEnc.setTexture(outTex, index: 1) }
-            if let altTex { computeEnc.setTexture(altTex, index: 2) }
-
-            computeEnc.setSamplerState(samplr, index: 0)
-
-            // compute buffer index is in order of declaration in flo script
-            for buf in nameBuffer.values {
-                computeEnc.setBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
-            }
-            // execute the compute pipeline threads
-            computeEnc.setComputePipelineState(computeState)
-            computeEnc.dispatchThreadgroups(threadCount, threadsPerThreadgroup: threadSize)
-        }
     }
     open func renderCommand(_ renderEnc: MTLRenderCommandEncoder) {
     }
