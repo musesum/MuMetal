@@ -28,7 +28,6 @@ open class MetNode: Equatable {
     public var outNode: MetNode?   // output node
 
     typealias MetBufId = Int
-    internal var nameBufId = [String: MetBufId]()
     internal var nameBuffer = [String: MetBuffer]()
 
     public var loops = 1

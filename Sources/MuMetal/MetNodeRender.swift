@@ -29,10 +29,6 @@ public class MetNodeRender: MetNode {
 
         self.mtkView = mtkView
         super.init(pipeline, "render", filename, .render)
-        nameBufId["frame"] = 0
-        nameBufId["repeat"] = 1
-        nameBufId["mirror"] = 2
-
         buildResources()
         buildShader()
     }

@@ -20,9 +20,6 @@ public class MetNodeCamera: MetNodeCompute {
                 _ filename  : String = "pipe.camera") {
 
         super.init(pipeline, name, filename)
-    
-        nameBufId["mix"] = 0
-        nameBufId["frame"] = 1
         setupSampler()
     }
 

@@ -4,12 +4,10 @@
 //  Created by warren on 3/13/23.
 //  Copyright © 2023 DeepMuse. All rights reserved.
 
-
 import Foundation
 import Collections
 import MetalKit
 import Metal
-
 
 open class MetPipeline: NSObject {
 
@@ -68,7 +66,8 @@ open class MetPipeline: NSObject {
         var node = firstNode
         while node != nil {
             if let node {
-                str += "\n" + node.name.pad(10) + "<- " + String.pointer(node.inTex) + " -> " + String.pointer(node.outTex)
+                str += "\n\(node.name.pad(7))(\(node.inNode?.name ?? ""))".pad(17) +
+                "-> " + (node.outNode?.name ?? "nil")
             }
             node = node!.outNode
         }
@@ -169,6 +168,7 @@ extension MetPipeline: MTKViewDelegate {
         return depthStencil
     }
 
+    /// used by MetNodeCubemap
     public func makeSampler(normalized: Bool) -> MTLSamplerState{
         let sd = MTLSamplerDescriptor()
         sd.minFilter = .nearest

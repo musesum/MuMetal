@@ -15,6 +15,7 @@ open class MetNodeCompute: MetNode {
                 _ filename: String = "") {
 
         super.init(pipeline, name, filename, .compute)
+
         makeComputeState()
         setupThreadGroup()
     }

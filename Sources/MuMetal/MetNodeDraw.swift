@@ -12,7 +12,6 @@ public class MetNodeDraw: MetNodeCompute {
                 _ drawFunc: @escaping DrawTextureFunc) {
 
         super.init(pipeline, "draw", "pipe.draw")
-        nameBufId["draw"] = 0
         self.drawFunc = drawFunc
     }
 

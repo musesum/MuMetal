@@ -10,7 +10,6 @@ public class MetNodeCell: MetNodeCompute {
     override public func setupInOutTextures(via: String) {
 
         if !isOn && outTex != nil { return }
-        nameBufId[""] = 0
         inTex = inNode?.outTex
         outTex = outTex ?? makeNewTex(via)
     }

@@ -14,7 +14,7 @@ extension MetNode {
 
         if let _ = nameBuffer[key] { return }
         // compute buffer index is in order of declaration in flo script
-        let index = nameBufId[key] ?? nameBuffer.count
+        let index = nameBuffer.count
         let metBuffer = MetBuffer(key, index, val, pipeline.device)
         nameBuffer[key] = metBuffer
     }

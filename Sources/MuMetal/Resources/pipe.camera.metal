@@ -7,8 +7,7 @@ kernel void camera
 (
  texture2d<float, access::write> outTex [[ texture(1) ]],
  texture2d<float>                camTex [[ texture(2) ]],
- constant float&                 mix    [[ buffer(0)  ]], // mix real/fake
- constant float4&                frame  [[ buffer(1)  ]],
+ constant float4&                frame  [[ buffer(0)  ]],
  sampler                         samplr [[ sampler(0) ]],
  uint2 gid [[ thread_position_in_grid ]])
 {
