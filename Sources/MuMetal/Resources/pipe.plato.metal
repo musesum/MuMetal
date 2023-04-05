@@ -10,7 +10,7 @@ struct PlatoVertex {
     float4 color;
 };
 
-struct PlatoUniforms {
+struct MetUniforms {
     float4x4 identity;
     float4x4 inverse; // of identity
     float4x4 projectModel;
@@ -32,9 +32,9 @@ struct Vert01 {
 
 vertex PlatoVertex platoVertex
 (
- device Vert01 const*   vert01    [[ buffer(0) ]],
- constant PlatoUniforms &uniforms [[ buffer(1) ]],
- uint32_t vid                     [[ vertex_id ]])
+ device Vert01 const*  vert01   [[ buffer(0) ]],
+ constant MetUniforms& uniforms [[ buffer(1) ]],
+ uint32_t vid                   [[ vertex_id ]])
 {
     float4 p0    = vert01[vid].p0;
     float4 p1    = vert01[vid].p1;
@@ -62,21 +62,21 @@ vertex PlatoVertex platoVertex
 }
 /// texturecube has index to a texture2d
 /// vert.color is used for creating a shadow mixed texture2d's color
-fragment half4 cubeIndexFragment
+fragment half4 platoCubeIndex
 (
  PlatoVertex          vert        [[ stage_in   ]],
  texturecube<int16_t> cubeTex     [[ texture(0) ]],
- texture2d<half>      imageTex    [[ texture(1) ]],
+ texture2d<half>      altTex      [[ texture(1) ]],
  sampler              cubeSamplr  [[ sampler(0) ]],
- sampler              imageSamplr [[ sampler(1) ]])
+ sampler              altSamplr   [[ sampler(1) ]])
 {
     float3 cubeCoords = float3(vert.texCoords.x,
                                vert.texCoords.y,
                                -vert.texCoords.z);
 
     short4 index = cubeTex.sample(cubeSamplr, cubeCoords);
-    float2 texCoords = float2(index.xy) / float(imageTex.get_width());
-    const half4 s = imageTex.sample(imageSamplr, texCoords);
+    float2 texCoords = float2(index.xy);
+    const half4 s = altTex.sample(altSamplr, texCoords);
 
     const half4 c = half4(vert.color);
     const half4 reflect = (s*2 + c) / 2;
@@ -85,7 +85,7 @@ fragment half4 cubeIndexFragment
 
 /// texturecube has color information uploaded to it
 /// vert.color is used for creating a shadow mixed with cube's color
-fragment half4 cubeColorFragment
+fragment half4 platoCubeColor
 (
  PlatoVertex       vert    [[ stage_in   ]],
  texturecube<half> cubeTex [[ texture(0) ]],
@@ -102,7 +102,7 @@ fragment half4 cubeColorFragment
 }
 
 /// no cubemap, color is contained within vert.color
-fragment half4 colorFragment
+fragment half4 platoColor
 (
  PlatoVertex vert [[ stage_in ]])
 {

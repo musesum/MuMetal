@@ -2,7 +2,7 @@
 #include <metal_stdlib>
 using namespace metal;
 
-struct CubeVertex {
+struct Vertex3D {
     float4 position [[ position ]];
     float4 texCoords;
 };
@@ -16,8 +16,8 @@ struct CubemapUniforms {
     float4x4 projectModel;
 };
 
-
-vertex CubeVertex cubemapVertex
+// MARK: - vertex
+vertex Vertex3D cubemapVertex
 (
  device Vertex const*      vertices  [[ buffer(0) ]],
  constant CubemapUniforms  &uniforms [[ buffer(1) ]],
@@ -25,40 +25,40 @@ vertex CubeVertex cubemapVertex
 {
     float4 position = vertices[vid].position;
 
-    CubeVertex outVert;
-    outVert.position = uniforms.projectModel * position;
-    outVert.texCoords = position;
-    return outVert;
+    Vertex3D out;
+    out.position = uniforms.projectModel * position;
+    out.texCoords = position;
+    return out;
 }
-
-fragment half4 cubemapIndexFragment
+// MARK: - fragment
+fragment half4 cubemapIndex
 (
- CubeVertex           vert        [[ stage_in ]],
+ Vertex3D             in          [[ stage_in ]],
  texturecube<int16_t> cubeTex     [[ texture(0) ]],
- texture2d<half>      imageTex    [[ texture(1) ]],
+ texture2d<half>      altTex      [[ texture(1) ]],
  sampler              cubeSamplr  [[ sampler(0) ]],
- sampler              imageSamplr [[ sampler(1) ]])
+ sampler              altSamplr   [[ sampler(1) ]])
 {
-    float3 cubeCoords = float3(vert.texCoords.x,
-                               vert.texCoords.y,
-                               -vert.texCoords.z);
+    float3 cubeCoords = float3(in.texCoords.x,
+                               in.texCoords.y,
+                               -in.texCoords.z);
 
     short4 index = cubeTex.sample(cubeSamplr, cubeCoords);
-    float2 texCoords = float2(index.xy) / cubeTex.get_width();
-    return imageTex.sample(imageSamplr, texCoords);
+    float2 texCoords = float2(index.xy);
+    return altTex.sample(altSamplr, texCoords);
 }
 
-fragment half4 cubemapColorFragment
+fragment half4 cubemapColor
 (
- CubeVertex          vert    [[ stage_in ]],
- texturecube<half>   cubeTex [[ texture(0) ]],
- sampler             samplr  [[ sampler(0) ]])
+ Vertex3D          in      [[ stage_in ]],
+ texturecube<half> cubeTex [[ texture(0) ]],
+ sampler           samplr  [[ sampler(0) ]])
 {
-    float3 cubeCoords = float3(vert.texCoords.x,
-                               vert.texCoords.y,
-                               -vert.texCoords.z);
+    float3 cubeCoords = float3(in.texCoords.x,
+                               in.texCoords.y,
+                               -in.texCoords.z);
+
     half4 color = cubeTex.sample(samplr, cubeCoords);
 
     return color;
 }
-

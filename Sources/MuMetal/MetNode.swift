@@ -82,7 +82,7 @@ open class MetNode: Equatable {
                      pipeline.library?.makeFunction(name: name)) {
             function = fn
         } else {
-            print("⁉️ MetNode::makeFunction: \(name) not found")
+           //??? print("⁉️ MetNode::makeFunction: \(name) not found")
         }
     }
 
