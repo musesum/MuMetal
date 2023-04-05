@@ -37,8 +37,6 @@ extension MetNode {
         switch insertWhere {
 
             case .above:
-                // already inserted above?
-                if insertNode.outNode == self { return self}
 
                 insertNode.inNode = inNode
                 insertNode.outNode = self
@@ -50,8 +48,6 @@ extension MetNode {
                 inTex = insertNode.outTex
 
             case .below:
-                // already inserted below?
-                if insertNode.inNode == self { return self }
 
                 insertNode.inNode = self
                 insertNode.outNode = outNode
