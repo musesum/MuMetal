@@ -30,6 +30,7 @@ open class MetPipeline: NSObject {
     private var commandBuf: MTLCommandBuffer?
     private var renderEnc: MTLRenderCommandEncoder?
     private var computeEnc: MTLComputeCommandEncoder?
+    
     private var depthTex: MTLTexture!
 
     public var settingUp = true        // ignore swapping in new shaders
@@ -172,7 +173,8 @@ extension MetPipeline: MTKViewDelegate {
     public func makeSampler(normalized: Bool) -> MTLSamplerState{
         let sd = MTLSamplerDescriptor()
         sd.minFilter = .nearest
-        sd.magFilter = .linear
+        sd.magFilter = .nearest
+        sd.maxAnisotropy = normalized ? 4 : 1 //??? 
 
         // normalized: 0..1, otherwise 0..width, 0..height.
         sd.supportArgumentBuffers = normalized

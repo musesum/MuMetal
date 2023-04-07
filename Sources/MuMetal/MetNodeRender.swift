@@ -10,32 +10,30 @@ public class MetNodeRender: MetNode {
     private var renderState: MTLRenderPipelineState?
 
     public var cgImage: CGImage? { get {
-        if let tex =  mtkView.currentDrawable?.texture,
+        if let tex =  pipeline.mtkView.currentDrawable?.texture,
            let img = tex.toImage() {
             return img
         } else {
             return nil
         }
     }}
-
-    private var mtkView: MTKView
     private var vertices: MTLBuffer? // Metal buffer for vertex data
     private var viewSize  = SIMD2<Float>(repeating: 0)
     private var clipFrame = SIMD4<Float>(repeating: 0) // clip rect
 
     public init(_ pipeline: MetPipeline,
-                _ mtkView: MTKView,
                 _ filename: String = "pipe.render") {
 
-        self.mtkView = mtkView
         super.init(pipeline, "render", filename, .render)
+
         buildResources()
         buildShader()
     }
 
     func buildResources() {
 
-        let viewSize = mtkView.frame.size * mtkView.contentScaleFactor
+        let viewSize = (pipeline.mtkView.frame.size *
+                        pipeline.mtkView.contentScaleFactor)
         self.viewSize = SIMD2<Float>(viewSize.floats())
         let clip = MetAspect.fillClip(from: pipeline.drawSize,
                                       to: viewSize).normalize()
@@ -64,16 +62,18 @@ public class MetNodeRender: MetNode {
     }
 
     func buildShader() {
+        let vertexName = "renderVertex"
+        let fragmentName = "renderColor"
 
-        guard let vertexFunc = library.makeFunction(name: "vertexShader") else { return err("vertexShader")}
-        guard let fragmentFunc = library.makeFunction(name: "fragmentShader") else { return err("fragmentShader")}
+        guard let vertexFunc = library.makeFunction(name: vertexName) else { return err(vertexName)}
+        guard let fragmentFunc = library.makeFunction(name: fragmentName) else { return err(fragmentName) }
 
         // descriptor pipeline state object
         let pd = MTLRenderPipelineDescriptor()
         pd.label = "Texturing Pipeline"
         pd.vertexFunction = vertexFunc
         pd.fragmentFunction = fragmentFunc
-        pd.colorAttachments[0].pixelFormat = mtkView.colorPixelFormat
+        pd.colorAttachments[0].pixelFormat = pipeline.mtkView.colorPixelFormat
         pd.depthAttachmentPixelFormat = .depth32Float
 
         do { renderState = try pipeline.device.makeRenderPipelineState(descriptor: pd) }

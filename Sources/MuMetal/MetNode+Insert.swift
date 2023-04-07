@@ -26,6 +26,7 @@ extension MetNode {
         }
         return self
     }
+
     public enum InsertWhere { case above, below }
 
     @discardableResult
@@ -37,6 +38,9 @@ extension MetNode {
         switch insertWhere {
 
             case .above:
+                // already inserted above?
+                if insertNode.outNode == self,
+                   self.inNode == insertNode { return self }
 
                 insertNode.inNode = inNode
                 insertNode.outNode = self
@@ -48,6 +52,9 @@ extension MetNode {
                 inTex = insertNode.outTex
 
             case .below:
+                // already inserted below
+                if insertNode.inNode == self,
+                   self.outNode == insertNode { return self }
 
                 insertNode.inNode = self
                 insertNode.outNode = outNode
@@ -62,6 +69,8 @@ extension MetNode {
     }
 
     public func replace(with newNode: MetNode?) -> MetNode? {
+
+        if newNode == self { return self }
 
         if let n = newNode {
 

@@ -99,16 +99,15 @@ import Foundation
     |  10 11 21 31 41 40
     |  00 10 20 30 40 50
  */
-public typealias IntRG16 = (Int16,Int16)
-public typealias Quad = [IntRG16]
+public typealias FloatRG16 = (Float16,Float16)
+public typealias Quad = [FloatRG16]
 
 class CubeDex {
 
 
     var size = CGSize.zero
     var side: Int // side length of square
-    var x0 = 0
-    var y0 = 0
+
     var count = 0 // side x side
     var logging = false
     var testing = false
@@ -130,7 +129,7 @@ class CubeDex {
         maximum
     }
 
-    var cubeTris = [CubeTri: [IntRG16]]()
+    var cubeTris = [CubeTri: [FloatRG16]]()
     /// triangle order for mapping `front` to other Quads
     //  front : [.nw_ne_c, .ne_se_c, .se_sw_c, .sw_nw_c]
     //  back  : [.nw_ne_c, .ne_se_c, .se_sw_c, .sw_nw_c]
@@ -148,17 +147,14 @@ class CubeDex {
         self.testing = testing
 
         side = Int(min(size.width, size.height))
-        x0 = (Int(size.width) - side) / 2
-        y0 = (Int(size.height) - side) / 2
-
         count = side * side
 
-        top   = [IntRG16](repeating: (-1,-1), count: count)
-        back  = [IntRG16](repeating: (-1,-1), count: count)
-        right = [IntRG16](repeating: (-1,-1), count: count)
-        front = [IntRG16](repeating: (-1,-1), count: count)
-        left  = [IntRG16](repeating: (-1,-1), count: count)
-        bot   = [IntRG16](repeating: (-1,-1), count: count)
+        top   = [FloatRG16](repeating: (-1,-1), count: count)
+        back  = [FloatRG16](repeating: (-1,-1), count: count)
+        right = [FloatRG16](repeating: (-1,-1), count: count)
+        front = [FloatRG16](repeating: (-1,-1), count: count)
+        left  = [FloatRG16](repeating: (-1,-1), count: count)
+        bot   = [FloatRG16](repeating: (-1,-1), count: count)
 
         makeCubeTris()
         makeSides()
@@ -172,8 +168,11 @@ class CubeDex {
     }
 
     func shiftOffsets() {
-
-        let ofs = IntRG16(Int16(x0),Int16(y0))
+        let xs = size.width
+        let ys = size.height
+        let ss = CGFloat(side)
+        let xOfs = Float16(((xs - ss) / 2) / xs)
+        let yOfs = Float16(((ys - ss) / 2) / ys)
 
         shiftOffset(&top  )
         shiftOffset(&back )
@@ -182,28 +181,31 @@ class CubeDex {
         shiftOffset(&left )
         shiftOffset(&bot  )
 
-        func shiftOffset(_ nums: inout [IntRG16]) {
+        func shiftOffset(_ nums: inout [FloatRG16]) {
 
             for i in 0..<nums.count {
                 let num = nums[i]
-                nums[i] = (num.0+ofs.0, num.1+ofs.1)
+                let x = CGFloat(num.0)
+                let y = CGFloat(num.1)
+                nums[i] = (Float16(xOfs + Float16(x/xs)),
+                           Float16(yOfs + Float16(y/ys)))
             }
         }
     }
-    func int16(_ x: Int,_ y: Int) -> IntRG16 {
-        (Int16(x),Int16(y))
+    func int16(_ x: Int,_ y: Int) -> FloatRG16 {
+        (Float16(x),Float16(y))
     }
     /// make front, back, left, right
     func makeSides() {
         for x in 0 ..< side {
             for y in 0 ..< side {
-                let ys = y * side
-                let sx = side-x-1
+                let yi = y * side
+                let xm = Int(side-x-1)
 
-                front [ys +  x] = int16(x, y)
-                back  [ys +  x] = int16(x, y)
-                left  [ys + sx] = int16(x, y)
-                right [ys + sx] = int16(x, y)
+                front [yi +  x] = int16(x, y)
+                back  [yi +  x] = int16(x, y)
+                left  [yi + xm] = int16(x, y)
+                right [yi + xm] = int16(x, y)
             }
         }
     }
@@ -251,7 +253,7 @@ class CubeDex {
         }
     }
 
-    func logIndices( _ src: [IntRG16], _ dst: [IntRG16]) {
+    func logIndices( _ src: [FloatRG16], _ dst: [FloatRG16]) {
         if logging {
             print("src:", terminator: " ")
             for xy in src {
@@ -284,8 +286,8 @@ class CubeDex {
         // these are the triangle mapped to face of cube
         // next fill each face with indices to front face
 
-        func make_nw_ne_c() -> [IntRG16] {
-            var r = [IntRG16]()
+        func make_nw_ne_c() -> [FloatRG16] {
+            var r = [FloatRG16]()
             for i in 0 ... S2 {
                 for j in i ... S-i {
                     r.append(int16(j,i))
@@ -293,8 +295,8 @@ class CubeDex {
             }
             return r
         }
-        func make_ne_nw_c() -> [IntRG16] {
-            var r = [IntRG16]()
+        func make_ne_nw_c() -> [FloatRG16] {
+            var r = [FloatRG16]()
             for i in 0 ... S2 {
                 for j in (i ... S-i) {
                     r.append(int16(S-j, i))
@@ -302,8 +304,8 @@ class CubeDex {
             }
             return r
         }
-        func make_ne_se_c() -> [IntRG16] {
-            var r = [IntRG16]()
+        func make_ne_se_c() -> [FloatRG16] {
+            var r = [FloatRG16]()
             for i in 0 ... S2 {
                 for j in i ... S-i {
                     r.append(int16(S-i, j))
@@ -311,8 +313,8 @@ class CubeDex {
             }
             return r
         }
-        func make_se_ne_c() -> [IntRG16] {
-            var r = [IntRG16]()
+        func make_se_ne_c() -> [FloatRG16] {
+            var r = [FloatRG16]()
             for i in 0 ... S2 {
                 for j in (i ... S-i) {
                     r.append(int16(S-i, S-j))
@@ -320,8 +322,8 @@ class CubeDex {
             }
             return r
         }
-        func make_sw_se_c() -> [IntRG16] {
-            var r = [IntRG16]()
+        func make_sw_se_c() -> [FloatRG16] {
+            var r = [FloatRG16]()
             for i in 0 ... S2 {
                 for j in i ... S-i {
                     r.append(int16(j, S-i))
@@ -329,8 +331,8 @@ class CubeDex {
             }
             return r
         }
-        func make_se_sw_c() -> [IntRG16] {
-            var r = [IntRG16]()
+        func make_se_sw_c() -> [FloatRG16] {
+            var r = [FloatRG16]()
             for i in 0 ... S2 {
                 for j in i ... S-i {
                     r.append(int16(S-j, S-i))
@@ -338,8 +340,8 @@ class CubeDex {
             }
             return r
         }
-        func make_sw_nw_c() -> [IntRG16] {
-            var r = [IntRG16]()
+        func make_sw_nw_c() -> [FloatRG16] {
+            var r = [FloatRG16]()
             for i in 0 ... S2 {
                 for j in i ... S-i {
                     r.append(int16(i, S-j))
@@ -347,8 +349,8 @@ class CubeDex {
             }
             return r
         }
-        func make_nw_sw_c() -> [IntRG16] {
-            var r = [IntRG16]()
+        func make_nw_sw_c() -> [FloatRG16] {
+            var r = [FloatRG16]()
             for i in 0 ... S2 {
                 for j in i ... S-i {
                     r.append(int16(i, j))

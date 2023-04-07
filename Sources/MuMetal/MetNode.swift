@@ -89,7 +89,7 @@ open class MetNode: Equatable {
     func setupSampler() {
 
         let sd = MTLSamplerDescriptor()
-        sd.minFilter    = .nearest
+        sd.minFilter    = .linear
         sd.magFilter    = .linear
         sd.sAddressMode = .repeat
         sd.tAddressMode = .repeat

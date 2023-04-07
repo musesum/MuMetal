@@ -32,8 +32,11 @@ public class Motion {
         }
     }
 
-    public func updateDeviceOrientation() {
+    @discardableResult
+    public func updateDeviceOrientation() -> matrix_float4x4 {
 
+        return identity //???
+        
         if  let motion,  motion.isDeviceMotionAvailable,
             let deviceMotion = motion.deviceMotion {
 
@@ -52,6 +55,7 @@ public class Motion {
 
             sceneOrientation = simdRotation * mat
         }
+        return sceneOrientation
     }
 }
 

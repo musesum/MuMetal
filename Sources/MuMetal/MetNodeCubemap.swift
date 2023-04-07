@@ -36,59 +36,62 @@ public class MetNodeCubemap: MetNode {
     var renderState: MTLRenderPipelineState!
     var cubeDex: CubeDex?
     let viaIndex: Bool
+    let vertices: [Float]
+    let indices: [UInt16]
 
     public init(_ pipeline: MetPipeline,
                 _ viaIndex: Bool) {
 
         self.viaIndex = viaIndex
+
+        let _0 = Float(-0.5) // position unit 0
+        let _1 = Float( 0.5) // position unit 1
+
+        vertices = [
+            _0,_1,_1, 1,  0,-1, 0, 0, // +Y
+            _1,_1,_1, 1,  0,-1, 0, 0,
+            _1,_1,_0, 1,  0,-1, 0, 0,
+            _0,_1,_0, 1,  0,-1, 0, 0,
+
+            _0,_0,_0, 1,  0, 1, 0, 0, // -Y
+            _1,_0,_0, 1,  0, 1, 0, 0,
+            _1,_0,_1, 1,  0, 1, 0, 0,
+            _0,_0,_1, 1,  0, 1, 0, 0,
+
+            _0,_0,_1, 1,  0, 0, 1, 0,  // +Z
+            _1,_0,_1, 1,  0, 0, 1, 0,
+            _1,_1,_1, 1,  0, 0, 1, 0,
+            _0,_1,_1, 1,  0, 0, 1, 0,
+
+            _1,_0,_0, 1,  0, 0, 1, 0, // -Z
+            _0,_0,_0, 1,  0, 0, 1, 0,
+            _0,_1,_0, 1,  0, 0, 1, 0,
+            _1,_1,_0, 1,  0, 0, 1, 0,
+
+            _0,_0,_0, 1,  1, 0, 0, 0, // -X
+            _0,_0,_1, 1,  1, 0, 0, 0,
+            _0,_1,_1, 1,  1, 0, 0, 0,
+            _0,_1,_0, 1,  1, 0, 0, 0,
+
+            _1,_0,_1, 1, -1, 0, 0, 0,  // +X
+            _1,_0,_0, 1, -1, 0, 0, 0,
+            _1,_1,_0, 1, -1, 0, 0, 0,
+            _1,_1,_1, 1, -1, 0, 0, 0,
+        ]
+        indices =  [
+            0,   2,  3,   2,  0,  1,
+            4,   6,  7,   6,  4,  5,
+            8,  10, 11,  10,  8,  9,
+            12, 14, 15,  14, 12, 13,
+            16, 18, 19,  18, 16, 17,
+            20, 22, 23,  22, 20, 21,
+        ]
+
         super.init(pipeline, "cubemap", "pipe.cubemap", .render)
 
         buildShader()
         buildResources()
     }
-
-    let vertices: [Float] =
-    [
-        // + Y
-        -0.5,  0.5,  0.5, 1.0,  0.0, -1.0,  0.0, 0.0,
-         +0.5,  0.5,  0.5, 1.0,  0.0, -1.0,  0.0, 0.0,
-         +0.5,  0.5, -0.5, 1.0,  0.0, -1.0,  0.0, 0.0,
-         -0.5,  0.5, -0.5, 1.0,  0.0, -1.0,  0.0, 0.0,
-         // -Y
-         -0.5, -0.5, -0.5, 1.0,  0.0,  1.0,  0.0, 0.0,
-         +0.5, -0.5, -0.5, 1.0,  0.0,  1.0,  0.0, 0.0,
-         +0.5, -0.5,  0.5, 1.0,  0.0,  1.0,  0.0, 0.0,
-         -0.5, -0.5,  0.5, 1.0,  0.0,  1.0,  0.0, 0.0,
-         // +Z
-         -0.5, -0.5,  0.5, 1.0,  0.0,  0.0, -1.0, 0.0,
-         +0.5, -0.5,  0.5, 1.0,  0.0,  0.0, -1.0, 0.0,
-         +0.5,  0.5,  0.5, 1.0,  0.0,  0.0, -1.0, 0.0,
-         -0.5,  0.5,  0.5, 1.0,  0.0,  0.0, -1.0, 0.0,
-         // -Z
-         +0.5, -0.5, -0.5, 1.0,  0.0,  0.0,  1.0, 0.0,
-         -0.5, -0.5, -0.5, 1.0,  0.0,  0.0,  1.0, 0.0,
-         -0.5,  0.5, -0.5, 1.0,  0.0,  0.0,  1.0, 0.0,
-         +0.5,  0.5, -0.5, 1.0,  0.0,  0.0,  1.0, 0.0,
-         // -X
-         -0.5, -0.5, -0.5, 1.0,  1.0,  0.0,  0.0, 0.0,
-         -0.5, -0.5,  0.5, 1.0,  1.0,  0.0,  0.0, 0.0,
-         -0.5,  0.5,  0.5, 1.0,  1.0,  0.0,  0.0, 0.0,
-         -0.5,  0.5, -0.5, 1.0,  1.0,  0.0,  0.0, 0.0,
-         // +X
-         +0.5, -0.5,  0.5, 1.0, -1.0,  0.0,  0.0, 0.0,
-         +0.5, -0.5, -0.5, 1.0, -1.0,  0.0,  0.0, 0.0,
-         +0.5,  0.5, -0.5, 1.0, -1.0,  0.0,  0.0, 0.0,
-         +0.5,  0.5,  0.5, 1.0, -1.0,  0.0,  0.0, 0.0,
-    ]
-
-    let indices: [UInt16] =
-    [ +0,   2,  3,   2,  0,  1,
-       +4,  6,  7,   6,  4,  5,
-       +8, 10, 11,  10,  8,  9,
-       12, 14, 15,  14, 12, 13,
-       16, 18, 19,  18, 16, 17,
-       20, 22, 23,  22, 20, 21,
-    ]
 
     func buildShader() {
 
@@ -120,10 +123,9 @@ public class MetNodeCubemap: MetNode {
         catch { print("🚫 \(#function) failed to create \(name), error \(error)") }
     }
 
-   
     func updateUniforms() {
         
-        guard let orientation = Motion.shared.sceneOrientation else { return }
+        let orientation = Motion.shared.updateDeviceOrientation()
         let perspective = pipeline.perspective()
         let viewModel = orientation * identity
         let projectModel = perspective * viewModel
@@ -138,13 +140,13 @@ public class MetNodeCubemap: MetNode {
         if viaIndex {
             cubeTex = makeIndexCube(pipeline.drawSize)
         } else {
-            cubeTex = makeCube(["front", "front",
-                                "top",   "bottom",
-                                "front", "front"], pipeline.device)
+            cubeTex = makeImageCube(["front", "front",
+                                     "top",   "bottom",
+                                     "front", "front"], pipeline.device)
             //cubeTexture = makeCube(["px","nx","py","ny","pz","nz"], device)
         }
-        cubeSamplr = pipeline.makeSampler(normalized: false)  
-        imageSamplr = pipeline.makeSampler(normalized: false)
+        cubeSamplr = pipeline.makeSampler(normalized: true)
+        imageSamplr = pipeline.makeSampler(normalized: true)
 
         let verticesLen = 24 * 8 * MemoryLayout<Float>.size
         let indicesLen = 36 * MemoryLayout<UInt16>.size
@@ -155,13 +157,11 @@ public class MetNodeCubemap: MetNode {
         uniformBuf = pipeline.device.makeBuffer(
             length: MemoryLayout<MetUniforms>.size * 2,
             options: .cpuCacheModeWriteCombined)!
-
     }
-
 
     func drawIndexCube(_ renderEnc: MTLRenderCommandEncoder) {
         guard let cubeTex else { return }
-        guard let altTex else { return }
+        guard let inTex else { return }
 
         let indexLength = indexBuf.length
         let indexCount = indexLength / MemoryLayout<UInt16>.stride
@@ -173,9 +173,9 @@ public class MetNodeCubemap: MetNode {
         renderEnc.setVertexBuffer(uniformBuf, offset: 0, index: 1)
 
         renderEnc.setFragmentTexture(cubeTex, index: 0)
+        renderEnc.setFragmentTexture(inTex, index: 1)
+        
         renderEnc.setFragmentSamplerState(cubeSamplr, index: 0)
-
-        renderEnc.setFragmentTexture(altTex, index: 1)
         renderEnc.setFragmentSamplerState(imageSamplr, index: 1)
 
         renderEnc.drawIndexedPrimitives(
@@ -185,6 +185,7 @@ public class MetNodeCubemap: MetNode {
             indexBuffer: indexBuf,
             indexBufferOffset: 0)
     }
+
     func drawColorCube(_ renderEnc: MTLRenderCommandEncoder) {
         guard let cubeTex else { return }
 
@@ -207,8 +208,9 @@ public class MetNodeCubemap: MetNode {
             indexBuffer       : indexBuf,
             indexBufferOffset : 0)
     }
-    func makeCube(_ names: [String],
-                  _ device: MTLDevice) -> MTLTexture {
+
+    func makeImageCube(_ names: [String],
+                       _ device: MTLDevice) -> MTLTexture {
 
         let image0 = UIImage(named: names[0])!
         let imageW = Int(image0.size.width)
@@ -246,7 +248,7 @@ public class MetNodeCubemap: MetNode {
         guard let cubeDex else { return nil }
 
         let td = MTLTextureDescriptor
-            .textureCubeDescriptor(pixelFormat : .rg16Sint,
+            .textureCubeDescriptor(pixelFormat : .rg16Float,
                                    size        : cubeDex.side,
                                    mipmapped   : true)
         let texture = pipeline.device.makeTexture(descriptor: td)!
@@ -277,14 +279,12 @@ public class MetNodeCubemap: MetNode {
 
     override public func renderCommand(_ renderEnc: MTLRenderCommandEncoder) {
 
-        if isOn {
-            if viaIndex {
-                if altTex != nil {
-                    drawIndexCube(renderEnc)
-                }
-            } else {
-                drawColorCube(renderEnc)
+        if viaIndex {
+            if inTex != nil {
+                drawIndexCube(renderEnc)
             }
+        } else {
+            drawColorCube(renderEnc)
         }
     }
 
@@ -292,7 +292,6 @@ public class MetNodeCubemap: MetNode {
 
         updateUniforms()
         inTex = inNode?.outTex // render to screen
-        altTex = inNode?.altTex
     }
 
 }

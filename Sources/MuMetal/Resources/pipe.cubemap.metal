@@ -17,6 +17,7 @@ struct CubemapUniforms {
 };
 
 // MARK: - vertex
+
 vertex Vertex3D cubemapVertex
 (
  device Vertex const*      vertices  [[ buffer(0) ]],
@@ -28,37 +29,40 @@ vertex Vertex3D cubemapVertex
     Vertex3D out;
     out.position = uniforms.projectModel * position;
     out.texCoords = position;
+
     return out;
 }
 // MARK: - fragment
+
 fragment half4 cubemapIndex
 (
- Vertex3D             in          [[ stage_in ]],
- texturecube<int16_t> cubeTex     [[ texture(0) ]],
- texture2d<half>      altTex      [[ texture(1) ]],
- sampler              cubeSamplr  [[ sampler(0) ]],
- sampler              altSamplr   [[ sampler(1) ]])
+ Vertex3D           in          [[ stage_in   ]],
+ texturecube<half>  cubeTex     [[ texture(0) ]],
+ texture2d<half>    inTex       [[ texture(1) ]],
+ constant float2&   repeat      [[ buffer(0)  ]],
+ constant float2&   mirror      [[ buffer(1)  ]],
+ sampler            cubeSamplr  [[ sampler(0) ]],
+ sampler            inSamplr    [[ sampler(1) ]])
 {
     float3 cubeCoords = float3(in.texCoords.x,
                                in.texCoords.y,
                                -in.texCoords.z);
 
-    short4 index = cubeTex.sample(cubeSamplr, cubeCoords);
+    half4 index = cubeTex.sample(cubeSamplr, cubeCoords);
     float2 texCoords = float2(index.xy);
-    return altTex.sample(altSamplr, texCoords);
+
+    return inTex.sample(inSamplr, texCoords);
 }
 
 fragment half4 cubemapColor
 (
- Vertex3D          in      [[ stage_in ]],
- texturecube<half> cubeTex [[ texture(0) ]],
- sampler           samplr  [[ sampler(0) ]])
+ Vertex3D           in      [[ stage_in   ]],
+ texturecube<half>  cubeTex [[ texture(0) ]],
+ sampler            samplr  [[ sampler(0) ]])
 {
     float3 cubeCoords = float3(in.texCoords.x,
                                in.texCoords.y,
                                -in.texCoords.z);
 
-    half4 color = cubeTex.sample(samplr, cubeCoords);
-
-    return color;
+    return cubeTex.sample(samplr, cubeCoords);
 }
