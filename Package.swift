@@ -1,5 +1,4 @@
 // swift-tools-version: 5.7
-// The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
@@ -22,8 +21,7 @@ let package = Package(
                 .product(name: "MuPar", package: "MuPar"),
                 .product(name: "MuFlo", package: "MuFlo"),
             ],
-            resources: [
-                .copy("Resources")]),
+            resources: [.copy("Resources")]),
         .testTarget(
             name: "MuMetalTests",
             dependencies: ["MuMetal"]),
