@@ -1,10 +1,6 @@
-//
-//  Matrix4x4+ext.swift
-//  Platonix
-//
 //  Created by warren on 3/1/23.
 //  Copyright © 2023 com.deepmuse. All rights reserved.
-//
+
 
 import simd
 import GLKit

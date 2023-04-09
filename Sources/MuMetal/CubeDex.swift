@@ -1,10 +1,6 @@
-//
-//  CubeCopy.swift
-//  Platonix
-//
 //  Created by warren on 3/2/23.
 //  Copyright © 2023 com.deepmuse. All rights reserved.
-//
+
 
 import Foundation
 

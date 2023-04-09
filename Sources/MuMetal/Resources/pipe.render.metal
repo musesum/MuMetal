@@ -45,29 +45,31 @@ fragment half4 renderColor
  sampler          samplr [[ sampler(0) ]])
 {
 
-    float2 modulo;
-    float2 repeati = max(0.005, 1. - repeat);
+    float2 inCoord = in.texCoord;
+
+    float2 mod;
+    float2 reps = max(0.005, 1. - repeat);
 
     if (mirror.x < -0.5) {
-        modulo.x = fmod(in.texCoord.x, repeati.x);
-    }
-    // mirror repeati x
-    else {
-        modulo.x = fmod(in.texCoord.x, repeati.x * (1 + mirror.x));
-        if (modulo.x > repeati.x) {
-            modulo.x = (repeati.x * (1 + mirror.x) - modulo.x) / fmax(0.0001, mirror.x);
+        mod.x = fmod(inCoord.x, reps.x);
+    } else {
+        // mirror repeati x
+        mod.x = fmod(inCoord.x, reps.x * (1 + mirror.x));
+        if (mod.x > reps.x) {
+            mod.x = ((reps.x * (1 + mirror.x) - mod.x)
+                     / fmax(0.0001, mirror.x));
         }
     }
     if (mirror.y < -0.5) {
-        modulo.y = fmod(in.texCoord.y, repeati.y);
+        mod.y = fmod(inCoord.y, reps.y);
     } else {
-        modulo.y = fmod(in.texCoord.y, repeati.y * (1 + mirror.y));
-        if (modulo.y > repeati.y) {
-            modulo.y = (repeati.y * (1 + mirror.y) - modulo.y) / fmax(0.0001, mirror.y);
+        mod.y = fmod(inCoord.y, reps.y * (1 + mirror.y));
+        if (mod.y > reps.y) {
+            mod.y = ((reps.y * (1 + mirror.y) - mod.y)
+                     / fmax(0.0001, mirror.y));
         }
     }
-    float2 normalized = modulo / repeati; //float2(modulo.x/repeati.x, modulo.y/repeati.y);
-
-    return inTex.sample(samplr, normalized);
+    float2 texCoord = mod / reps;
+    return inTex.sample(samplr, texCoord);
 }
 

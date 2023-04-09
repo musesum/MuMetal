@@ -1,10 +1,6 @@
-//
-//  AngleColors.swift
-//  Platonix
-//
 //  Created by warren on 2/21/23.
 //  Copyright © 2023 com.deepmuse. All rights reserved.
-//
+
 
 import Foundation
 

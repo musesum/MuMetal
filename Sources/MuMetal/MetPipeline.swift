@@ -172,10 +172,9 @@ extension MetPipeline: MTKViewDelegate {
     /// used by MetNodeCubemap
     public func makeSampler(normalized: Bool) -> MTLSamplerState{
         let sd = MTLSamplerDescriptor()
-        sd.minFilter = .nearest
-        sd.magFilter = .nearest
-        sd.maxAnisotropy = normalized ? 4 : 1 //??? 
-
+        sd.minFilter = .linear
+        sd.magFilter = .linear
+    
         // normalized: 0..1, otherwise 0..width, 0..height.
         sd.supportArgumentBuffers = normalized
         sd.normalizedCoordinates = normalized

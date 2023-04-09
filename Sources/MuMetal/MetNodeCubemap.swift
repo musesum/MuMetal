@@ -1,10 +1,6 @@
-//
-//  MetNodeCubemap.swift
-//  Platonix
-//
 //  Created by warren on 3/16/23.
 //  Copyright © 2023 com.deepmuse. All rights reserved.
-//
+
 
 import UIKit
 import Metal
@@ -32,7 +28,7 @@ public class MetNodeCubemap: MetNode {
 
     public var cubeTex: MTLTexture?
     public var cubeSamplr: MTLSamplerState!
-    public var imageSamplr: MTLSamplerState!
+    public var inSamplr: MTLSamplerState!
     var renderState: MTLRenderPipelineState!
     var cubeDex: CubeDex?
     let viaIndex: Bool
@@ -146,7 +142,7 @@ public class MetNodeCubemap: MetNode {
             //cubeTexture = makeCube(["px","nx","py","ny","pz","nz"], device)
         }
         cubeSamplr = pipeline.makeSampler(normalized: true)
-        imageSamplr = pipeline.makeSampler(normalized: true)
+        inSamplr = pipeline.makeSampler(normalized: true)
 
         let verticesLen = 24 * 8 * MemoryLayout<Float>.size
         let indicesLen = 36 * MemoryLayout<UInt16>.size
@@ -159,35 +155,7 @@ public class MetNodeCubemap: MetNode {
             options: .cpuCacheModeWriteCombined)!
     }
 
-    func drawIndexCube(_ renderEnc: MTLRenderCommandEncoder) {
-        guard let cubeTex else { return }
-        guard let inTex else { return }
-
-        let indexLength = indexBuf.length
-        let indexCount = indexLength / MemoryLayout<UInt16>.stride
-
-        renderEnc.setRenderPipelineState(renderState)
-        renderEnc.setDepthStencilState(pipeline.depthStencil(write: false))
-
-        renderEnc.setVertexBuffer(vertexBuf , offset: 0, index: 0)
-        renderEnc.setVertexBuffer(uniformBuf, offset: 0, index: 1)
-
-        renderEnc.setFragmentTexture(cubeTex, index: 0)
-        renderEnc.setFragmentTexture(inTex, index: 1)
-        
-        renderEnc.setFragmentSamplerState(cubeSamplr, index: 0)
-        renderEnc.setFragmentSamplerState(imageSamplr, index: 1)
-
-        renderEnc.drawIndexedPrimitives(
-            type: .triangle,
-            indexCount: indexCount,
-            indexType: .uint16,
-            indexBuffer: indexBuf,
-            indexBufferOffset: 0)
-    }
-
-    func drawColorCube(_ renderEnc: MTLRenderCommandEncoder) {
-        guard let cubeTex else { return }
+    func drawCube(_ renderEnc: MTLRenderCommandEncoder) {
 
         let indexLength = indexBuf.length
         let indexCount = indexLength / MemoryLayout<UInt16>.stride
@@ -200,6 +168,10 @@ public class MetNodeCubemap: MetNode {
 
         renderEnc.setFragmentTexture(cubeTex, index: 0)
         renderEnc.setFragmentSamplerState(cubeSamplr, index: 0)
+
+        for buf in nameBuffer.values {
+            renderEnc.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
+        }
 
         renderEnc.drawIndexedPrimitives(
             type              : .triangle,
@@ -207,6 +179,14 @@ public class MetNodeCubemap: MetNode {
             indexType         : .uint16,
             indexBuffer       : indexBuf,
             indexBufferOffset : 0)
+    }
+    func drawIndexCube(_ renderEnc: MTLRenderCommandEncoder) {
+        guard let inTex else { return }
+
+        renderEnc.setFragmentTexture(inTex, index: 1)
+        renderEnc.setFragmentSamplerState(inSamplr, index: 1)
+
+        drawCube(renderEnc)
     }
 
     func makeImageCube(_ names: [String],
@@ -284,14 +264,20 @@ public class MetNodeCubemap: MetNode {
                 drawIndexCube(renderEnc)
             }
         } else {
-            drawColorCube(renderEnc)
+            drawCube(renderEnc)
         }
     }
 
     override public func setupInOutTextures(via: String) {
 
         updateUniforms()
-        inTex = inNode?.outTex // render to screen
+        if let inNode {
+
+            switch inNode.name {
+                case "camix", "camera": inTex = inNode.altTex
+                default: inTex = inNode.outTex
+            }
+        }
     }
 
 }

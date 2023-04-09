@@ -1,7 +1,3 @@
-//
-//  Image+ext.swift
-//  Platonix
-//
 //  Created by warren on 2/18/23.
 //  Copyright © 2023 com.deepmuse. All rights reserved.
 

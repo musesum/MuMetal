@@ -1,9 +1,5 @@
-//  Motion.swift
-//  Platonix
-//
 //  Created by warren on 2/28/23.
 //  Copyright © 2023 com.deepmuse. All rights reserved.
-
 
 import Foundation
 import CoreMotion
@@ -35,7 +31,7 @@ public class Motion {
     @discardableResult
     public func updateDeviceOrientation() -> matrix_float4x4 {
 
-        return identity //???
+        //??? return identity //???
         
         if  let motion,  motion.isDeviceMotionAvailable,
             let deviceMotion = motion.deviceMotion {
@@ -76,7 +72,6 @@ extension UIDeviceOrientation {
             case .portraitUpsideDown:   return rpy(-a.roll , -a.pitch, a.yaw)
             case .landscapeRight:       return rpy(-a.pitch,  a.roll , a.yaw)
             default:                    return rpy( a.roll , -a.pitch, a.yaw)
-
         }
     }
     func rotatation() -> Float {

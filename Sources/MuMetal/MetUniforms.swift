@@ -1,7 +1,3 @@
-//
-//  MetUniforms.swift
-//  Platonix
-//
 //  Created by warren on 4/5/23.
 //  Copyright © 2023 com.deepmuse. All rights reserved.
 
