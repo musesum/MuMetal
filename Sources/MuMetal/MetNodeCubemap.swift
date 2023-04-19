@@ -258,13 +258,14 @@ public class MetNodeCubemap: MetNode {
     }
 
     override public func renderCommand(_ renderEnc: MTLRenderCommandEncoder) {
-
-        if viaIndex {
-            if inTex != nil {
-                drawIndexCube(renderEnc)
+        if isOn { 
+            if viaIndex {
+                if inTex != nil {
+                    drawIndexCube(renderEnc)
+                }
+            } else {
+                drawCube(renderEnc)
             }
-        } else {
-            drawCube(renderEnc)
         }
     }
 
