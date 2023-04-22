@@ -11,7 +11,7 @@ public class MetNodeRecord: MetNodeCompute {
     var inputPixelBufferAdaptor: AVAssetWriterInputPixelBufferAdaptor?
     
     public init(_ pipeline: MetPipeline,
-                _ filename: String = "pipe.record") {
+                _ filename: String = "compute.record") {
         
         super.init(pipeline, "record", filename)
         // placeholder nameIndex["record"] = 0

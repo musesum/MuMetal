@@ -17,7 +17,7 @@ public class MetNodeColor: MetNodeCompute {
     public init(_ pipeline: MetPipeline,
                 _ getPal: @escaping GetTextureFunc) {
 
-        super.init(pipeline, "color", "pipe.color")
+        super.init(pipeline, "color", "compute.color")
         self.getPal = getPal
     }
 

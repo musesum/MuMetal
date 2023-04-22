@@ -30,7 +30,7 @@ struct Vert01 {
 };
 
 
-vertex PlatoVertex platoVertex
+vertex PlatoVertex plato
 (
  device Vert01 const*  vert01   [[ buffer(0) ]],
  constant MetUniforms& uniforms [[ buffer(1) ]],

@@ -83,7 +83,7 @@ public class MetNodeCubemap: MetNode {
             20, 22, 23,  22, 20, 21,
         ]
 
-        super.init(pipeline, "cubemap", "pipe.cubemap", .render)
+        super.init(pipeline, "cubemap", "render.cubemap", .render)
 
         buildShader()
         buildResources()
@@ -91,7 +91,7 @@ public class MetNodeCubemap: MetNode {
 
     func buildShader() {
 
-        let vertexName = "cubemapVertex"
+        let vertexName = "cubemap"
         let fragmentName = (viaIndex
                             ? "cubemapIndex"
                             : "cubemapColor")
@@ -258,7 +258,7 @@ public class MetNodeCubemap: MetNode {
     }
 
     override public func renderCommand(_ renderEnc: MTLRenderCommandEncoder) {
-        if isOn { 
+        if isOn {
             if viaIndex {
                 if inTex != nil {
                     drawIndexCube(renderEnc)

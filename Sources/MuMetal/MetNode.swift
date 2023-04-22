@@ -65,6 +65,7 @@ open class MetNode: Equatable {
         }
         if let data = MuMetal.read(filename, "metal") {
             do {
+                print("makeLibrary: \(name)")
                 library = try pipeline.device
                     .makeLibrary(source: data,
                                  options: MTLCompileOptions())
@@ -125,8 +126,8 @@ open class MetNode: Equatable {
                                _ completion: @escaping ()->()) {
         if self.isOn != isOn {
             self.isOn = isOn
-            completion()
         }
+        completion()
     }
     open func setupInOutTextures(via: String) {
 

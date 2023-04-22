@@ -1,4 +1,4 @@
-// pipe.render.metal
+// render.flatmap.metal
 
 #include <metal_stdlib>
 #include <simd/simd.h>
@@ -16,7 +16,7 @@ struct MetVertex {
 };
 
 // MARK: - vertex
-vertex Vertex2D renderVertex
+vertex Vertex2D flatmap
 (
  constant MetVertex*  vertices  [[ buffer(0) ]],
  constant float2&     viewSize  [[ buffer(1) ]],
@@ -36,12 +36,12 @@ vertex Vertex2D renderVertex
 }
 
 // MARK: - fragment
-fragment half4 renderColor
+fragment half4 flatmapColor
 (
  Vertex2D         in     [[ stage_in   ]],
  texture2d<half>  inTex  [[ texture(0) ]],
- constant float2& repeat [[ buffer(1) ]],
- constant float2& mirror [[ buffer(2) ]],
+ constant float2& repeat [[ buffer(1)  ]],
+ constant float2& mirror [[ buffer(2)  ]],
  sampler          samplr [[ sampler(0) ]])
 {
 

@@ -1,9 +1,4 @@
-//
-//  File.swift
-//  
-//
 //  Created by warren on 3/25/23.
-//
 
 import Foundation
 import Metal

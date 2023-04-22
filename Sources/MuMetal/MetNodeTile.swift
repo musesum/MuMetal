@@ -7,7 +7,7 @@ open class MetNodeTile: MetNodeCompute {
     public init(_ pipeline: MetPipeline,
                          _ name: String) {
 
-        super.init(pipeline, name, "pipe.tile")
+        super.init(pipeline, name, "compute.tile")
     }
 
     // cellular automata uses double buffering

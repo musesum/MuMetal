@@ -11,7 +11,7 @@ public class MetNodeDraw: MetNodeCompute {
     public init(_ pipeline: MetPipeline,
                 _ drawFunc: @escaping DrawTextureFunc) {
 
-        super.init(pipeline, "draw", "pipe.draw")
+        super.init(pipeline, "draw", "compute.draw")
         self.drawFunc = drawFunc
     }
 

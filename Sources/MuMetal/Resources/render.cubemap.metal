@@ -18,7 +18,7 @@ struct CubemapUniforms {
 
 // MARK: - vertex
 
-vertex Vertex3D cubemapVertex
+vertex Vertex3D cubemap
 (
  device Vertex const*      vertices  [[ buffer(0) ]],
  constant CubemapUniforms  &uniforms [[ buffer(1) ]],
@@ -84,8 +84,8 @@ fragment half4 cubemapColor
  sampler            samplr  [[ sampler(0) ]])
 {
     float3 cubeCoord = float3(vin.texCoord.x,
-                               vin.texCoord.y,
-                               -vin.texCoord.z);
+                              vin.texCoord.y,
+                              -vin.texCoord.z);
 
     return cubeTex.sample(samplr, cubeCoord);
 }

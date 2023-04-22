@@ -67,29 +67,29 @@ extension MetNode {
         }
         return self
     }
+    @discardableResult
+    public func replace(with newNode: MetNode) -> MetNode? {
 
-    public func replace(with newNode: MetNode?) -> MetNode? {
+        // ignore replaceing self with self
+        if newNode.id == self.id { return self }
 
-        if newNode == self { return self }
+        // ignore false positive, where self is not in pipeline
+        if inNode == nil, outNode == nil { return newNode }
 
-        if let n = newNode {
+        newNode.inTex = inTex
+        newNode.outTex = outTex
+        newNode.altTex = altTex
+        newNode.outNode = outNode
+        newNode.inNode = inNode
+        newNode.pipeline.drawSize = pipeline.drawSize
 
-            n.inTex = inTex
-            n.outTex = outTex
-            n.altTex = altTex
-            n.outNode = outNode
-            n.inNode = inNode
-            n.pipeline.drawSize = pipeline.drawSize
-
-            if  inNode?.outNode?.id == id {
-                inNode?.outNode = newNode
-            }
-            if  outNode?.inNode?.id == id {
-                outNode?.inNode = newNode
-            }
-            return n
+        if  inNode?.outNode?.id == id {
+            inNode?.outNode = newNode
         }
-        return self
+        if  outNode?.inNode?.id == id {
+            outNode?.inNode = newNode
+        }
+        return newNode
     }
 
 

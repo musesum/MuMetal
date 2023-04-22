@@ -5,7 +5,7 @@ import Metal
 import MetalKit
 import QuartzCore
 
-public class MetNodeRender: MetNode {
+public class MetNodeFlatmap: MetNode {
 
     private var renderState: MTLRenderPipelineState?
 
@@ -22,9 +22,9 @@ public class MetNodeRender: MetNode {
     private var clipFrame = SIMD4<Float>(repeating: 0) // clip rect
 
     public init(_ pipeline: MetPipeline,
-                _ filename: String = "pipe.render") {
+                _ filename: String = "render.flatmap") {
 
-        super.init(pipeline, "render", filename, .render)
+        super.init(pipeline, "flatmap", filename, .render)
 
         buildResources()
         buildShader()
@@ -62,8 +62,8 @@ public class MetNodeRender: MetNode {
     }
 
     func buildShader() {
-        let vertexName = "renderVertex"
-        let fragmentName = "renderColor"
+        let vertexName = "flatmap"
+        let fragmentName = "flatmapColor"
 
         guard let vertexFunc = library.makeFunction(name: vertexName) else { return err(vertexName)}
         guard let fragmentFunc = library.makeFunction(name: fragmentName) else { return err(fragmentName) }

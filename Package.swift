@@ -19,8 +19,7 @@ let package = Package(
             name: "MuMetal",
             dependencies: [
                 .product(name: "MuPar", package: "MuPar"),
-                .product(name: "MuFlo", package: "MuFlo"),
-            ],
+                .product(name: "MuFlo", package: "MuFlo")],
             resources: [.copy("Resources")]),
         .testTarget(
             name: "MuMetalTests",

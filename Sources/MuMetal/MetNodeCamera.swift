@@ -7,7 +7,7 @@ import UIKit
 public class MetNodeCamix: MetNodeCamera {
     
     public init(_ pipeline: MetPipeline) {
-        super.init(pipeline, "camix", "pipe.camix")
+        super.init(pipeline, "camix", "compute.camix")
     }
 }
 
@@ -17,7 +17,7 @@ public class MetNodeCamera: MetNodeCompute {
     
     override public init(_ pipeline  : MetPipeline,
                 _ name      : String = "camera",
-                _ filename  : String = "pipe.camera") {
+                _ filename  : String = "compute.camera") {
 
         super.init(pipeline, name, filename)
         setupSampler()
