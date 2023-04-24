@@ -19,7 +19,7 @@ open class MetPipeline: NSObject {
     public var mtlCommand: MTLCommandQueue!  // queue w/ command buffers
 
     public var nodes = [MetNode]()
-    public var nodeNamed = [String: MetNode]() //???  find node by name
+    public var nodeNamed = [String: MetNode]() //??  find node by name
     public var firstNode: MetNode?    // 1st node in renderer chain
     public var flatmapNode: MetNode?  // render 2d to screen
     public var cubemapNode: MetNodeCubemap?  // render cubemap to screen

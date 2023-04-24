@@ -31,7 +31,7 @@ public class Motion {
     @discardableResult
     public func updateDeviceOrientation() -> matrix_float4x4 {
 
-        //??? return identity //???
+        //?? return identity //??
         
         if  let motion,  motion.isDeviceMotionAvailable,
             let deviceMotion = motion.deviceMotion {

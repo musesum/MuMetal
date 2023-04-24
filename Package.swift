@@ -20,7 +20,7 @@ let package = Package(
             dependencies: [
                 .product(name: "MuPar", package: "MuPar"),
                 .product(name: "MuFlo", package: "MuFlo")],
-            resources: [.copy("Resources")]),
+            resources: [.process("Resources")]),
         .testTarget(
             name: "MuMetalTests",
             dependencies: ["MuMetal"]),
