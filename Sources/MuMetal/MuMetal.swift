@@ -11,7 +11,7 @@ public class MuMetal {
                             _ ext: String) -> String? {
 
         guard let path = Bundle.module.path(forResource: filename, ofType: ext)  else {
-            print("🚫 MuMeta::read couldn't find file: \(filename).\(ext)")
+            print("🚫 MuMetal::read couldn't find file: \(filename).\(ext)")
             return nil
         }
         do {
