@@ -34,6 +34,7 @@ public class MetNodeCubemap: MetNode {
     let viaIndex: Bool
     let vertices: [Float]
     let indices: [UInt16]
+ 
 
     public init(_ pipeline: MetPipeline,
                 _ viaIndex: Bool) {

@@ -17,10 +17,9 @@ open class MetPipeline: NSObject {
     public var library: MTLLibrary?
 
     public var mtlCommand: MTLCommandQueue!  // queue w/ command buffers
-
-    public var nodes = [MetNode]()
     public var nodeNamed = [String: MetNode]() //??  find node by name
     public var firstNode: MetNode?    // 1st node in renderer chain
+    public var lastNode: MetNode?
     public var flatmapNode: MetNode?  // render 2d to screen
     public var cubemapNode: MetNodeCubemap?  // render cubemap to screen
 
@@ -86,6 +85,13 @@ open class MetPipeline: NSObject {
     open func setupPipeline() {
         print("\(#function) override me")
     }
+    public func updateLastNode() {
+        var node = firstNode
+        while let outNode = node?.outNode {
+            node = outNode
+        }
+        lastNode = node
+    }
 }
 
 extension MetPipeline: MTKViewDelegate {
@@ -137,19 +143,20 @@ extension MetPipeline: MTKViewDelegate {
             }
         }
     }
-    public func assemblePipeline() {
-        firstNode = nodes.first
-        if let firstNode {
-            var prevNode = firstNode
-            for i in 1 ..< nodes.count {
-                let node = nodes[i]
 
-                node.inNode = prevNode
-                prevNode.outNode = node
-                prevNode = node
-            }
-        }
-    }
+//    public func assemblePipeline() {
+//        firstNode = nodes.first
+//        if let firstNode {
+//            var prevNode = firstNode
+//            for i in 1 ..< nodes.count {
+//                let node = nodes[i]
+//
+//                node.inNode = prevNode
+//                prevNode.outNode = node
+//                prevNode = node
+//            }
+//        }
+//    }
 
     public func perspective() -> simd_float4x4 {
         let size = metalLayer.drawableSize
