@@ -25,7 +25,7 @@ public class MetTexCache {
         return nil
     }
 
-    static func makeTexturePixelFormat(_ pixelFormat: MTLPixelFormat, size: CGSize, device: MTLDevice?) -> MTLTexture? {
+    public static func makeTexturePixelFormat(_ pixelFormat: MTLPixelFormat, size: CGSize, device: MTLDevice?) -> MTLTexture? {
 
         var tex = recycleTextureFormat(pixelFormat, size: size)
 

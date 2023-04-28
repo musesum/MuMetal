@@ -32,13 +32,13 @@ struct Vert01 {
 
 vertex PlatoVertex plato
 (
- device Vert01 const*  vert01   [[ buffer(0) ]],
- constant MetUniforms& uniforms [[ buffer(1) ]],
- uint32_t vid                   [[ vertex_id ]])
+ device Vert01 const*           vert01   [[ buffer(0) ]],
+ constant MetUniforms&          uniforms [[ buffer(1) ]],
+ texture2d<half, access::read>  palTex   [[ texture(1) ]],
+ uint32_t vid                            [[ vertex_id ]])
 {
     float4 p0    = vert01[vid].p0;
     float4 p1    = vert01[vid].p1;
-    //float4 extra = vert01[vid].extra; // used for debugging
     float4 color = vert01[vid].color;
     float4 n0    = vert01[vid].n0;
     float4 n1    = vert01[vid].n1;
@@ -67,8 +67,10 @@ fragment half4 platoCubeIndex
  PlatoVertex        vert        [[ stage_in   ]],
  texturecube<half>  cubeTex     [[ texture(0) ]],
  texture2d<half>    inTex       [[ texture(1) ]],
+ texture2d<half>    palTex      [[ texture(2) ]],
  sampler            cubeSamplr  [[ sampler(0) ]],
- sampler            inSamplr    [[ sampler(1) ]])
+ sampler            inSamplr    [[ sampler(1) ]],
+ sampler            palSamplr   [[ sampler(2) ]])
 {
     float3 cubeCoords = float3(vert.texCoords.x,
                                vert.texCoords.y,

@@ -12,7 +12,7 @@ public typealias GetTextureFunc = ((_ size: Int) -> (UnsafeMutablePointer<UInt32
 
 public class MetNodeColor: MetNodeCompute {
 
-    private var getPal: GetTextureFunc?
+    public var getPal: GetTextureFunc?
 
     public init(_ pipeline: MetPipeline,
                 _ getPal: @escaping GetTextureFunc) {

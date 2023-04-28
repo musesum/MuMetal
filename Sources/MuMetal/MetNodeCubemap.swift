@@ -29,6 +29,7 @@ public class MetNodeCubemap: MetNode {
     public var cubeTex: MTLTexture?
     public var cubeSamplr: MTLSamplerState!
     public var inSamplr: MTLSamplerState!
+
     var renderState: MTLRenderPipelineState!
     var cubeDex: CubeDex?
     let viaIndex: Bool
