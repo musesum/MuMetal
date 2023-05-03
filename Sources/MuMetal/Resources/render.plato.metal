@@ -8,7 +8,7 @@ struct PlatoVertex {
     float4 position [[ position ]];
     float4 texCoords;
     float4 color;
-    float4 shade;
+    float4 shadow;
 };
 
 struct MetUniforms {
@@ -85,10 +85,10 @@ vertex PlatoVertex plato
     outVert.position = uniforms.projectModel * pos;
     outVert.texCoords = reflect(eyeDirection, worldNorm);
     outVert.color = float4(faceId,uniforms.range01.zw,0);
-    outVert.shade = float4(uniforms.shadow.x,
+    outVert.shadow = float4(uniforms.shadow.x,
                            uniforms.shadow.y,
-                           harmonic, 0);
-
+                           uniforms.shadow.z,
+                           harmonic);
     return outVert;
 }
 /// texturecube has index to a texture2d
@@ -119,10 +119,11 @@ fragment half4 platoCubeIndex
     half4 reflect = inTex.sample(inSamplr, float2(cubeIndex.xy));
 
     const half3 mix = half3((reflect * mixAlpha) + palette * (1.0-mixAlpha));
-
-    float gray =  vert.shade.x;
-    float harmonic = vert.shade.z;
-    float alpha = vert.shade.y * harmonic;
+    const float count = 6;
+    float gray     = vert.shadow.x;
+    float harmonic = vert.shadow.w;
+    float inverse  = vert.shadow.z * count;
+    float alpha    = vert.shadow.y * abs(harmonic-inverse);
 
     half3 shaded = (mix * (1-alpha) + gray * alpha);
 
