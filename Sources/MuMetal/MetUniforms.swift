@@ -10,21 +10,16 @@ public struct MetUniforms {
     public var inverse      : matrix_float4x4
     public var projectModel : matrix_float4x4
     public var worldCamera  : vector_float4
-    public var range01      : vector_float4
-    public var shadow       : vector_float4
+
 
     public init(identity     : matrix_float4x4,
                 inverse      : matrix_float4x4,
                 projectModel : matrix_float4x4,
-                worldCamera  : vector_float4,
-                range01      : vector_float4,
-                shadow       : vector_float4) {
+                worldCamera  : vector_float4) {
 
         self.identity     = identity
         self.inverse      = inverse
         self.projectModel = projectModel
         self.worldCamera  = worldCamera
-        self.range01      = range01
-        self.shadow       = shadow
     }
 }

@@ -35,7 +35,10 @@ public class MetNodeColor: MetNodeCompute {
             let palRegion = MTLRegionMake3D(0, 0, 0, palSize, 1, 1)
             let bytesPerRow = palSize * pixSize
             let palBytes = getPal(palSize)
-            altTex.replace(region: palRegion, mipmapLevel: 0, withBytes: palBytes, bytesPerRow: bytesPerRow)
+            altTex.replace(region: palRegion,
+                           mipmapLevel: 0,
+                           withBytes: palBytes,
+                           bytesPerRow: bytesPerRow)
         }
         func makePaletteTex() -> MTLTexture? {
             

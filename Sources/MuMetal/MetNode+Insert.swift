@@ -6,7 +6,8 @@ extension MetNode {
 
     @discardableResult
     public func insert(before: MetNode?) -> MetNode? {
-        if let before = before {
+        if let before {
+            if before.id == self.id { return self }
             inNode = before.inNode
             outNode = before
             before.inNode = self
@@ -16,7 +17,8 @@ extension MetNode {
     
     @discardableResult
     public func insert(after: MetNode?) -> MetNode {
-        if let after = after {
+        if let after {
+            if after.id == self.id { return self }
             inNode = after
             // avoid creating a loop if already inserted before
             if after.outNode != self {

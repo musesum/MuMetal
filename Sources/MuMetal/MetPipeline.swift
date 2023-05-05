@@ -31,9 +31,12 @@ open class MetPipeline: NSObject {
     private var commandBuf: MTLCommandBuffer?
     private var renderEnc: MTLRenderCommandEncoder?
     private var computeEnc: MTLComputeCommandEncoder?
-    
-    private var depthTex: MTLTexture!
 
+
+    private var tripleBuffer = DispatchSemaphore(value: 3)
+    private var tripleIndex = 0
+
+    private var depthTex: MTLTexture!
     public var settingUp = true        // ignore swapping in new shaders
 
     public override init() {
@@ -111,12 +114,12 @@ extension MetPipeline: MTKViewDelegate {
         let rp = MTLRenderPassDescriptor()
 
         rp.colorAttachments[0].texture = drawable.texture
-        rp.colorAttachments[0].loadAction = .clear
+        rp.colorAttachments[0].loadAction = .dontCare
         rp.colorAttachments[0].storeAction = .store
         rp.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 1)
 
         rp.depthAttachment.texture = self.depthTex
-        rp.depthAttachment.loadAction = .clear
+        rp.depthAttachment.loadAction = .dontCare
         rp.depthAttachment.storeAction = .dontCare
         rp.depthAttachment.clearDepth = 1
 
@@ -135,7 +138,7 @@ extension MetPipeline: MTKViewDelegate {
                     pixelFormat: .depth32Float,
                     width:  width,
                     height: height,
-                    mipmapped: false)
+                    mipmapped: true)
                 td.usage = .renderTarget
                 td.storageMode = .memoryless
 
@@ -144,25 +147,11 @@ extension MetPipeline: MTKViewDelegate {
         }
     }
 
-//    public func assemblePipeline() {
-//        firstNode = nodes.first
-//        if let firstNode {
-//            var prevNode = firstNode
-//            for i in 1 ..< nodes.count {
-//                let node = nodes[i]
-//
-//                node.inNode = prevNode
-//                prevNode.outNode = node
-//                prevNode = node
-//            }
-//        }
-//    }
-
     public func perspective() -> simd_float4x4 {
         let size = metalLayer.drawableSize
         let aspect = Float(size.width / size.height)
         let FOV = aspect > 1 ? 60.0 : 90.0
-        let FOVPI = Float(FOV * .pi / 180.0)
+        let FOVPI = Float(FOV * .pi / 180.0) 
         let near = Float(0.1)
         let far = Float(100)
 
@@ -183,7 +172,7 @@ extension MetPipeline: MTKViewDelegate {
         let sd = MTLSamplerDescriptor()
         sd.minFilter = .linear
         sd.magFilter = .linear
-    
+
         // normalized: 0..1, otherwise 0..width, 0..height.
         sd.supportArgumentBuffers = normalized
         sd.normalizedCoordinates = normalized
@@ -201,6 +190,7 @@ extension MetPipeline: MTKViewDelegate {
                 return renderEnc
             } else {
                 renderEnc = commandBuf.makeRenderCommandEncoder(descriptor:  makeRenderPass(drawable))
+                //?? renderEnc?.setDepthBias(0.1, slopeScale: 1.0, clamp: 0.0)
                 return renderEnc
             }
         }
@@ -239,8 +229,14 @@ extension MetPipeline: MTKViewDelegate {
 
         if settingUp { return }
 
-        drawable = metalLayer.nextDrawable()
+
+        _ = tripleBuffer.wait(timeout:DispatchTime.distantFuture)
+        tripleIndex = (tripleIndex + 1) % 3
         commandBuf = mtlCommand?.makeCommandBuffer()
+        commandBuf?.addCompletedHandler { _ in
+            self.tripleBuffer.signal()
+        }
+        drawable = metalLayer.nextDrawable()
 
         if let firstNode,
            let drawable,
@@ -250,7 +246,6 @@ extension MetPipeline: MTKViewDelegate {
 
             commandBuf.present(drawable)
             commandBuf.commit()
-            commandBuf.waitUntilCompleted()
         }
     }
 }
