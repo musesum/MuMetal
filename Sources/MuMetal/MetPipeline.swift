@@ -246,6 +246,7 @@ extension MetPipeline: MTKViewDelegate {
 
             commandBuf.present(drawable)
             commandBuf.commit()
+            commandBuf.waitUntilCompleted()
         }
     }
 }

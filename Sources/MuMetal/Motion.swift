@@ -24,14 +24,13 @@ public class Motion {
            motion.isDeviceMotionAvailable {
             motion.deviceMotionUpdateInterval = 1 / 60.0
             motion.startDeviceMotionUpdates(using: .xMagneticNorthZVertical)
-
         }
     }
 
     @discardableResult
     public func updateDeviceOrientation() -> matrix_float4x4 {
 
-        //?? return identity //??
+        //??? return identity
         
         if  let motion,  motion.isDeviceMotionAvailable,
             let deviceMotion = motion.deviceMotion {
@@ -55,33 +54,82 @@ public class Motion {
     }
 }
 
+var LastDeviceOrientation = UIDeviceOrientation.unknown
+
 extension UIDeviceOrientation {
 
-    func transform(_ a: CMAttitude) -> Transform {
+    func guessOrientation() -> UIDeviceOrientation {
 
-        func rpy(_ roll: Double, _ pitch: Double,_ yaw: Double) -> Transform {
-            let t = Transform(pitch : Float(pitch),
-                          yaw   : Float(yaw  ),
-                          roll  : Float(roll ))
-            return t
+        if LastDeviceOrientation != .unknown {
+            return LastDeviceOrientation
         }
 
         switch self {
-            case .landscapeLeft:        return rpy( a.pitch, -a.roll , a.yaw)
-            case .portrait:             return rpy( a.roll ,  a.pitch, a.yaw)
-            case .portraitUpsideDown:   return rpy(-a.roll , -a.pitch, a.yaw)
-            case .landscapeRight:       return rpy(-a.pitch,  a.roll , a.yaw)
-            default:                    return rpy( a.roll , -a.pitch, a.yaw)
+
+            case .unknown, .faceUp, .faceDown:
+
+                let idiom = UIDevice.current.userInterfaceIdiom
+                return idiom == .phone ? .portrait : .landscapeLeft
+
+            default:
+
+                return self
+        }
+    }
+
+    func transform(_ a: CMAttitude) -> Transform {
+
+        func rpy(_ roll: Double,
+                 _ pitch: Double,
+                 _ yaw: Double) -> Transform {
+
+            let t = Transform(pitch : Float(pitch),
+                              yaw   : Float(yaw  ),
+                              roll  : Float(roll ))
+            return t
+        }
+
+        func transform(for orientation: UIDeviceOrientation) -> Transform {
+
+            switch orientation {
+                case .landscapeLeft:        return rpy( a.pitch, -a.roll , a.yaw)
+                case .portrait:             return rpy( a.roll ,  a.pitch, a.yaw)
+                case .portraitUpsideDown:   return rpy(-a.roll , -a.pitch, a.yaw)
+                case .landscapeRight:       return rpy(-a.pitch,  a.roll , a.yaw)
+                default:                    return rpy( a.roll , -a.pitch, a.yaw)
+            }
+        }
+        switch self {
+            case .unknown, .faceUp, .faceDown:
+                return transform(for: guessOrientation())
+
+            default:
+
+                LastDeviceOrientation = self
+                return transform(for: self)
         }
     }
     func rotatation() -> Float {
 
+        func rotation(for orientation: UIDeviceOrientation) -> Float {
+
+            switch orientation {
+                case .portrait:             return 0
+                case .landscapeLeft:        return  .pi/2
+                case .landscapeRight:       return -.pi/2
+                case .portraitUpsideDown:   return  .pi
+                default:                    return 0
+            }
+        }
         switch self {
-            case .portrait:             return 0
-            case .landscapeLeft:        return  .pi/2
-            case .landscapeRight:       return -.pi/2
-            case .portraitUpsideDown:   return  .pi
-            default:                    return 0
+            case .unknown, .faceUp, .faceDown :
+
+                return rotation(for: guessOrientation())
+
+            default:
+
+                LastDeviceOrientation = self
+                return rotation(for: self)
         }
     }
 }

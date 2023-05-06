@@ -79,7 +79,7 @@ fragment half4 platoCubeIndex
  sampler                 palSamplr  [[ sampler(2) ]])
 {
 
-    float palMod = fmod(vert.faceId, uniforms.colorCount);
+    float palMod = fmod(vert.faceId + uniforms.colorCount, 256);
     float2 palPos = float2(palMod,0);
     half4 palette = palTex.sample(palSamplr, palPos);
 
