@@ -12,7 +12,7 @@ extension MetNode {
 
     public func addBuffer(_ key: String,_ val: Any) {
 
-        if let _ = nameBuffer[key] { return }
+        if nameBuffer.keys.contains(key) { return }
         // compute buffer index is in order of declaration in flo script
         let index = nameBuffer.count
         let metBuffer = MetBuffer(key, index, val, pipeline.device)
