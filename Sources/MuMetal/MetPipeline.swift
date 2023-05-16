@@ -223,12 +223,10 @@ extension MetPipeline: MTKViewDelegate {
         computeEnc = nil
     }
 
-
     /// Called whenever the view needs to render a frame
     public func draw(in inView: MTKView) {
 
         if settingUp { return }
-
 
         _ = tripleBuffer.wait(timeout:DispatchTime.distantFuture)
         tripleIndex = (tripleIndex + 1) % 3
