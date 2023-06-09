@@ -102,7 +102,7 @@ public class MetBuffer {
             case let v as CGPoint:  updateBuf(v.floats())
             case let v as CGSize:   updateBuf(v.floats())
             case let v as CGRect:   updateBuf(v.floats())
-            case _ as FloValExprs: break
+            case _ as FloExprs: break
             default: print("🚫 \(#function) unknown format: \(val)")
         }
     }
