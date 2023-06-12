@@ -126,8 +126,8 @@ open class MetNode: Equatable {
                                _ completion: @escaping ()->()) {
         if self.isOn != isOn {
             self.isOn = isOn
+            completion()
         }
-        completion()
     }
     open func setupInOutTextures(via: String) {
 
