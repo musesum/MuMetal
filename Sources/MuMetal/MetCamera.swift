@@ -97,9 +97,9 @@ public final class MetCamera: NSObject {
         }
     }
 
-    public func flipCamera() {
+    public func facing(_ front: Bool) {
 
-        camPos = (camPos == .front) ? .back : .front
+        camPos = front ? .front : .back
         camSession.beginConfiguration()
         if let deviceInput = camSession.inputs.first as? AVCaptureDeviceInput {
             camSession.removeInput(deviceInput)
