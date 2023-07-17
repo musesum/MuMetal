@@ -3,7 +3,7 @@ import Foundation
 import Metal
 import MetalKit
 import QuartzCore
-import MuPar
+import MuVisit
 
 public enum MetType { case compute, render }
 

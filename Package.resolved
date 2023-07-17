@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/musesum/MuFlo.git",
       "state" : {
-        "revision" : "cc8d22b6395fb1c5721fe3ee2e87d9fb50a11b82",
-        "version" : "0.23.203"
+        "revision" : "7645866d9c086aa7426ca9749e622d604d62a892",
+        "version" : "0.23.717"
       }
     },
     {
@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/musesum/MuPar.git",
       "state" : {
-        "revision" : "84c1daaebac2091286b4da2381a5fc4108f276d3",
-        "version" : "0.23.201"
+        "revision" : "a60583bdd6dc93246a3157a016a5497e1f287728",
+        "version" : "0.23.717"
       }
     },
     {
@@ -23,8 +23,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/musesum/MuSkyFlo.git",
       "state" : {
-        "revision" : "a1434a95ddb74b561b60b7acdace095ed381eef9",
-        "version" : "0.23.203"
+        "revision" : "4777870c0d0228105622906124a8991c1d22e9bd",
+        "version" : "0.23.717"
       }
     },
     {
@@ -32,8 +32,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/musesum/MuTime.git",
       "state" : {
-        "revision" : "81adea94421037659bca892ac210686e8b28d7e3",
-        "version" : "0.23.201"
+        "revision" : "06cf96ad00ffc2541b38fc1ada3693178320aa8b",
+        "version" : "0.23.517"
+      }
+    },
+    {
+      "identity" : "muvisit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/musesum/MuVisit.git",
+      "state" : {
+        "revision" : "c55b10d6ca7d2d9f83ae0ced651c96c7137bd998",
+        "version" : "0.23.717"
       }
     },
     {
