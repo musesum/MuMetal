@@ -15,17 +15,17 @@ extension MetNodeRecord {
     func createOutputURL() -> URL? {
         docURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         docURL?.appendPathComponent("test.m4v")
-        guard let docURL = docURL else { print("🚫 createOutputURL failed"); return nil  }
+        guard let docURL = docURL else { print("⁉️ createOutputURL failed"); return nil  }
         removeURL(docURL)
         return docURL
     }
 
 
     func setupAssetWriter() -> AVAssetWriter? {
-        func bail(_ msg: String) { print("🚫 setupAssetWriter \(msg)") }
-        guard let url = createOutputURL() else { print("🚫 createOutputURL failed"); return nil }
+        func bail(_ msg: String) { print("⁉️ setupAssetWriter \(msg)") }
+        guard let url = createOutputURL() else { print("⁉️ createOutputURL failed"); return nil }
         assetWriter = try? AVAssetWriter(outputURL: url, fileType: AVFileType.m4v)
-        guard let assetWriter = assetWriter else { print("🚫 assetWriter: nil"); return nil }
+        guard let assetWriter = assetWriter else { print("⁉️ assetWriter: nil"); return nil }
 
         let outputSettings: [String: Any] =
         [ AVVideoCodecKey: AVVideoCodecType.h264,
@@ -68,7 +68,7 @@ extension MetNodeRecord {
 
         if !isRecording { return }
         isRecording = false
-        func bail(_ msg: String) { print("🚫 endRecording \(msg)"); completion() }
+        func bail(_ msg: String) { print("⁉️ endRecording \(msg)"); completion() }
         guard let assetWriterInput = assetWriterInput else { return bail("assetWriterInput: nil)") }
         guard let assetWriter = assetWriter else { return bail("assetWriter: nil)") }
 
@@ -105,15 +105,15 @@ extension MetNodeRecord {
                 self.removeURL(self.docURL)
                 print("✔︎ \(#function) saved: \(url.absoluteString)")
             } else if let error = error {
-                print("🚫 \(#function) error: \(error)")
+                print("⁉️ \(#function) error: \(error)")
             } else {
-                print("🚫 \(#function) failed: \(url.absoluteString)")
+                print("⁉️ \(#function) failed: \(url.absoluteString)")
             }
         }
     }
     func writeFrame(_ texture: MTLTexture) {
 
-        func bail(_ msg: String) { print("🚫 writeFrame \(msg)") }
+        func bail(_ msg: String) { print("⁉️ writeFrame \(msg)") }
 
         if !isRecording { return bail("not recording") }
         guard let input = assetWriterInput else { return bail("assetWriterInput: nil)") }

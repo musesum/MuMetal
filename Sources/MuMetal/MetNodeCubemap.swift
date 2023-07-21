@@ -118,7 +118,7 @@ public class MetNodeCubemap: MetNode {
         pd.depthAttachmentPixelFormat = .depth32Float
 
         do { renderState = try pipeline.device.makeRenderPipelineState(descriptor: pd) }
-        catch { print("🚫 \(#function) failed to create \(name), error \(error)") }
+        catch { print("⁉️ \(#function) failed to create \(name), error \(error)") }
     }
 
     func updateUniforms() {

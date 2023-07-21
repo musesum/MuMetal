@@ -124,10 +124,10 @@ open class MetNode: Equatable {
     // can override to trigger behaviors, such as turning on  camera
     public func setMetalNodeOn(_ isOn: Bool,
                                _ completion: @escaping ()->()) {
-        if self.isOn != isOn {
+        //???
             self.isOn = isOn
             completion()
-        }
+        
     }
     open func setupInOutTextures(via: String) {
 

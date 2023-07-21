@@ -71,7 +71,7 @@ public class MetBuffer {
                                               length: Float4Len)
 
             default:
-                print("🚫 updateFloats unknown count: \(floats)")
+                print("⁉️ updateFloats unknown count: \(floats)")
 
         }
         //print(String(format:"˚\(name):%.2f", float), terminator:" ")
@@ -103,7 +103,7 @@ public class MetBuffer {
             case let v as CGSize:   updateBuf(v.floats())
             case let v as CGRect:   updateBuf(v.floats())
             case _ as FloExprs: break
-            default: print("🚫 \(#function) unknown format: \(val)")
+            default: print("⁉️ \(#function) unknown format: \(val)")
         }
     }
 }

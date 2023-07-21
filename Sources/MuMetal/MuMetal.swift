@@ -11,16 +11,18 @@ public class MuMetal {
                             _ ext: String) -> String? {
 
         guard let path = Bundle.module.path(forResource: filename, ofType: ext)  else {
-            print("🚫 MuMetal:: could not find file: \(filename).\(ext)")
+            print("⁉️ MuMetal:: could not find file: \(filename).\(ext)")
             return nil
         }
         do {
             return try String(contentsOfFile: path) }
         catch {
-            print("🚫 MuMetal::read error:\(error) loading contents of:\(path)")
+            print("⁉️ MuMetal::read error:\(error) loading contents of:\(path)")
         }
         return nil
     }
-    
-
+    public static func hasFile(_ filename: String,
+                               _ ext: String) -> Bool {
+        return Bundle.module.path(forResource: filename, ofType: ext) != nil
+    }
 }

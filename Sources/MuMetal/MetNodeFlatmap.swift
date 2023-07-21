@@ -82,7 +82,7 @@ public class MetNodeFlatmap: MetNode {
         setupSampler()
 
         func err(_ err: String) {
-            print("🚫 MetNodeRender::buildShader err: \(err)")
+            print("⁉️ MetNodeRender::buildShader err: \(err)")
         }
     }
 
