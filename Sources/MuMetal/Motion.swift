@@ -5,7 +5,6 @@ import Foundation
 import CoreMotion
 import UIKit
 import RealityKit
-import GLKit
 
 public class Motion {
     
@@ -20,8 +19,8 @@ public class Motion {
     }
 
     func updateMotion() {
-        if let motion,
-           motion.isDeviceMotionAvailable {
+        if let motion, motion.isDeviceMotionAvailable {
+
             motion.deviceMotionUpdateInterval = 1 / 60.0
             motion.startDeviceMotionUpdates(using: .xMagneticNorthZVertical)
         }
@@ -43,8 +42,8 @@ public class Motion {
             let mat = matrix_float4x4(X,Y,Z,W)
 
             let radians = UIDevice.current.orientation.rotatation()
-            let baseRotation = GLKMatrix4MakeRotation(radians, 0, 0, 1)
-            let simdRotation = float4x4(baseRotation)
+            let axis = SIMD3<Float>(x: 0, y: 0, z: 1)
+            let simdRotation = matrix_float4x4(simd_quatf(angle: radians, axis: axis))
 
             sceneOrientation = simdRotation * mat
         }
@@ -75,16 +74,18 @@ extension UIDeviceOrientation {
         }
     }
 
-    func transform(_ a: CMAttitude) -> Transform {
+    private func transform(_ a: CMAttitude) -> Transform {
 
-        func rpy(_ roll: Double,
-                 _ pitch: Double,
-                 _ yaw: Double) -> Transform {
+        switch self {
 
-            let t = Transform(pitch : Float(pitch),
-                              yaw   : Float(yaw  ),
-                              roll  : Float(roll ))
-            return t
+        case .unknown, .faceUp, .faceDown:
+
+            return transform(for: guessOrientation())
+
+        default:
+
+            LastDeviceOrientation = self
+            return transform(for: self)
         }
 
         func transform(for orientation: UIDeviceOrientation) -> Transform {
@@ -96,15 +97,14 @@ extension UIDeviceOrientation {
             case .landscapeRight     : return rpy(-a.pitch,  a.roll , a.yaw)
             default                  : return rpy( a.roll , -a.pitch, a.yaw)
             }
-        }
-        switch self {
-        case .unknown, .faceUp, .faceDown:
-            return transform(for: guessOrientation())
+            func rpy(_ roll: Double,
+                     _ pitch: Double,
+                     _ yaw: Double) -> Transform {
 
-        default:
-
-            LastDeviceOrientation = self
-            return transform(for: self)
+                return Transform(pitch : Float(pitch),
+                                  yaw  : Float(yaw  ),
+                                  roll : Float(roll ))
+            }
         }
     }
     func rotatation() -> Float {
@@ -112,11 +112,11 @@ extension UIDeviceOrientation {
         func rotation(for orientation: UIDeviceOrientation) -> Float {
 
             switch orientation {
-            case .portrait           : return 0
+            case .portrait           : return   0
             case .landscapeLeft      : return  .pi/2
             case .landscapeRight     : return -.pi/2
             case .portraitUpsideDown : return  .pi
-            default                  : return 0
+            default                  : return   0
             }
         }
         switch self {

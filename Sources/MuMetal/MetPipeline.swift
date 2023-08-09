@@ -32,7 +32,6 @@ open class MetPipeline: NSObject {
     private var renderEnc: MTLRenderCommandEncoder?
     private var computeEnc: MTLComputeCommandEncoder?
 
-
     private var tripleBuffer = DispatchSemaphore(value: 3)
     private var tripleIndex = 0
 
@@ -63,7 +62,6 @@ open class MetPipeline: NSObject {
         mtkView.device = device
         mtlCommand = device.makeCommandQueue()
         mtkView.frame = bounds
-
     }
 
     public func scriptPipeline() -> String {
@@ -196,6 +194,7 @@ extension MetPipeline: MTKViewDelegate {
         }
         return nil
     }
+
     public func endRenderEnc() {
         renderEnc?.endEncoding()
         renderEnc = nil

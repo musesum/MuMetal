@@ -3,7 +3,6 @@
 
 
 import simd
-import GLKit
 
 public func perspective4x4(_ aspect: Float,
                            _ fovy  : Float,
@@ -41,14 +40,4 @@ public func translation(_ t: vector_float4) -> matrix_float4x4 {
     
     let mat = matrix_float4x4([X,Y,Z,W])
     return mat
-}
-
-
-extension float4x4 {
-    init(_ m: GLKMatrix4) {
-        self.init(columns: (SIMD4<Float>(m.m00, m.m01, m.m02, m.m03),
-                            SIMD4<Float>(m.m10, m.m11, m.m12, m.m13),
-                            SIMD4<Float>(m.m20, m.m21, m.m22, m.m23),
-                            SIMD4<Float>(m.m30, m.m31, m.m32, m.m33)))
-    }
 }

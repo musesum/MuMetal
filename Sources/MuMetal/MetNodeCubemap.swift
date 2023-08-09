@@ -35,7 +35,6 @@ public class MetNodeCubemap: MetNode {
     let viaIndex: Bool
     let vertices: [Float]
     let indices: [UInt16]
- 
 
     public init(_ pipeline: MetPipeline,
                 _ viaIndex: Bool) {
@@ -141,6 +140,7 @@ public class MetNodeCubemap: MetNode {
             cubeTex = makeImageCube(["front", "front",
                                      "top",   "bottom",
                                      "front", "front"], pipeline.device)
+
             //cubeTexture = makeCube(["px","nx","py","ny","pz","nz"], device)
         }
         cubeSamplr = pipeline.makeSampler(normalized: true)
