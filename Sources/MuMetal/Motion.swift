@@ -40,8 +40,11 @@ public class Motion {
             let Z = vector_float4([a.m11, a.m21, a.m31, 0])
             let W = vector_float4([    0,     0,     0, 1])
             let mat = matrix_float4x4(X,Y,Z,W)
-
+            #if os(xrOS)
+            let radians = Float.pi/2
+            #else
             let radians = UIDevice.current.orientation.rotatation()
+            #endif
             let axis = SIMD3<Float>(x: 0, y: 0, z: 1)
             let simdRotation = matrix_float4x4(simd_quatf(angle: radians, axis: axis))
 

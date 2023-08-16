@@ -12,10 +12,6 @@ struct PlatoVertex {
 };
 
 struct PlatoUniforms {
-    float4x4 identity;
-    float4x4 inverse; // of identity
-    float4x4 projectModel;
-    float4   worldCamera;
     float range;
     float harmonif;
     float colorCount;
@@ -24,6 +20,11 @@ struct PlatoUniforms {
     float shadowDepth;
     float invert;
     float zoom;
+    float4   extra;
+    float4   worldCamera;
+    float4x4 identity;
+    float4x4 inverse; // of identity
+    float4x4 projectModel;
 };
 
 // index ranged  0...1

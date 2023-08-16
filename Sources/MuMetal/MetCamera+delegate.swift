@@ -7,6 +7,9 @@
 //
 
 import Foundation
+
+#if os(xrOS)
+#else
 import AVFoundation
 
 extension MetCamera: AVCaptureVideoDataOutputSampleBufferDelegate {
@@ -40,3 +43,4 @@ extension MetCamera: AVCaptureVideoDataOutputSampleBufferDelegate {
     }
     
 }
+#endif

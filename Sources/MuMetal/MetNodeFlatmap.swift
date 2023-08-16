@@ -10,7 +10,7 @@ public class MetNodeFlatmap: MetNode {
     private var renderState: MTLRenderPipelineState?
 
     public var cgImage: CGImage? { get {
-        if let tex =  pipeline.mtkView.currentDrawable?.texture,
+        if let tex =  pipeline.metalLayer.nextDrawable()?.texture,
            let img = tex.toImage() {
             return img
         } else {
@@ -32,8 +32,8 @@ public class MetNodeFlatmap: MetNode {
 
     func buildResources() {
 
-        let viewSize = (pipeline.mtkView.frame.size *
-                        pipeline.mtkView.contentScaleFactor)
+        let viewSize = (pipeline.metalLayer.frame.size *
+                        pipeline.metalLayer.contentsScale)
         self.viewSize = SIMD2<Float>(viewSize.floats())
         let clip = MetAspect.fillClip(from: pipeline.drawSize,
                                       to: viewSize).normalize()
@@ -73,7 +73,7 @@ public class MetNodeFlatmap: MetNode {
         pd.label = "Texturing Pipeline"
         pd.vertexFunction = vertexFunc
         pd.fragmentFunction = fragmentFunc
-        pd.colorAttachments[0].pixelFormat = pipeline.mtkView.colorPixelFormat
+        pd.colorAttachments[0].pixelFormat =  .bgra8Unorm  //??? pipeline.metalLayer.colorPixelFormat
         pd.depthAttachmentPixelFormat = .depth32Float
 
         do { renderState = try pipeline.device.makeRenderPipelineState(descriptor: pd) }

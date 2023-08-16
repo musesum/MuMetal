@@ -2,9 +2,4 @@
 
 import Foundation
 
-public class TextureData {
-    public static let shared = TextureData()
-    public var data: Data?
-
-    public init() {}
-}
+public var TextureData = [String:Data?]()

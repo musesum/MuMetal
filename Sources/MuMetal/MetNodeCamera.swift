@@ -67,7 +67,9 @@ public class MetNodeCamera: MetNodeCompute {
     
 
     override public func setupInOutTextures(via: String) {
-
+        #if os(xrOS)
+         outTex = inTex
+        #else
         if isOn, MetCamera.shared.hasNewTex {
             // inTex is used by camix.metal, but ignored by camera.metal
             inTex = inNode?.outTex
@@ -76,10 +78,12 @@ public class MetNodeCamera: MetNodeCompute {
         } else {
             outTex = inTex
         }
+        #endif
     }
 
     override public func computeCommand(_ computeEnc: MTLComputeCommandEncoder) {
-
+        #if os(xrOS)
+        #else
         if isOn, MetCamera.shared.hasNewTex {
 
             let frame = getAspectFill()
@@ -88,6 +92,7 @@ public class MetNodeCamera: MetNodeCompute {
                 super.computeCommand(computeEnc)
             }
         }
+        #endif
     }
     
 }

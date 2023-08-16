@@ -2,7 +2,8 @@
 import AVFoundation
 import Metal
 import UIKit
-
+#if os(xrOS)
+#else
 public final class MetCamera: NSObject {
 
     public static var shared = MetCamera(nil, position: .front)
@@ -225,4 +226,4 @@ public final class MetCamera: NSObject {
         NotificationCenter.default.removeObserver(self)
     }
 }
-
+#endif

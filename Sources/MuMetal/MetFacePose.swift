@@ -5,7 +5,8 @@ import AVFoundation
 import CoreImage
 import CoreImage.CIFilterBuiltins
 import Vision
-
+#if os(xrOS)
+#else
 public protocol MetFacePoseDelegate {
     func didUpdate(_ ciImage: CIImage)
 }
@@ -135,3 +136,4 @@ extension MetFacePose: AVCaptureVideoDataOutputSampleBufferDelegate {
     }
 }
 
+#endif
