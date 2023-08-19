@@ -73,7 +73,7 @@ public class MetNodeFlatmap: MetNode {
         pd.label = "Texturing Pipeline"
         pd.vertexFunction = vertexFunc
         pd.fragmentFunction = fragmentFunc
-        pd.colorAttachments[0].pixelFormat =  .bgra8Unorm  //??? pipeline.metalLayer.colorPixelFormat
+        pd.colorAttachments[0].pixelFormat =  .bgra8Unorm  //?? pipeline.metalLayer.colorPixelFormat
         pd.depthAttachmentPixelFormat = .depth32Float
 
         do { renderState = try pipeline.device.makeRenderPipelineState(descriptor: pd) }

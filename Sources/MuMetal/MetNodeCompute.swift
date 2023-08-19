@@ -52,7 +52,7 @@ open class MetNodeCompute: MetNode {
             if let outTex { computeEnc.setTexture(outTex, index: 1) }
             if let altTex { computeEnc.setTexture(altTex, index: 2) }
 
-            computeEnc.setSamplerState(samplr, index: 0)
+            //????? computeEnc.setSamplerState(samplr, index: 0)
 
             // compute buffer index is in order of declaration in flo script
             for buf in nameBuffer.values {

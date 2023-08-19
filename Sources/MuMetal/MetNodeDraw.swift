@@ -3,16 +3,19 @@ import Foundation
 import Metal
 import MetalKit
 
+public protocol TouchDrawDelegate {
+    func drawTexture(_ texBuf: UnsafeMutablePointer<UInt32>, size: CGSize) -> Bool
+}
 
 public class MetNodeDraw: MetNodeCompute {
 
-    public var drawFunc: DrawTextureFunc?
+    public var drawDelegate: TouchDrawDelegate?
 
     public init(_ pipeline: MetPipeline,
-                _ drawFunc: @escaping DrawTextureFunc) {
+                _ drawDelegate: TouchDrawDelegate) {
 
         super.init(pipeline, "draw", "compute.draw")
-        self.drawFunc = drawFunc
+        self.drawDelegate = drawDelegate
     }
 
     override public func computeCommand(_ computeEnc: MTLComputeCommandEncoder) {
@@ -29,7 +32,7 @@ public class MetNodeDraw: MetNodeCompute {
             // get universe
             inTex.getBytes(cellBytes, bytesPerRow: bytesPerRow, from: region, mipmapLevel: 0)
             // draw in uninverse
-            let filled = drawFunc?(cellBytes, pipeline.drawSize) ?? false
+            let filled = drawDelegate?.drawTexture(cellBytes, size: pipeline.drawSize) ?? false
             // put back universe
             inTex.replace(region: region, mipmapLevel: 0, withBytes: cellBytes, bytesPerRow: bytesPerRow)
             // fill both text textures
