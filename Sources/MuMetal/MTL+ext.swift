@@ -5,7 +5,7 @@ import MetalKit
 
 extension MTLTexture {
 
-       public func bytes() -> (UnsafeMutableRawPointer, Int) {
+       public func mtlBytes() -> (UnsafeMutableRawPointer, Int) {
 
            let width = self.width
            let height = self.height
@@ -19,7 +19,7 @@ extension MTLTexture {
 
        public func toImage() -> CGImage? {
            let pixSize = MemoryLayout<UInt32>.size
-           let (data, totalSize) = bytes()
+           let (data, totalSize) = mtlBytes()
 
            let pColorSpace = CGColorSpaceCreateDeviceRGB()
 

@@ -83,10 +83,7 @@ open class MetPipeline: NSObject {
         node.inNode?.outNode = node.outNode
         node.outNode?.inNode = node.inNode
     }
-    /// create pipeline from script or snapshot
-    open func setupPipeline() {
-        print("\(#function) override me")
-    }
+    
     public func updateLastNode() {
         var node = firstNode
         while let outNode = node?.outNode {
