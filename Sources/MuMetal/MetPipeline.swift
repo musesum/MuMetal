@@ -40,33 +40,29 @@ open class MetPipeline: NSObject {
     public init(_ bounds: CGRect) {
 
         super.init()
-//        #if os(xrOS)
-//        let bounds = CGRect(x: 0, y: 0, width: 1920, height: 1080)
-//        #else
-//        let bounds = UIScreen.main.bounds
-//        #endif
-        viewSize = bounds.size
-        drawSize = CGSize(width: 1920, height: 1080)
+
         device = MTLCreateSystemDefaultDevice()!
         library = device.makeDefaultLibrary()
 
-        metalLayer.device = device // mtkView.device = device
+        metalLayer.device = device
         metalLayer.device = MTLCreateSystemDefaultDevice()
         #if os(xrOS)
-        metalLayer.contentsScale = 2 //??? UIScreen.main.scale
+        drawSize = CGSize(width: 1920, height: 1080)
+        metalLayer.contentsScale = 3
         #else
+        let bounds = UIScreen.main.bounds
+        drawSize = (bounds.size.width > bounds.size.height
+                    ? CGSize(width: 1920, height: 1080)
+                    : CGSize(width: 1080, height: 1920))
+
         metalLayer.contentsScale = UIScreen.main.scale
+        viewSize = bounds.size
         #endif
         metalLayer.framebufferOnly = false
         metalLayer.contentsGravity = .resizeAspectFill
-        metalLayer.frame = CGRect(x: 0, y: 0, width: 1920, height: 1080) //???
-//        metalLayer.isPaused = true //??? mtkView.isPaused = true
-//        metalLayer.delegate = self //???  mtkView.delegate = self
-//        metalLayer.enableSetNeedsDisplay = true //??  mtkView.enableSetNeedsDisplay = true
-
-        metalLayer.bounds =  metalLayer.frame //???  bounds // ???  mtkView.frame = bounds
+        metalLayer.frame = bounds
+        metalLayer.bounds =  metalLayer.frame
         mtlCommand = device.makeCommandQueue()
-
     }
 
     public func scriptPipeline() -> String {
@@ -102,22 +98,12 @@ open class MetPipeline: NSObject {
 }
 
 extension MetPipeline {
-//    public func mtkView(_ mtkView: MTKView, drawableSizeWillChange size: CGSize) {
-//
-//        if size.width == 0 { return }
-//        viewSize = size // view.frame.size
-//        clipRect = MetAspect.fillClip(from: drawSize, to: viewSize).normalize()
-//        mtkView.autoResizeDrawable = false
-//    }
-    public func resize(_ bounds: CGRect, _ scale: CGFloat) {
-        if bounds.size.width == 0 { return }
-        let scale = CGFloat(3) //??? scale
-        viewSize = bounds.size * scale  // view.frame.size
+    // public func mtkView(_ mtkView: MTKView, drawableSizeWillChange size: CGSize) {...}
+    public func resize(_ viewSize: CGSize, _ scale: CGFloat) {
         clipRect = MetAspect.fillClip(from: drawSize, to: viewSize).normalize()
         metalLayer.contentsScale = scale
         metalLayer.drawableSize = viewSize
-        metalLayer.layoutIfNeeded() //??? 
-        print("MetPipeline::resize(\(bounds.size),scale:\(scale)) viewSize: \(viewSize)")
+        metalLayer.layoutIfNeeded() //???
         //?? mtkView.autoResizeDrawable = false
     }
 
@@ -126,17 +112,14 @@ extension MetPipeline {
         updateDepthTex()
 
         let rp = MTLRenderPassDescriptor()
-
         rp.colorAttachments[0].texture = drawable.texture
         rp.colorAttachments[0].loadAction = .dontCare
         rp.colorAttachments[0].storeAction = .store
         rp.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 1)
-
         rp.depthAttachment.texture = self.depthTex
         rp.depthAttachment.loadAction = .dontCare
         rp.depthAttachment.storeAction = .dontCare
         rp.depthAttachment.clearDepth = 1
-
         return rp
 
         func updateDepthTex()  {

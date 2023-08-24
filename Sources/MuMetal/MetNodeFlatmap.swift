@@ -39,7 +39,7 @@ public class MetNodeFlatmap: MetNode {
                                       to: viewSize).normalize()
         clipFrame = SIMD4<Float>(clip.floats())
 
-        //print(" MetNodeRender::clipFrame: \(clipFrame)")
+        print(" MetNodeRender::clipFrame: \(clipFrame)")
 
         let w2 = Float(viewSize.width / 2)
         let h2 = Float(viewSize.height / 2)
@@ -73,7 +73,7 @@ public class MetNodeFlatmap: MetNode {
         pd.label = "Texturing Pipeline"
         pd.vertexFunction = vertexFunc
         pd.fragmentFunction = fragmentFunc
-        pd.colorAttachments[0].pixelFormat =  .bgra8Unorm  //?? pipeline.metalLayer.colorPixelFormat
+        pd.colorAttachments[0].pixelFormat =  pipeline.metalLayer.pixelFormat //??? .bgra8Unorm 
         pd.depthAttachmentPixelFormat = .depth32Float
 
         do { renderState = try pipeline.device.makeRenderPipelineState(descriptor: pd) }

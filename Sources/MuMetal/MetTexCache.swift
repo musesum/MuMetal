@@ -10,6 +10,8 @@
 import Foundation
 import MetalKit
 
+public let MetBaseFormat = MTLPixelFormat.bgra8Unorm
+
 public class MetTexCache {
 
     static var cache = [MTLTexture]() //TextureCache

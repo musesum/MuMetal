@@ -61,6 +61,7 @@ open class MetNode: Equatable {
 
         if pipeline.library?.functionNames.contains(name) ?? false {
             library = pipeline.library
+            assertionFailure("MetNode::makeLibrary")
             return
         }
         if let data = MuMetal.read(filename, "metal") {
