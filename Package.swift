@@ -11,7 +11,7 @@ let package = Package(
             targets: ["MuMetal"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/musesum/MuFlo.git", from: "0.23.0"),
+        .package(url: "https://github.com/musesum/MuFlo.git", .branch("main")),
     ],
     targets: [
         .target(

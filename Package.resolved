@@ -5,17 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/musesum/MuFlo.git",
       "state" : {
-        "revision" : "7645866d9c086aa7426ca9749e622d604d62a892",
-        "version" : "0.23.717"
-      }
-    },
-    {
-      "identity" : "mupar",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/musesum/MuPar.git",
-      "state" : {
-        "revision" : "a60583bdd6dc93246a3157a016a5497e1f287728",
-        "version" : "0.23.717"
+        "branch" : "main",
+        "revision" : "527a6467b3f76d88f59e86a647642a63f5b2ac08"
       }
     },
     {
@@ -23,26 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/musesum/MuSkyFlo.git",
       "state" : {
-        "revision" : "4777870c0d0228105622906124a8991c1d22e9bd",
-        "version" : "0.23.717"
-      }
-    },
-    {
-      "identity" : "mutime",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/musesum/MuTime.git",
-      "state" : {
-        "revision" : "06cf96ad00ffc2541b38fc1ada3693178320aa8b",
-        "version" : "0.23.517"
-      }
-    },
-    {
-      "identity" : "muvisit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/musesum/MuVisit.git",
-      "state" : {
-        "revision" : "c55b10d6ca7d2d9f83ae0ced651c96c7137bd998",
-        "version" : "0.23.717"
+        "revision" : "340affb49e060eaf9f51a6915d04044ffeea8dee",
+        "version" : "0.23.826"
       }
     },
     {
@@ -52,6 +25,24 @@
       "state" : {
         "revision" : "937e904258d22af6e447a0b72c0bc67583ef64a2",
         "version" : "1.0.4"
+      }
+    },
+    {
+      "identity" : "swift-numerics",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-numerics",
+      "state" : {
+        "revision" : "0a5bc04095a675662cf24757cc0640aa2204253b",
+        "version" : "1.0.2"
+      }
+    },
+    {
+      "identity" : "zipfoundation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/weichsel/ZIPFoundation.git",
+      "state" : {
+        "branch" : "development",
+        "revision" : "1f10742b8b02bd006747b1d39d41e4725da60898"
       }
     }
   ],
