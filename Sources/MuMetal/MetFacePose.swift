@@ -71,7 +71,6 @@ open class MetFacePose: NSObject {
 
     private func processVideoFrame(_ pixelBuffer: CVPixelBuffer) {
 
-        let faceMask = true // ??? platoOps.faceMask
         if  faceMask {
             // Perform the requests on the pixel buffer that contains the video frame.
 

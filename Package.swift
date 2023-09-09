@@ -1,4 +1,4 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 5.8
 
 import PackageDescription
 
@@ -11,16 +11,12 @@ let package = Package(
             targets: ["MuMetal"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/musesum/MuPar.git", from: "0.23.0"),
-        .package(url: "https://github.com/musesum/MuVisit.git", from: "0.23.0"),
         .package(url: "https://github.com/musesum/MuFlo.git", from: "0.23.0"),
     ],
     targets: [
         .target(
             name: "MuMetal",
             dependencies: [
-                .product(name: "MuPar", package: "MuPar"),
-                .product(name: "MuVisit", package: "MuVisit"),
                 .product(name: "MuFlo", package: "MuFlo")],
             resources: [.process("Resources")]),
         .testTarget(
