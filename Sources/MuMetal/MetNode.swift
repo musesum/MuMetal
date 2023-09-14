@@ -61,7 +61,6 @@ open class MetNode: Equatable {
 
         if pipeline.library?.functionNames.contains(name) ?? false {
             library = pipeline.library
-            //???? assertionFailure("MetNode::makeLibrary")
             return
         }
         if let data = MuMetal.read(filename, "metal") {
@@ -125,7 +124,6 @@ open class MetNode: Equatable {
     // can override to trigger behaviors, such as turning on  camera
     public func setMetalNodeOn(_ isOn: Bool,
                                _ completion: @escaping ()->()) {
-        //???
             self.isOn = isOn
             completion()
     }
