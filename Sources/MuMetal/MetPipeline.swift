@@ -100,8 +100,8 @@ extension MetPipeline {
         clipRect = MetAspect.fillClip(from: drawSize, to: viewSize).normalize()
         metalLayer.contentsScale = scale
         metalLayer.drawableSize = viewSize
-        metalLayer.layoutIfNeeded() //???
-        //?? mtkView.autoResizeDrawable = false
+        //metalLayer.layoutIfNeeded() //???
+
     }
 
     public func makeRenderPass(_ drawable: CAMetalDrawable) -> MTLRenderPassDescriptor {
