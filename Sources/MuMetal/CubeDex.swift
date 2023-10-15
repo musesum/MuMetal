@@ -1,9 +1,6 @@
-//  Created by warren on 3/2/23.
-//  Copyright © 2023 com.deepmuse. All rights reserved.
-
+//  created by musesum on 3/2/23.
 
 import Foundation
-
 
 /** Instead of copying a video texture into 6 cube faces,
  precompute an index cube that points to a pixel

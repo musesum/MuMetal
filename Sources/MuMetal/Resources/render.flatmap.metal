@@ -1,7 +1,6 @@
-// render.flatmap.metal
+// Flatmap
 
 #include <metal_stdlib>
-#include <simd/simd.h>
 
 using namespace metal;
 
@@ -22,7 +21,7 @@ vertex VertexFlat vertexFlatmap
  constant float2&   viewSize  [[ buffer(1) ]],
  constant float4&   clipFrame [[ buffer(2) ]],
  uint               vertexID  [[ vertex_id ]])
-{    
+{
     VertexFlat out;
 
     float2 pos = in[vertexID].position.xy; // distance from origin
@@ -53,7 +52,7 @@ fragment half4 fragmentFlatmap
         // mirror repeati x
         mod.x = fmod(texCoord.x, reps.x * (1 + mirror.x));
         if (mod.x > reps.x) {
-            mod.x = ((reps.x * (1 + mirror.x) - mod.x)
+            mod.x = ((reps.x * (1+mirror.x) - mod.x)
                      / fmax(0.0001, mirror.x));
         }
     }
@@ -62,7 +61,7 @@ fragment half4 fragmentFlatmap
     } else {
         mod.y = fmod(texCoord.y, reps.y * (1 + mirror.y));
         if (mod.y > reps.y) {
-            mod.y = ((reps.y * (1 + mirror.y) - mod.y)
+            mod.y = ((reps.y * (1+mirror.y) - mod.y)
                      / fmax(0.0001, mirror.y));
         }
     }

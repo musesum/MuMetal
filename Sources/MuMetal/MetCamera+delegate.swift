@@ -1,10 +1,4 @@
-//
-//  CameraSesssion+Video.swift
-//  MuseSky
-//
-//  Created by warren on 11/12/19.
-//  Copyright © 2019 DeepMuse All rights reserved.
-//
+//  created by musesum on 11/12/19.
 
 import Foundation
 

@@ -2,24 +2,41 @@
 import Foundation
 import Metal
 import UIKit
+import MuFlo
 
 
 public class MetNodeCamix: MetNodeCamera {
     
-    public init(_ pipeline: MetPipeline) {
-        super.init(pipeline, "camix", "compute.camix")
+    public init(_ root˚    : Flo,
+                _ pipeline : MetPipeline) {
+
+        super.init(root˚, pipeline, "camix", "compute.camix")
     }
 }
 
 public class MetNodeCamera: MetNodeCompute {
 
+    private var front˚: Flo?
+    var front: Bool = true
+
     private var bypassTex: MTLTexture?  // bypass outTex when not on
 
-    override public init(_ pipeline  : MetPipeline,
-                         _ name      : String = "camera",
-                         _ filename  : String = "compute.camera") {
+    public init(
+        _ root˚     : Flo,
+        _ pipeline  : MetPipeline,
+        _ name      : String = "camera",
+        _ filename  : String = "compute.camera") {
 
-        super.init(pipeline, name, filename)
+            super.init(pipeline, name, filename)
+            let camera = root˚.bind("shader.compute.camera")
+            front˚ = camera.bind("front") { flo,_ in self.updateFacing(flo.bool) }
+    }
+    func updateFacing(_ front: Bool) {
+        self.front = front
+#if os(xrOS)
+#else
+        MetCamera.shared.facing(front)
+#endif
     }
 
     // get clipping frame from altTex\

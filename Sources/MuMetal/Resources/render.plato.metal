@@ -1,8 +1,6 @@
-//  Created by warren on 2/28/23.
-//  Copyright © 2023 com.deepmuse. All rights reserved.
+// Plato
 
-#include "metal_stdlib"
-#include "metal_math"
+#include <metal_stdlib>
 
 using namespace metal;
 
@@ -48,7 +46,7 @@ vertex VertexPlato vertexPlato
  uint32_t                vertexId [[ vertex_id ]])
 {
     VertexPlato out;
-    
+
     float range  = uniforms.range;// 0...1 maps pv0...pv1
     float3 pos0  = in[vertexId].pos0.xyz;
     float3 pos1  = in[vertexId].pos1.xyz;
@@ -91,7 +89,9 @@ fragment half4 fragmentPlatoCubeIndex
     float2 palPos = float2(palMod,0);
     half4 palette = palTex.sample(palSamplr, palPos);
 
-    float3 texCoord = float3(out.texCoord.x, out.texCoord.y, -out.texCoord.z);
+    float3 texCoord = float3(out.texCoord.x,
+                             out.texCoord.y,
+                             -out.texCoord.z);
     half4 cubeIndex = cubeTex.sample(samplr, texCoord);
 
     half4 reflect = inTex.sample(samplr, float2(cubeIndex.xy));
@@ -132,7 +132,9 @@ fragment half4 fragmentPlatoColor
  VertexPlato      out   [[ stage_in   ]],
  texture2d <half> inTex [[ texture(1) ]])
 {
-    float3 texCoord = float3(out.texCoord.x, out.texCoord.y, -out.texCoord.z);
+    float3 texCoord = float3(out.texCoord.x,
+                             out.texCoord.y,
+                             -out.texCoord.z);
 
     constexpr sampler samplr(filter::linear,
                              address::repeat);

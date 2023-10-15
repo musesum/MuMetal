@@ -1,11 +1,5 @@
-
-//
 //  MetTexCache.swift
-//  Sky
-//
-//  Created by warren on 2/27/19.
-//  Copyright © 2019 DeepMuse All rights reserved.
-
+//  created by musesum on 2/27/19.
 
 import Foundation
 import MetalKit

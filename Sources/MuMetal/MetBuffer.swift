@@ -1,10 +1,4 @@
-
-//
-//  MetalUniform.h
-//  Sky
-//
-//  Created by warren on 2/13/19.
-//  Copyright © 2019 DeepMuse All rights reserved.
+//  created by musesum on 2/13/19.
 
 import Foundation
 import Metal

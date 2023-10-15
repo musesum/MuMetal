@@ -1,5 +1,7 @@
+// Cubemap
 
 #include <metal_stdlib>
+
 using namespace metal;
 
 struct VertexCube {
@@ -28,7 +30,6 @@ vertex VertexCube vertexCubemap
 
     float4 position = in[vertexID].position;
 
-
     out.position = uniforms.projectModel * position;
     out.texCoord = position;
 
@@ -45,8 +46,8 @@ fragment half4 fragmentCubeIndex
  constant float2&   mirror  [[ buffer(2)  ]])
 {
     float3 texCoord = float3(out.texCoord.x,
-                               out.texCoord.y,
-                               -out.texCoord.z);
+                             out.texCoord.y,
+                             -out.texCoord.z);
 
     constexpr sampler samplr(filter::linear,
                              address::repeat);

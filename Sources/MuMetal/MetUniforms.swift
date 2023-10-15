@@ -1,5 +1,4 @@
-//  Created by warren on 4/5/23.
-//  Copyright © 2023 com.deepmuse. All rights reserved.
+//  created by musesum on 4/5/23.
 
 import simd
 

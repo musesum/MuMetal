@@ -1,10 +1,5 @@
-//
 //  MetItem.swift
-//  DeepMuse
-//
-//  Created by warren on 3/11/23.
-//  Copyright © 2023 DeepMuse. All rights reserved.
-//
+//  created by musesum on 3/11/23.
 
 import Metal
 
