@@ -1,6 +1,6 @@
 import MetalKit
 
-struct MetVertex {
+struct Vertex2D {
     var position: vector_float2
     var texCoord: vector_float2  // 2D texture coordinate
 
