@@ -8,9 +8,8 @@ kernel void camix
  texture2d<float, access::read>   inTex  [[ texture(0) ]],
  texture2d<float, access::write>  outTex [[ texture(1) ]],
  texture2d<float>                 camTex [[ texture(2) ]],
- constant float&                  mix    [[ buffer(0)  ]], // mix real/fake
+ constant float&                  mix    [[ buffer(0)  ]],
  constant float4&                 frame  [[ buffer(1)  ]],
- sampler                          samplr [[ sampler(0) ]],
  uint2 gid [[ thread_position_in_grid ]])
 {
     float x = frame.x; // x offset 0...n
@@ -26,12 +25,15 @@ kernel void camix
     float hf = hh / h;  // in height factor < 0...1
     float yy = y / hh;  // in y offset 0...1
 
-    float2 norm = float2(gid) / float2(outTex.get_width(),
-                                       outTex.get_height());
-    float2 camOut = (x > y
-                     ? float2(norm.x * wf + xx, norm.y * hf + yy)
-                     : float2(norm.x * hf + yy, norm.y * wf + xx));
+    float2 size = float2(outTex.get_width(),
+                         outTex.get_height());
+    float2 norm = float2(gid) / size;
+    float2 camOut =
+    (x > y
+     ? float2(norm.x * wf + xx, norm.y * hf + yy)
+     : float2(norm.x * hf + yy, norm.y * wf + xx));
 
+    constexpr sampler samplr(filter::linear);
     float4 camItem = camTex.sample(samplr, camOut);
     float4 inItem = inTex.read(gid);
     float4 mixItem = camItem * mix + inItem * (1 - mix);

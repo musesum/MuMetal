@@ -11,7 +11,7 @@ open class MetNodeTile: MetNodeCompute {
     }
 
     // cellular automata uses double buffering
-    override public func setupInOutTextures(via: String) {
+    override public func updateTextures(via: String) {
 
         //if !isOn && outTex != nil { return }
         inTex = inNode?.outTex

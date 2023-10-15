@@ -8,7 +8,6 @@ kernel void camera
  texture2d<float, access::write> outTex [[ texture(1) ]],
  texture2d<float>                camTex [[ texture(2) ]],
  constant float4&                frame  [[ buffer(0)  ]],
- sampler                         samplr [[ sampler(0) ]],
  uint2 gid [[ thread_position_in_grid ]])
 {
     float x = frame.x; // x offset 0...n
@@ -30,6 +29,7 @@ kernel void camera
                      ? float2(norm.x * wf + xx, norm.y * hf + yy)
                      : float2(norm.x * hf + yy, norm.y * wf + xx));
 
+    constexpr sampler samplr(filter::linear);
     float4 camItem = camTex.sample(samplr, camOut);
     outTex.write(camItem, gid);
 }

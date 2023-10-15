@@ -20,7 +20,6 @@ open class MetNode: Equatable {
     public var outTex: MTLTexture?  // output texture 1
     public var altTex: MTLTexture?  // optional texture 2
     
-    public var samplr: MTLSamplerState?
     public var library: MTLLibrary!
     public var function: MTLFunction?
 
@@ -86,17 +85,6 @@ open class MetNode: Equatable {
            //?? print("⁉️ MetNode::makeFunction: \(name) not found")
         }
     }
-
-    func setupSampler() {
-
-        let sd = MTLSamplerDescriptor()
-        sd.minFilter    = .linear
-        sd.magFilter    = .linear
-        sd.sAddressMode = .repeat
-        sd.tAddressMode = .repeat
-        sd.rAddressMode = .repeat
-        samplr = pipeline.device.makeSamplerState(descriptor: sd)
-    }
     
     func logMetaNodes() {
 
@@ -127,7 +115,7 @@ open class MetNode: Equatable {
             self.isOn = isOn
             completion()
     }
-    open func setupInOutTextures(via: String) {
+    open func updateTextures(via: String) {
 
         inTex = inNode?.outTex ?? makeNewTex(via)
         outTex = outTex ?? makeNewTex(via)
@@ -138,9 +126,9 @@ open class MetNode: Equatable {
     open func renderCommand(_ renderEnc: MTLRenderCommandEncoder) {
     }
 
-    func nextCommand(_ commandBuf: MTLCommandBuffer) {
+    public func nextCommand(_ commandBuf: MTLCommandBuffer) {
 
-        setupInOutTextures(via: name)
+        updateTextures(via: name)
 
         switch type {
 

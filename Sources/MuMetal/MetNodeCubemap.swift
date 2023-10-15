@@ -27,10 +27,8 @@ public class MetNodeCubemap: MetNode {
     var uniformBuf: MTLBuffer!
 
     public var cubeTex: MTLTexture?
-    public var cubeSamplr: MTLSamplerState!
-    public var inSamplr: MTLSamplerState!
+    public var cubePipe: MTLRenderPipelineState!
 
-    var renderState: MTLRenderPipelineState!
     var cubeDex: CubeDex?
     let viaIndex: Bool
     let vertices: [Float]
@@ -86,16 +84,16 @@ public class MetNodeCubemap: MetNode {
 
         super.init(pipeline, "cubemap", "render.cubemap", .render)
 
-        buildShader()
-        buildResources()
+        makePipeline()
+        makeResources()
     }
 
-    func buildShader() {
+    func makePipeline() {
 
-        let vertexName = "cubemap"
+        let vertexName = "vertexCubemap"
         let fragmentName = (viaIndex
-                            ? "cubemapIndex"
-                            : "cubemapColor")
+                            ? "fragmentCubeIndex"
+                            : "fragmentCubeColor")
 
         let vd = MTLVertexDescriptor()
         vd.attributes[0].bufferIndex = 0
@@ -116,7 +114,7 @@ public class MetNodeCubemap: MetNode {
         pd.colorAttachments[0].pixelFormat = .bgra8Unorm
         pd.depthAttachmentPixelFormat = .depth32Float
 
-        do { renderState = try pipeline.device.makeRenderPipelineState(descriptor: pd) }
+        do { cubePipe = try pipeline.device.makeRenderPipelineState(descriptor: pd) }
         catch { print("⁉️ \(#function) failed to create \(name), error \(error)") }
     }
 
@@ -132,7 +130,7 @@ public class MetNodeCubemap: MetNode {
         memcpy(uniformBuf.contents(), &cubemapUniforms,  uniformLen)
     }
 
-    func buildResources() {
+    func makeResources() {
 
         if viaIndex {
             cubeTex = makeIndexCube(pipeline.drawSize)
@@ -143,9 +141,6 @@ public class MetNodeCubemap: MetNode {
 
             //cubeTexture = makeCube(["px","nx","py","ny","pz","nz"], device)
         }
-        cubeSamplr = pipeline.makeSampler(normalized: true)
-        inSamplr = pipeline.makeSampler(normalized: true)
-
         let verticesLen = 24 * 8 * MemoryLayout<Float>.size
         let indicesLen = 36 * MemoryLayout<UInt16>.size
 
@@ -162,14 +157,11 @@ public class MetNodeCubemap: MetNode {
         let indexLength = indexBuf.length
         let indexCount = indexLength / MemoryLayout<UInt16>.stride
 
-        renderEnc.setRenderPipelineState(renderState)
+        renderEnc.setRenderPipelineState(cubePipe)
         renderEnc.setDepthStencilState(pipeline.depthStencil(write: false))
-
         renderEnc.setVertexBuffer(vertexBuf , offset: 0, index: 0)
         renderEnc.setVertexBuffer(uniformBuf, offset: 0, index: 1)
-
         renderEnc.setFragmentTexture(cubeTex, index: 0)
-        renderEnc.setFragmentSamplerState(cubeSamplr, index: 0)
 
         for buf in nameBuffer.values {
             renderEnc.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
@@ -184,10 +176,7 @@ public class MetNodeCubemap: MetNode {
     }
     func drawIndexCube(_ renderEnc: MTLRenderCommandEncoder) {
         guard let inTex else { return }
-
         renderEnc.setFragmentTexture(inTex, index: 1)
-        renderEnc.setFragmentSamplerState(inSamplr, index: 1)
-
         drawCube(renderEnc)
     }
 
@@ -240,14 +229,14 @@ public class MetNodeCubemap: MetNode {
         let bytesPerImage = bytesPerRow * cubeDex.side
         let region = MTLRegionMake2D(0, 0, cubeDex.side, cubeDex.side)
 
-        addQuad(cubeDex.left  , 0)
-        addQuad(cubeDex.right , 1)
-        addQuad(cubeDex.top   , 2)
-        addQuad(cubeDex.bot   , 3)
-        addQuad(cubeDex.front , 4)
-        addQuad(cubeDex.back  , 5)
+        addCubeFace(cubeDex.left  , 0)
+        addCubeFace(cubeDex.right , 1)
+        addCubeFace(cubeDex.top   , 2)
+        addCubeFace(cubeDex.bot   , 3)
+        addCubeFace(cubeDex.front , 4)
+        addCubeFace(cubeDex.back  , 5)
 
-        func addQuad(_ quad: Quad, _ slice: Int) {
+        func addCubeFace(_ quad: Quad, _ slice: Int) {
 
             texture.replace(region        : region,
                             mipmapLevel   : 0,
@@ -271,9 +260,10 @@ public class MetNodeCubemap: MetNode {
         }
     }
 
-    override public func setupInOutTextures(via: String) {
+    override public func updateTextures(via: String) {
 
         updateUniforms()
+        
         if let inNode {
 
             switch inNode.name {

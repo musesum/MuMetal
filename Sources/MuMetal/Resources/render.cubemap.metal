@@ -2,7 +2,7 @@
 #include <metal_stdlib>
 using namespace metal;
 
-struct Vertex3D {
+struct VertexCube {
     float4 position [[ position ]];
     float4 texCoord;
 };
@@ -18,15 +18,17 @@ struct CubemapUniforms {
 
 // MARK: - vertex
 
-vertex Vertex3D cubemap
+vertex VertexCube vertexCubemap
 (
- device Vertex const*      vertices  [[ buffer(0) ]],
+ constant Vertex*          in        [[ buffer(0) ]],
  constant CubemapUniforms  &uniforms [[ buffer(1) ]],
- uint32_t                  vid       [[ vertex_id ]])
+ uint32_t                  vertexID  [[ vertex_id ]])
 {
-    float4 position = vertices[vid].position;
+    VertexCube out;
 
-    Vertex3D out;
+    float4 position = in[vertexID].position;
+
+
     out.position = uniforms.projectModel * position;
     out.texCoord = position;
 
@@ -34,21 +36,22 @@ vertex Vertex3D cubemap
 }
 // MARK: - fragment
 
-fragment half4 cubemapIndex
+fragment half4 fragmentCubeIndex
 (
- Vertex3D           vin         [[ stage_in   ]],
- texturecube<half>  cubeTex     [[ texture(0) ]],
- texture2d<half>    inTex       [[ texture(1) ]],
- constant float2&   repeat      [[ buffer(1)  ]],
- constant float2&   mirror      [[ buffer(2)  ]],
- sampler            cubeSamplr  [[ sampler(0) ]],
- sampler            inSamplr    [[ sampler(1) ]])
+ VertexCube         out     [[ stage_in   ]],
+ texturecube<half>  cubeTex [[ texture(0) ]],
+ texture2d<half>    inTex   [[ texture(1) ]],
+ constant float2&   repeat  [[ buffer(1)  ]],
+ constant float2&   mirror  [[ buffer(2)  ]])
 {
-    float3 cubeCoords = float3(vin.texCoord.x,
-                               vin.texCoord.y,
-                               -vin.texCoord.z);
+    float3 texCoord = float3(out.texCoord.x,
+                               out.texCoord.y,
+                               -out.texCoord.z);
 
-    half4 index = cubeTex.sample(cubeSamplr, cubeCoords);
+    constexpr sampler samplr(filter::linear,
+                             address::repeat);
+
+    half4 index = cubeTex.sample(samplr,texCoord);
     float2 inCoord = float2(index.xy);
 
     float2 mod;
@@ -73,19 +76,19 @@ fragment half4 cubemapIndex
                      / fmax(0.0001, mirror.y));
         }
     }
-    float2 texCoord = mod / reps;
-    return inTex.sample(inSamplr, texCoord);
+    float2 modCoord = mod / reps;
+    return inTex.sample(samplr, modCoord);
 }
 
-fragment half4 cubemapColor
+fragment half4 fragmentCubeColor
 (
- Vertex3D           vin     [[ stage_in   ]],
- texturecube<half>  cubeTex [[ texture(0) ]],
- sampler            samplr  [[ sampler(0) ]])
+ VertexCube         out     [[ stage_in   ]],
+ texturecube<half>  cubeTex [[ texture(0) ]])
 {
-    float3 cubeCoord = float3(vin.texCoord.x,
-                              vin.texCoord.y,
-                              -vin.texCoord.z);
+    constexpr sampler samplr(filter::linear,
+                             address::repeat);
 
-    return cubeTex.sample(samplr, cubeCoord);
+    float3 texCoord = float3(out.texCoord.x, out.texCoord.y, -out.texCoord.z);
+
+    return cubeTex.sample(samplr, texCoord);
 }

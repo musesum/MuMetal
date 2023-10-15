@@ -15,9 +15,9 @@ open class MetPipeline: NSObject {
     public var device: MTLDevice!
     public var library: MTLLibrary?
 
-    public var mtlCommand: MTLCommandQueue!  // queue w/ command buffers
+    public var commandQueue: MTLCommandQueue!  // queue w/ command buffers
     public var nodeNamed = [String: MetNode]() //??  find node by name
-    public var firstNode: MetNode?    // 1st node in renderer chain
+    public var firstNode: MetNode?    // 1st node in rendering chain
     public var lastNode: MetNode?
     public var flatmapNode: MetNode?  // render 2d to screen
     public var cubemapNode: MetNodeCubemap?  // render cubemap to screen
@@ -31,7 +31,7 @@ open class MetPipeline: NSObject {
     private var renderEnc: MTLRenderCommandEncoder?
     private var computeEnc: MTLComputeCommandEncoder?
 
-    private var tripleBuffer = DispatchSemaphore(value: 3)
+    private var tripleSemaphore = DispatchSemaphore(value: 3)
     private var tripleIndex = 0
 
     private var depthTex: MTLTexture!
@@ -43,9 +43,9 @@ open class MetPipeline: NSObject {
 
         device = MTLCreateSystemDefaultDevice()!
         library = device.makeDefaultLibrary()
-
         metalLayer.device = device
         metalLayer.device = MTLCreateSystemDefaultDevice()
+        
         #if os(xrOS)
         drawSize = CGSize(width: 1920, height: 1080)
         metalLayer.contentsScale = 3
@@ -54,15 +54,14 @@ open class MetPipeline: NSObject {
         drawSize = (bounds.size.width > bounds.size.height
                     ? CGSize(width: 1920, height: 1080)
                     : CGSize(width: 1080, height: 1920))
-
         metalLayer.contentsScale = UIScreen.main.scale
         viewSize = bounds.size
         #endif
         metalLayer.framebufferOnly = false
         metalLayer.contentsGravity = .resizeAspectFill
         metalLayer.frame = bounds
-        metalLayer.bounds =  metalLayer.frame
-        mtlCommand = device.makeCommandQueue()
+        metalLayer.bounds = metalLayer.frame
+        commandQueue = device.makeCommandQueue()
     }
 
     public func scriptPipeline() -> String {
@@ -91,33 +90,31 @@ open class MetPipeline: NSObject {
         }
         lastNode = node
     }
-
 }
 
 extension MetPipeline {
-    // public func mtkView(_ mtkView: MTKView, drawableSizeWillChange size: CGSize) {...}
+
     public func resize(_ viewSize: CGSize, _ scale: CGFloat) {
         clipRect = MetAspect.fillClip(from: drawSize, to: viewSize).normalize()
         metalLayer.contentsScale = scale
         metalLayer.drawableSize = viewSize
-        //metalLayer.layoutIfNeeded() //???
-
+        metalLayer.layoutIfNeeded() //???
     }
 
     public func makeRenderPass(_ drawable: CAMetalDrawable) -> MTLRenderPassDescriptor {
 
         updateDepthTex()
 
-        let rp = MTLRenderPassDescriptor()
-        rp.colorAttachments[0].texture = drawable.texture
-        rp.colorAttachments[0].loadAction = .dontCare
-        rp.colorAttachments[0].storeAction = .store
-        rp.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 1)
-        rp.depthAttachment.texture = self.depthTex
-        rp.depthAttachment.loadAction = .dontCare
-        rp.depthAttachment.storeAction = .dontCare
-        rp.depthAttachment.clearDepth = 1
-        return rp
+        let renderPass = MTLRenderPassDescriptor()
+        renderPass.colorAttachments[0].texture = drawable.texture
+        renderPass.colorAttachments[0].loadAction = .dontCare
+        renderPass.colorAttachments[0].storeAction = .store
+        renderPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 1)
+        renderPass.depthAttachment.texture = self.depthTex
+        renderPass.depthAttachment.loadAction = .dontCare
+        renderPass.depthAttachment.storeAction = .dontCare
+        renderPass.depthAttachment.clearDepth = 1
+        return renderPass
 
         func updateDepthTex()  {
 
@@ -142,6 +139,7 @@ extension MetPipeline {
     }
 
     public func perspective() -> simd_float4x4 {
+
         let size = metalLayer.drawableSize
         let aspect = Float(size.width / size.height)
         let FOV = aspect > 1 ? 60.0 : 90.0
@@ -219,15 +217,15 @@ extension MetPipeline {
     }
 
     /// Called whenever the view needs to render a frame
-    public func draw() { //??? (in inView: MTKView) {
+    public func draw() {
 
         if settingUp { return }
 
-        _ = tripleBuffer.wait(timeout:DispatchTime.distantFuture)
+        _ = tripleSemaphore.wait(timeout:DispatchTime.distantFuture)
         tripleIndex = (tripleIndex + 1) % 3
-        commandBuf = mtlCommand?.makeCommandBuffer()
+        commandBuf = commandQueue?.makeCommandBuffer()
         commandBuf?.addCompletedHandler { _ in
-            self.tripleBuffer.signal()
+            self.tripleSemaphore.signal()
         }
         drawable = metalLayer.nextDrawable()
 
@@ -242,4 +240,5 @@ extension MetPipeline {
             commandBuf.waitUntilCompleted()
         }
     }
+
 }

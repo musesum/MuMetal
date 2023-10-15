@@ -7,7 +7,7 @@ import QuartzCore
 
 public class MetNodeFlatmap: MetNode {
 
-    private var renderState: MTLRenderPipelineState?
+    private var flatPipe: MTLRenderPipelineState?
 
     public var cgImage: CGImage? { get {
         if let tex =  pipeline.metalLayer.nextDrawable()?.texture,
@@ -26,17 +26,19 @@ public class MetNodeFlatmap: MetNode {
 
         super.init(pipeline, "flatmap", filename, .render)
 
-        buildResources()
-        buildShader()
+        makeResources()
+        makePipeline()
     }
 
-    func buildResources() {
+    func makeResources() {
 
         let viewSize = (pipeline.metalLayer.frame.size *
                         pipeline.metalLayer.contentsScale)
         self.viewSize = SIMD2<Float>(viewSize.floats())
+
         let clip = MetAspect.fillClip(from: pipeline.drawSize,
                                       to: viewSize).normalize()
+        
         clipFrame = SIMD4<Float>(clip.floats())
 
         print(" MetNodeRender::clipFrame: \(clipFrame)")
@@ -44,26 +46,25 @@ public class MetNodeFlatmap: MetNode {
         let w2 = Float(viewSize.width / 2)
         let h2 = Float(viewSize.height / 2)
 
-        let metVertices: [MetVertex] = [
+        let metVertices: [Vertex2D] = [
             // (position texCoord)
-            MetVertex( w2,-h2, 1, 1),
-            MetVertex(-w2,-h2, 0, 1),
-            MetVertex(-w2, h2, 0, 0),
-            MetVertex( w2,-h2, 1, 1),
-            MetVertex(-w2, h2, 0, 0),
-            MetVertex( w2, h2, 1, 0)]
+            Vertex2D( w2,-h2, 1, 1),
+            Vertex2D(-w2,-h2, 0, 1),
+            Vertex2D(-w2, h2, 0, 0),
+            Vertex2D( w2,-h2, 1, 1),
+            Vertex2D(-w2, h2, 0, 0),
+            Vertex2D( w2, h2, 1, 0)]
 
-        let quadSize = MemoryLayout<MetVertex>.size * metVertices.count
-
-        // Create our vertex buffer, and initialize it with our quadVertices array
+        let size = MemoryLayout<Vertex2D>.size * metVertices.count
         vertices = pipeline.device.makeBuffer(bytes: metVertices,
-                                              length: quadSize,
+                                              length: size,
                                               options: .storageModeShared)
     }
 
-    func buildShader() {
-        let vertexName = "flatmap"
-        let fragmentName = "flatmapColor"
+    func makePipeline() {
+
+        let vertexName = "vertexFlatmap"
+        let fragmentName = "fragmentFlatmap"
 
         guard let vertexFunc = library.makeFunction(name: vertexName) else { return err(vertexName)}
         guard let fragmentFunc = library.makeFunction(name: fragmentName) else { return err(fragmentName) }
@@ -73,41 +74,38 @@ public class MetNodeFlatmap: MetNode {
         pd.label = "Texturing Pipeline"
         pd.vertexFunction = vertexFunc
         pd.fragmentFunction = fragmentFunc
-        pd.colorAttachments[0].pixelFormat =  pipeline.metalLayer.pixelFormat //??? .bgra8Unorm 
+        pd.colorAttachments[0].pixelFormat = pipeline.metalLayer.pixelFormat
         pd.depthAttachmentPixelFormat = .depth32Float
 
-        do { renderState = try pipeline.device.makeRenderPipelineState(descriptor: pd) }
-        catch { err("\(error)") }
-
-        setupSampler()
+        do {
+            flatPipe = try pipeline.device.makeRenderPipelineState(descriptor: pd)
+        } catch { err("\(error)") }
 
         func err(_ err: String) {
-            print("⁉️ MetNodeRender::buildShader err: \(err)")
+            print("⁉️ MetNodeFlatmap::makePipeline err: \(err)")
         }
     }
 
-    override public func setupInOutTextures(via: String) {
+    override public func updateTextures(via: String) {
 
         inTex = inNode?.outTex // render to screen
-                               // no output texture here
+
+        // no output texture here
     }
 
     override open func renderCommand(_ renderEnc: MTLRenderCommandEncoder) {
-        guard let renderState else { return }
+        guard let flatPipe else { return }
 
         let viewPort = MTLViewport(viewSize)
         renderEnc.setViewport(viewPort)
-        renderEnc.setRenderPipelineState(renderState)
+        renderEnc.setRenderPipelineState(flatPipe)
 
         // vertex
         renderEnc.setVertexBuffer(vertices, offset: 0, index: 0)
         renderEnc.setVertexBytes(&viewSize , length: Float2Len, index: 1)
         renderEnc.setVertexBytes(&clipFrame, length: Float4Len, index: 2)
-
         // fragment
         renderEnc.setFragmentTexture(inTex, index: 0)
-        renderEnc.setFragmentSamplerState(samplr, index: 0)
-
         for buf in nameBuffer.values {
             renderEnc.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
         }

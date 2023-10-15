@@ -14,16 +14,15 @@ public class MetNodeCamix: MetNodeCamera {
 public class MetNodeCamera: MetNodeCompute {
 
     private var bypassTex: MTLTexture?  // bypass outTex when not on
-    
+
     override public init(_ pipeline  : MetPipeline,
-                _ name      : String = "camera",
-                _ filename  : String = "compute.camera") {
+                         _ name      : String = "camera",
+                         _ filename  : String = "compute.camera") {
 
         super.init(pipeline, name, filename)
-        setupSampler()
     }
 
-    // get clipping frame from altTex
+    // get clipping frame from altTex\
     func getAspectFill() -> CGRect {
 
         if  let altTex,
@@ -38,10 +37,13 @@ public class MetNodeCamera: MetNodeCompute {
             let ia = iw/ih
 
             if oa < ia { // ipad front, back
+                
                 let x = round((iw - ih*oa)/2)
                 let y = CGFloat.zero
                 return CGRect(x: x, y: y, width: iw, height: ih)
+
             } else { // phone front, back (1.218)
+
                 let y = round((ih - iw/oa)/2)
                 let x = CGFloat.zero
                 return CGRect(x: x, y: y, width: iw, height: ih)
@@ -66,7 +68,7 @@ public class MetNodeCamera: MetNodeCompute {
     }
     
 
-    override public func setupInOutTextures(via: String) {
+    override public func updateTextures(via: String) {
         #if os(xrOS)
          outTex = inTex
         #else

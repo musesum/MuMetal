@@ -21,9 +21,9 @@ public class MetNodeColor: MetNodeCompute {
         self.getPal = getPal
     }
 
-    override public func setupInOutTextures(via: String) {
+    override public func updateTextures(via: String) {
         
-        super.setupInOutTextures(via: via)
+        super.updateTextures(via: via)
         altTex = altTex ?? makePaletteTex() // 256 false color palette
         
         // draw into palette texture

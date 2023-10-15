@@ -15,7 +15,6 @@ public class MetNodeRecord: MetNodeCompute {
         
         super.init(pipeline, "record", filename)
         // placeholder nameIndex["record"] = 0
-        setupSampler()
     }
     var docURL: URL?
     
@@ -35,7 +34,7 @@ public class MetNodeRecord: MetNodeCompute {
         }
     }
     
-    override public func setupInOutTextures(via: String) {
+    override public func updateTextures(via: String) {
         
         inTex = inNode?.outTex ?? makeNewTex(via)
         outTex = inTex
