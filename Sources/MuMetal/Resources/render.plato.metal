@@ -21,10 +21,11 @@ struct PlatoUniforms {
     float invert;
     float zoom;
 
+    float4x4 projectModel;
     float4   worldCamera;
     float4x4 identity;
     float4x4 inverse; // of identity
-    float4x4 projectModel;
+
 };
 
 // index ranged  0...1
@@ -70,8 +71,6 @@ vertex VertexPlato vertexPlato
 
 // MARK: - fragment
 
-/// texturecube has index to a texture2d
-/// vert.color is used for creating a shadow mixed texture2d's color
 fragment half4 fragmentPlatoCubeIndex
 (
  VertexPlato             out      [[ stage_in   ]],
@@ -86,7 +85,7 @@ fragment half4 fragmentPlatoCubeIndex
                              address::repeat);
 
     float palMod = fmod(out.faceId + uniforms.colorCount, 256);
-    float2 palPos = float2(palMod,0);
+    float2 palPos = float2(palMod, 0);
     half4 palette = palTex.sample(palSamplr, palPos);
 
     float3 texCoord = float3(out.texCoord.x,
