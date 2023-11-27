@@ -15,8 +15,7 @@ struct PlatoUniforms {
     
     float range;    // from 0 to 1 to animate
     float harmonif; // total depth of subdivisions
-    float colorCount; // number of colors to map to faces
-    float colorMix;
+    float passthru;
     float shadowWhite;
     float shadowDepth;
     float invert;
@@ -79,14 +78,12 @@ fragment half4 fragmentPlatoCubeIndex
  texture2d  <half>       inTex    [[ texture(1) ]],
  texture2d  <half>       palTex   [[ texture(2) ]])
 {
-    constexpr sampler palSamplr(coord::pixel);
-
     constexpr sampler samplr(filter::linear,
                              address::repeat);
 
-    float palMod = fmod(out.faceId + uniforms.colorCount, 256);
-    float2 palPos = float2(palMod, 0);
-    half4 palette = palTex.sample(palSamplr, palPos);
+    float palMod = fmod(out.faceId, 256) / 256.0;
+    float2 palPos = float2(palMod, 0.0);
+    half4 palette = palTex.sample(samplr, palPos);
 
     float3 texCoord = float3(out.texCoord.x,
                              out.texCoord.y,
@@ -94,10 +91,9 @@ fragment half4 fragmentPlatoCubeIndex
     half4 cubeIndex = cubeTex.sample(samplr, texCoord);
 
     half4 reflect = inTex.sample(samplr, float2(cubeIndex.xy));
+    float passthru = max(uniforms.passthru, 0.001);
 
-    const half3 mix =
-    half3((reflect * uniforms.colorMix) +
-          palette * (1.0-uniforms.colorMix));
+    const half3 mix = half3((reflect * passthru) + palette * (1.0 - passthru));
 
     const float count = 6;
     float gray     = uniforms.shadowWhite;
