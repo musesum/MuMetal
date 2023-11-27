@@ -5,7 +5,7 @@ import MetalKit
 import QuartzCore
 import MuFlo
 
-public enum MetType { case compute, render }
+public enum MetType { case computing, rendering }
 
 open class MetNode: Equatable {
 
@@ -33,10 +33,10 @@ open class MetNode: Equatable {
     public var isOn = false
     public var pipeline: MetPipeline
 
-    public init(_ pipeline: MetPipeline,
-                _ name: String,
-                _ filename: String = "",
-                _ type: MetType) {
+    public init(_ pipeline  : MetPipeline,
+                _ name      : String,
+                _ filename  : String = "",
+                _ type      : MetType) {
 
         self.pipeline = pipeline
         self.name = name
@@ -132,21 +132,21 @@ open class MetNode: Equatable {
 
         switch type {
 
-            case .compute:
+            case .computing:
                 if let computeEnc = pipeline.getComputeEnc() {
                     computeCommand(computeEnc)
                 }
-                if outNode?.type == .compute {
+                if outNode?.type == .computing {
                     // continue this compute, recycle computeEnc
                 } else {
                     pipeline.endComputeEnc()
                 }
 
-            case .render:
+            case .rendering:
                 // uses depth to hide occulded fragments
                 if let renderEnc = pipeline.getRenderEnc() {
                     renderCommand(renderEnc)
-                    if  outNode?.type == .render {
+                    if  outNode?.type == .rendering {
                         // continue this render, recycle renderEnc
                     } else {
                         pipeline.endRenderEnc()

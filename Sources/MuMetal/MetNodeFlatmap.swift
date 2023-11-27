@@ -24,7 +24,7 @@ public class MetNodeFlatmap: MetNode {
     public init(_ pipeline: MetPipeline,
                 _ filename: String = "render.flatmap") {
 
-        super.init(pipeline, "flatmap", filename, .render)
+        super.init(pipeline, "flatmap", filename, .rendering)
 
         makeResources()
         makePipeline()

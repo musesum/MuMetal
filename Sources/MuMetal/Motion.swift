@@ -39,7 +39,7 @@ public class Motion {
             let Z = vector_float4([a.m11, a.m21, a.m31, 0])
             let W = vector_float4([    0,     0,     0, 1])
             let mat = matrix_float4x4(X,Y,Z,W)
-            #if os(xrOS)
+            #if os(visionOS)
             let radians = Float.pi/2
             #else
             let radians = UIDevice.current.orientation.rotatation()

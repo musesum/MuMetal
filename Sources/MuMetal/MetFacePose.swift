@@ -4,7 +4,7 @@ import AVFoundation
 import CoreImage
 import CoreImage.CIFilterBuiltins
 import Vision
-#if os(xrOS)
+#if os(visionOS)
 #else
 public protocol MetFacePoseDelegate {
     func didUpdate(_ ciImage: CIImage)

@@ -16,6 +16,7 @@ open class MetPipeline: NSObject {
     public var nodeNamed = [String: MetNode]() //??  find node by name
     public var firstNode: MetNode?    // 1st node in rendering chain
     public var lastNode: MetNode?
+    
     public var flatmapNode: MetNode?  // render 2d to screen
     public var cubemapNode: MetNodeCubemap?  // render cubemap to screen
 
@@ -43,7 +44,7 @@ open class MetPipeline: NSObject {
         metalLayer.device = device
         metalLayer.device = MTLCreateSystemDefaultDevice()
         
-        #if os(xrOS)
+        #if os(visionOS)
         drawSize = CGSize(width: 1920, height: 1080)
         metalLayer.contentsScale = 3
         #else
@@ -220,6 +221,7 @@ extension MetPipeline {
 
         _ = tripleSemaphore.wait(timeout:DispatchTime.distantFuture)
         tripleIndex = (tripleIndex + 1) % 3
+
         commandBuf = commandQueue?.makeCommandBuffer()
         commandBuf?.addCompletedHandler { _ in
             self.tripleSemaphore.signal()

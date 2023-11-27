@@ -2,7 +2,7 @@
 import AVFoundation
 import Metal
 import UIKit
-#if os(xrOS)
+#if os(visionOS)
 #else
 public final class MetCamera: NSObject {
 

@@ -80,7 +80,7 @@ public class MetNodeCubemap: MetNode {
             20, 22, 23,  22, 20, 21,
         ]
 
-        super.init(pipeline, "cubemap", "render.cubemap", .render)
+        super.init(pipeline, "cubemap", "render.cubemap", .rendering)
 
         makePipeline()
         makeResources()

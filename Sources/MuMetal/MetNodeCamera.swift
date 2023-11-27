@@ -33,7 +33,7 @@ public class MetNodeCamera: MetNodeCompute {
     }
     func updateFacing(_ front: Bool) {
         self.front = front
-#if os(xrOS)
+#if os(visionOS)
 #else
         MetCamera.shared.facing(front)
 #endif
@@ -86,7 +86,7 @@ public class MetNodeCamera: MetNodeCompute {
     
 
     override public func updateTextures(via: String) {
-        #if os(xrOS)
+        #if os(visionOS)
          outTex = inTex
         #else
         if isOn, MetCamera.shared.hasNewTex {
@@ -101,7 +101,7 @@ public class MetNodeCamera: MetNodeCompute {
     }
 
     override public func computeCommand(_ computeEnc: MTLComputeCommandEncoder) {
-        #if os(xrOS)
+        #if os(visionOS)
         #else
         if isOn, MetCamera.shared.hasNewTex {
 

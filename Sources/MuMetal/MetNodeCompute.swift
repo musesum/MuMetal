@@ -12,7 +12,7 @@ open class MetNodeCompute: MetNode {
                 _ name: String,
                 _ filename: String = "") {
 
-        super.init(pipeline, name, filename, .compute)
+        super.init(pipeline, name, filename, .computing)
 
         makeComputeState()
         setupThreadGroup()

@@ -2,7 +2,7 @@
 
 import Foundation
 
-#if os(xrOS)
+#if os(visionOS)
 #else
 import AVFoundation
 

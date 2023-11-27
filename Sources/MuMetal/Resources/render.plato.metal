@@ -12,6 +12,7 @@ struct VertexPlato {
 };
 
 struct PlatoUniforms {
+    
     float range;    // from 0 to 1 to animate
     float harmonif; // total depth of subdivisions
     float colorCount; // number of colors to map to faces
@@ -25,7 +26,6 @@ struct PlatoUniforms {
     float4   worldCamera;
     float4x4 identity;
     float4x4 inverse; // of identity
-
 };
 
 // index ranged  0...1
@@ -131,13 +131,10 @@ fragment half4 fragmentPlatoColor
  VertexPlato      out   [[ stage_in   ]],
  texture2d <half> inTex [[ texture(1) ]])
 {
-    float3 texCoord = float3(out.texCoord.x,
-                             out.texCoord.y,
-                             -out.texCoord.z);
 
     constexpr sampler samplr(filter::linear,
                              address::repeat);
 
-    return inTex.sample(samplr, texCoord.xy);
+    return inTex.sample(samplr, out.texCoord.xy);
 }
 
