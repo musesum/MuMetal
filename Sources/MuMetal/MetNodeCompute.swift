@@ -4,7 +4,7 @@ import Metal
 
 open class MetNodeCompute: MetNode {
 
-    var computeState: MTLComputePipelineState? // _cellRulePipeline;
+    var computePipe: MTLComputePipelineState? // _cellRulePipeline;
     var threadSize = MTLSize()
     var threadCount = MTLSize()
 
@@ -14,7 +14,7 @@ open class MetNodeCompute: MetNode {
 
         super.init(pipeline, name, filename, .computing)
 
-        makeComputeState()
+        makeComputePipe()
         setupThreadGroup()
     }
     func setupThreadGroup() {
@@ -29,34 +29,35 @@ open class MetNodeCompute: MetNode {
         threadCount.depth  = 1
     }
 
-    func makeComputeState() {
+    func makeComputePipe() {
+        
         if let device = pipeline.device,
            let function,
            let state = try? device.makeComputePipelineState(function: function) {
 
-            self.computeState = state
+            self.computePipe = state
 
         } else {
             print("⁉️ makeComputeState: \(name) failed")
         }
     }
 
-    override public func computeCommand(_ computeEnc: MTLComputeCommandEncoder) {
+    public func computeNode(_ computeCmd: MTLComputeCommandEncoder) {
         // setup and execute compute textures
 
-        if let computeState {
+        if let computePipe {
 
-            if let inTex  { computeEnc.setTexture(inTex,  index: 0) }
-            if let outTex { computeEnc.setTexture(outTex, index: 1) }
-            if let altTex { computeEnc.setTexture(altTex, index: 2) }
+            if let inTex  { computeCmd.setTexture(inTex,  index: 0) }
+            if let outTex { computeCmd.setTexture(outTex, index: 1) }
+            if let altTex { computeCmd.setTexture(altTex, index: 2) }
 
             // compute buffer index is in order of declaration in flo script
             for buf in nameBuffer.values {
-                computeEnc.setBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
+                computeCmd.setBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
             }
             // execute the compute pipeline threads
-            computeEnc.setComputePipelineState(computeState)
-            computeEnc.dispatchThreadgroups(threadCount, threadsPerThreadgroup: threadSize)
+            computeCmd.setComputePipelineState(computePipe)
+            computeCmd.dispatchThreadgroups(threadCount, threadsPerThreadgroup: threadSize)
         }
     }
 }

@@ -34,13 +34,13 @@ public class MetNodeRecord: MetNodeCompute {
         }
     }
     
-    override public func updateTextures(via: String) {
+    override public func updateTextures() {
         
-        inTex = inNode?.outTex ?? makeNewTex(via)
+        inTex = inNode?.outTex ?? makeNewTex(name)
         outTex = inTex
     }
 
-    override public func computeCommand(_ computeEnc: MTLComputeCommandEncoder) {
+    override public func computeNode(_ computeCmd: MTLComputeCommandEncoder) {
         if isRecording, let inTex = inTex {
             writeFrame(inTex)
         }

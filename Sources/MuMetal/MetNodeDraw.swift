@@ -18,7 +18,7 @@ public class MetNodeDraw: MetNodeCompute {
         self.drawDelegate = drawDelegate
     }
 
-    override public func computeCommand(_ computeEnc: MTLComputeCommandEncoder) {
+    override public func computeNode(_ computeCmd: MTLComputeCommandEncoder) {
 
         if let inTex,
            let outTex {
@@ -41,6 +41,6 @@ public class MetNodeDraw: MetNodeCompute {
             }
             free(cellBytes)
         }
-        super.computeCommand(computeEnc)
+        super.computeNode(computeCmd)
     }
 }

@@ -5,21 +5,26 @@ import MetalKit
 import QuartzCore
 import MuFlo
 
-public enum MetType { case computing, rendering }
+public enum MetNodeType { case computing, rendering }
+
+open class MetNodeRender: MetNode {
+
+    public var renderPipe: MTLRenderPipelineState!
+}
 
 open class MetNode: Equatable {
 
     var id = Visitor.nextId()
     public static func == (lhs: MetNode, rhs: MetNode) -> Bool { return lhs.id == rhs.id }
-    
+
     public var name: String
-    public var type: MetType
+    public var metType: MetNodeType
     public var filename = "" // optional filename for runtime compile of shader file
-    
+
     public var inTex: MTLTexture?   // input texture 0
     public var outTex: MTLTexture?  // output texture 1
     public var altTex: MTLTexture?  // optional texture 2
-    
+
     public var library: MTLLibrary!
     public var function: MTLFunction?
 
@@ -33,15 +38,15 @@ open class MetNode: Equatable {
     public var isOn = false
     public var pipeline: MetPipeline
 
-    public init(_ pipeline  : MetPipeline,
-                _ name      : String,
-                _ filename  : String = "",
-                _ type      : MetType) {
+    public init(_ pipeline : MetPipeline,
+                _ name     : String,
+                _ filename : String = "",
+                _ type     : MetNodeType) {
 
         self.pipeline = pipeline
         self.name = name
         self.filename = filename
-        self.type = type
+        self.metType = type
 
         makeLibrary()
         makeFunction()
@@ -82,16 +87,16 @@ open class MetNode: Equatable {
                      pipeline.library?.makeFunction(name: name)) {
             function = fn
         } else {
-           //?? print("⁉️ MetNode::makeFunction: \(name) not found")
+            //?? print("⁉️ MetNode::makeFunction: \(name) not found")
         }
     }
-    
+
     func logMetaNodes() {
 
         let inName = inNode?.name ?? "nil"
         var inTexNow = ""
         var outTexNow = ""
-        
+
         if let t = inTex  { inTexNow  = "\(Unmanaged.passUnretained(t).toOpaque())" }
         if let t = outTex { outTexNow = "\(Unmanaged.passUnretained(t).toOpaque())" }
 
@@ -108,51 +113,21 @@ open class MetNode: Equatable {
         }
     }
 
-
-    // can override to trigger behaviors, such as turning on  camera
+    // can override to trigger behaviors, such as turning on camera
     public func setMetalNodeOn(_ isOn: Bool,
                                _ completion: @escaping ()->()) {
-            self.isOn = isOn
-            completion()
+        self.isOn = isOn
+        completion()
     }
-    open func updateTextures(via: String) {
+    open func updateTextures() {
 
-        inTex = inNode?.outTex ?? makeNewTex(via)
-        outTex = outTex ?? makeNewTex(via)
-    }
-
-    open func computeCommand(_ computeEnc: MTLComputeCommandEncoder) {
-    }
-    open func renderCommand(_ renderEnc: MTLRenderCommandEncoder) {
+        inTex = inNode?.outTex ?? makeNewTex(name)
+        outTex = outTex ?? makeNewTex(name)
     }
 
-    public func nextCommand(_ commandBuf: MTLCommandBuffer) {
-
-        updateTextures(via: name)
-
-        switch type {
-
-            case .computing:
-                if let computeEnc = pipeline.getComputeEnc() {
-                    computeCommand(computeEnc)
-                }
-                if outNode?.type == .computing {
-                    // continue this compute, recycle computeEnc
-                } else {
-                    pipeline.endComputeEnc()
-                }
-
-            case .rendering:
-                // uses depth to hide occulded fragments
-                if let renderEnc = pipeline.getRenderEnc() {
-                    renderCommand(renderEnc)
-                    if  outNode?.type == .rendering {
-                        // continue this render, recycle renderEnc
-                    } else {
-                        pipeline.endRenderEnc()
-                    }
-                }
-        }
-        outNode?.nextCommand(commandBuf)
+//    open func computeNode(_ computeCmd: MTLComputeCommandEncoder) {
+//    }
+    open func renderNode(_ renderCmd: MTLRenderCommandEncoder) {
     }
+
 }

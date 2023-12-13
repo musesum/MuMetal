@@ -12,22 +12,17 @@ open class MetPipeline: NSObject {
     public var device: MTLDevice!
     public var library: MTLLibrary?
 
+    public var flatmapNode: MetNodeRender?  // render 2d to screen
+    public var cubemapNode: MetNodeCubemap?  // render cubemap to screen
+
     public var commandQueue: MTLCommandQueue!  // queue w/ command buffers
     public var nodeNamed = [String: MetNode]() //??  find node by name
     public var firstNode: MetNode?    // 1st node in rendering chain
     public var lastNode: MetNode?
-    
-    public var flatmapNode: MetNode?  // render 2d to screen
-    public var cubemapNode: MetNodeCubemap?  // render cubemap to screen
 
     public var drawSize = CGSize.zero  // size of draw surface
     public var viewSize = CGSize.zero  // size of render surface
     public var clipRect = CGRect.zero
-
-    private var drawable: CAMetalDrawable?
-    private var commandBuf: MTLCommandBuffer?
-    private var renderEnc: MTLRenderCommandEncoder?
-    private var computeEnc: MTLComputeCommandEncoder?
 
     private var tripleSemaphore = DispatchSemaphore(value: 3)
     private var tripleIndex = 0
@@ -42,7 +37,6 @@ open class MetPipeline: NSObject {
         device = MTLCreateSystemDefaultDevice()!
         library = device.makeDefaultLibrary()
         metalLayer.device = device
-        metalLayer.device = MTLCreateSystemDefaultDevice()
         
         #if os(visionOS)
         drawSize = CGSize(width: 1920, height: 1080)
@@ -99,12 +93,12 @@ extension MetPipeline {
         metalLayer.layoutIfNeeded() //???
     }
 
-    public func makeRenderPass(_ drawable: CAMetalDrawable) -> MTLRenderPassDescriptor {
+    public func makeRenderPass(_ metalDrawable: CAMetalDrawable) -> MTLRenderPassDescriptor {
 
         updateDepthTex()
 
         let renderPass = MTLRenderPassDescriptor()
-        renderPass.colorAttachments[0].texture = drawable.texture
+        renderPass.colorAttachments[0].texture = metalDrawable.texture
         renderPass.colorAttachments[0].loadAction = .dontCare
         renderPass.colorAttachments[0].storeAction = .store
         renderPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 1)
@@ -169,75 +163,57 @@ extension MetPipeline {
         return device.makeSamplerState(descriptor: sd)!
     }
 
-    public func getRenderEnc() -> MTLRenderCommandEncoder? {
+    public func computeNodes(_ commandBuf: MTLCommandBuffer,
+                             _ node: MetNode?) -> MetNode? {
+        var node = node
 
-        if let commandBuf,
-           let drawable {
-
-            endComputeEnc()
-
-            if let renderEnc {
-                return renderEnc
-            } else {
-                renderEnc = commandBuf.makeRenderCommandEncoder(descriptor:  makeRenderPass(drawable))
-                //?? renderEnc?.setDepthBias(0.1, slopeScale: 1.0, clamp: 0.0)
-                return renderEnc
+        // compute
+        if node?.metType == .computing,
+           let computeCmd = commandBuf.makeComputeCommandEncoder() {
+            while let computeNode = node as? MetNodeCompute {
+                computeNode.updateTextures()
+                computeNode.computeNode(computeCmd)
+                node = computeNode.outNode
             }
+            computeCmd.endEncoding()
         }
-        return nil
+        return node
     }
+    public func renderNodes(_ commandBuf: MTLCommandBuffer,
+                            _ drawable: CAMetalDrawable,
+                            _ node: MetNode?) {
+        var node = node
+        if  node?.metType == .rendering,
+            let renderCmd = commandBuf.makeRenderCommandEncoder(descriptor:  makeRenderPass(drawable)) {
 
-    public func endRenderEnc() {
-        renderEnc?.endEncoding()
-        renderEnc = nil
-    }
-
-    public func getComputeEnc() -> MTLComputeCommandEncoder? {
-
-        if let commandBuf {
-
-            endRenderEnc()
-
-            if let computeEnc {
-                return computeEnc
-            } else {
-                computeEnc = commandBuf.makeComputeCommandEncoder()
-                return computeEnc
+            while let renderNode = node as? MetNodeRender {
+                renderNode.updateTextures()
+                renderNode.renderNode(renderCmd)
+                node = renderNode.outNode
             }
+            renderCmd.endEncoding()
         }
-        return nil
     }
-
-    public func endComputeEnc() {
-
-        computeEnc?.endEncoding()
-        computeEnc = nil
-    }
-
     /// Called whenever the view needs to render a frame
-    public func draw() {
+    public func drawNodes() {
 
         if settingUp { return }
 
         _ = tripleSemaphore.wait(timeout:DispatchTime.distantFuture)
         tripleIndex = (tripleIndex + 1) % 3
 
-        commandBuf = commandQueue?.makeCommandBuffer()
-        commandBuf?.addCompletedHandler { _ in
+        guard let commandBuf = commandQueue.makeCommandBuffer() else { return }
+        commandBuf.addCompletedHandler { _ in
             self.tripleSemaphore.signal()
         }
-        drawable = metalLayer.nextDrawable()
+        let node = computeNodes(commandBuf,firstNode)
 
-        if let firstNode,
-           let drawable,
-           let commandBuf {
+        guard let drawable = metalLayer.nextDrawable() else { return }
+        renderNodes(commandBuf, drawable, node)
 
-            firstNode.nextCommand(commandBuf)
-
-            commandBuf.present(drawable)
-            commandBuf.commit()
-            commandBuf.waitUntilCompleted()
-        }
+        commandBuf.present(drawable)
+        commandBuf.commit()
+        commandBuf.waitUntilCompleted()
     }
 
 }

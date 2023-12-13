@@ -7,21 +7,21 @@ import MetalKit
 public class MetNodeCell: MetNodeCompute {
     
     // cellular automata uses double buffering
-    override public func updateTextures(via: String) {
+    override public func updateTextures() {
 
         if !isOn && outTex != nil { return }
         inTex = inNode?.outTex
-        outTex = outTex ?? makeNewTex(via)
+        outTex = outTex ?? makeNewTex(name)
     }
 
-    override public func computeCommand(_ computeEnc: MTLComputeCommandEncoder) {
+    override public func computeNode(_ computeCmd: MTLComputeCommandEncoder) {
 
         if isOn {
-            super.computeCommand(computeEnc)
+            super.computeNode(computeCmd)
 
             for _ in 1 ..< loops {
                 flipInOutTextures()
-                super.computeCommand(computeEnc)
+                super.computeNode(computeCmd)
             }
         }
         // cellular automata uses double buffering

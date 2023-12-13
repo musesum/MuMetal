@@ -10,22 +10,17 @@ struct CubemapUniforms {
 }
 
 struct Vertex {
-    var position : vector_float4
-    var normal   : vector_float4
-    init() {
-        position = vector_float4([0,0,0,0])
-        normal   = vector_float4([0,0,0,0])
-    }
+    var position : vector_float4 = .zero
+    var normal   : vector_float4 = .zero
 }
 
-public class MetNodeCubemap: MetNode {
-
+public class MetNodeCubemap: MetNodeRender {
+    
     var vertexBuf: MTLBuffer!
     var indexBuf: MTLBuffer!
     var uniformBuf: MTLBuffer!
 
     public var cubeTex: MTLTexture?
-    public var cubePipe: MTLRenderPipelineState!
 
     var cubeDex: CubeDex?
     let viaIndex: Bool
@@ -112,7 +107,9 @@ public class MetNodeCubemap: MetNode {
         pd.colorAttachments[0].pixelFormat = .bgra8Unorm
         pd.depthAttachmentPixelFormat = .depth32Float
 
-        do { cubePipe = try pipeline.device.makeRenderPipelineState(descriptor: pd) }
+        do {
+            renderPipe = try pipeline.device.makeRenderPipelineState(descriptor: pd)
+        }
         catch { print("⁉️ \(#function) failed to create \(name), error \(error)") }
     }
 
@@ -150,32 +147,31 @@ public class MetNodeCubemap: MetNode {
             options: .cpuCacheModeWriteCombined)!
     }
 
-    func drawCube(_ renderEnc: MTLRenderCommandEncoder) {
+    override public func renderNode(_ renderCmd: MTLRenderCommandEncoder) {
+        guard isOn else { return }
 
+        if viaIndex, let inTex { 
+            renderCmd.setFragmentTexture(inTex, index: 1)
+        }
         let indexLength = indexBuf.length
         let indexCount = indexLength / MemoryLayout<UInt16>.stride
 
-        renderEnc.setRenderPipelineState(cubePipe)
-        renderEnc.setDepthStencilState(pipeline.depthStencil(write: false))
-        renderEnc.setVertexBuffer(vertexBuf , offset: 0, index: 0)
-        renderEnc.setVertexBuffer(uniformBuf, offset: 0, index: 1)
-        renderEnc.setFragmentTexture(cubeTex, index: 0)
+        renderCmd.setRenderPipelineState(renderPipe)
+        renderCmd.setDepthStencilState(pipeline.depthStencil(write: false))
+        renderCmd.setVertexBuffer(vertexBuf , offset: 0, index: 0)
+        renderCmd.setVertexBuffer(uniformBuf, offset: 0, index: 1)
+        renderCmd.setFragmentTexture(cubeTex, index: 0)
 
         for buf in nameBuffer.values {
-            renderEnc.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
+            renderCmd.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
         }
 
-        renderEnc.drawIndexedPrimitives(
+        renderCmd.drawIndexedPrimitives(
             type              : .triangle,
             indexCount        : indexCount,
             indexType         : .uint16,
             indexBuffer       : indexBuf,
             indexBufferOffset : 0)
-    }
-    func drawIndexCube(_ renderEnc: MTLRenderCommandEncoder) {
-        guard let inTex else { return }
-        renderEnc.setFragmentTexture(inTex, index: 1)
-        drawCube(renderEnc)
     }
 
     func makeImageCube(_ names: [String],
@@ -246,19 +242,7 @@ public class MetNodeCubemap: MetNode {
         return texture
     }
 
-    override public func renderCommand(_ renderEnc: MTLRenderCommandEncoder) {
-        if isOn {
-            if viaIndex {
-                if inTex != nil {
-                    drawIndexCube(renderEnc)
-                }
-            } else {
-                drawCube(renderEnc)
-            }
-        }
-    }
-
-    override public func updateTextures(via: String) {
+    override public func updateTextures() {
 
         updateUniforms()
         

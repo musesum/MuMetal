@@ -5,9 +5,7 @@ import Metal
 import MetalKit
 import QuartzCore
 
-public class MetNodeFlatmap: MetNode {
-
-    private var flatPipe: MTLRenderPipelineState?
+public class MetNodeFlatmap: MetNodeRender {
 
     public var cgImage: CGImage? { get {
         if let tex =  pipeline.metalLayer.nextDrawable()?.texture,
@@ -78,7 +76,7 @@ public class MetNodeFlatmap: MetNode {
         pd.depthAttachmentPixelFormat = .depth32Float
 
         do {
-            flatPipe = try pipeline.device.makeRenderPipelineState(descriptor: pd)
+            renderPipe = try pipeline.device.makeRenderPipelineState(descriptor: pd)
         } catch { err("\(error)") }
 
         func err(_ err: String) {
@@ -86,29 +84,29 @@ public class MetNodeFlatmap: MetNode {
         }
     }
 
-    override public func updateTextures(via: String) {
+    override public func updateTextures() {
 
         inTex = inNode?.outTex // render to screen
 
         // no output texture here
     }
 
-    override open func renderCommand(_ renderEnc: MTLRenderCommandEncoder) {
-        guard let flatPipe else { return }
+    override open func renderNode(_ renderCmd: MTLRenderCommandEncoder) {
+        guard let renderPipe else { return }
 
         let viewPort = MTLViewport(viewSize)
-        renderEnc.setViewport(viewPort)
-        renderEnc.setRenderPipelineState(flatPipe)
+        renderCmd.setViewport(viewPort)
+        renderCmd.setRenderPipelineState(renderPipe)
 
         // vertex
-        renderEnc.setVertexBuffer(vertices, offset: 0, index: 0)
-        renderEnc.setVertexBytes(&viewSize , length: Float2Len, index: 1)
-        renderEnc.setVertexBytes(&clipFrame, length: Float4Len, index: 2)
+        renderCmd.setVertexBuffer(vertices, offset: 0, index: 0)
+        renderCmd.setVertexBytes(&viewSize , length: Float2Len, index: 1)
+        renderCmd.setVertexBytes(&clipFrame, length: Float4Len, index: 2)
         // fragment
-        renderEnc.setFragmentTexture(inTex, index: 0)
+        renderCmd.setFragmentTexture(inTex, index: 0)
         for buf in nameBuffer.values {
-            renderEnc.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
+            renderCmd.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
         }
-        renderEnc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6) //metVertices.count
+        renderCmd.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6) //metVertices.count
     }
 }

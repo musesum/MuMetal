@@ -85,7 +85,7 @@ public class MetNodeCamera: MetNodeCompute {
     }
     
 
-    override public func updateTextures(via: String) {
+    override public func updateTextures() {
         #if os(visionOS)
          outTex = inTex
         #else
@@ -100,7 +100,7 @@ public class MetNodeCamera: MetNodeCompute {
         #endif
     }
 
-    override public func computeCommand(_ computeEnc: MTLComputeCommandEncoder) {
+    override public func computeNode(_ computeCmd: MTLComputeCommandEncoder) {
         #if os(visionOS)
         #else
         if isOn, MetCamera.shared.hasNewTex {
@@ -108,7 +108,7 @@ public class MetNodeCamera: MetNodeCompute {
             let frame = getAspectFill()
             if frame != .zero {
                 updateBuffer("frame", frame)
-                super.computeCommand(computeEnc)
+                super.computeNode(computeCmd)
             }
         }
         #endif
