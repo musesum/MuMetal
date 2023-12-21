@@ -19,6 +19,15 @@
       }
     },
     {
+      "identity" : "muvision",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/musesum/MuVision.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "bd4f64a08ffc58c3f7590b9b5427397d8c7538f4"
+      }
+    },
+    {
       "identity" : "swift-collections",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-collections.git",

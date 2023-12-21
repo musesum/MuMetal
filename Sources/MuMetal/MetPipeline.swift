@@ -5,7 +5,9 @@ import Foundation
 import Collections
 import MetalKit
 import Metal
-
+#if os(visionOS)
+import CompositorServices
+#endif
 open class MetPipeline: NSObject {
 
     public var metalLayer = CAMetalLayer()
@@ -215,5 +217,17 @@ extension MetPipeline {
         commandBuf.commit()
         commandBuf.waitUntilCompleted()
     }
+#if os(visionOS)
+
+    func drawLayer(_ layerDrawable : LayerRenderer.Drawable,
+                   _ renderCmd: MTLRenderCommandEncoder,
+                   _ viewports: [MTLViewport]) {
+
+//????        guard let eyeBuf, let mesh, let renderPipe else { return }
+//        eyeBuf.setViewMappings(renderCmd, layerDrawable, viewports)
+//        eyeBuf.setUniformBuf(renderCmd)
+//        mesh.drawMesh(renderCmd, renderPipe)
+    }
+#endif
 
 }

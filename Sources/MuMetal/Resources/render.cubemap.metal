@@ -4,29 +4,28 @@
 
 using namespace metal;
 
-struct VertexCube {
+struct VertexOut {
     float4 position [[ position ]];
     float4 texCoord;
 };
 
-struct Vertex {
+struct VertexCube {
     float4 position [[ attribute(0) ]];
-    float4 normal   [[ attribute(1) ]];
 };
 
 struct CubemapUniforms {
     float4x4 projectModel;
 };
 
-// MARK: - vertex
+// MARK: - Vertex
 
-vertex VertexCube vertexCubemap
+vertex VertexOut vertexCubemap
 (
- constant Vertex*          in        [[ buffer(0) ]],
+ constant VertexCube*      in        [[ buffer(0) ]],
  constant CubemapUniforms  &uniforms [[ buffer(1) ]],
  uint32_t                  vertexID  [[ vertex_id ]])
 {
-    VertexCube out;
+    VertexOut out;
 
     float4 position = in[vertexID].position;
 
@@ -35,11 +34,12 @@ vertex VertexCube vertexCubemap
 
     return out;
 }
-// MARK: - fragment
+
+// MARK: - Fragment via index texture
 
 fragment half4 fragmentCubeIndex
 (
- VertexCube         out     [[ stage_in   ]],
+ VertexOut          out     [[ stage_in   ]],
  texturecube<half>  cubeTex [[ texture(0) ]],
  texture2d<half>    inTex   [[ texture(1) ]],
  constant float2&   repeat  [[ buffer(1)  ]],
@@ -81,9 +81,11 @@ fragment half4 fragmentCubeIndex
     return inTex.sample(samplr, modCoord);
 }
 
+// MARK: - fragment color
+
 fragment half4 fragmentCubeColor
 (
- VertexCube         out     [[ stage_in   ]],
+ VertexOut          out     [[ stage_in   ]],
  texturecube<half>  cubeTex [[ texture(0) ]])
 {
     constexpr sampler samplr(filter::linear,

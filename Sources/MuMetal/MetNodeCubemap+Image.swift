@@ -1,9 +1,5 @@
-//
-//  File.swift
-//  
-//
 //  created by musesum on 4/5/23.
-//
+
 
 import CoreImage
 extension MetNodeCubemap {

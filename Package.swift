@@ -12,12 +12,15 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/musesum/MuFlo.git", .branch("main")),
+        .package(url: "https://github.com/musesum/MuVision.git", .branch("main")),
     ],
     targets: [
         .target(
             name: "MuMetal",
             dependencies: [
-                .product(name: "MuFlo", package: "MuFlo")],
+                .product(name: "MuFlo", package: "MuFlo"),
+                .product(name: "MuVision", package: "MuVision")
+            ],
             resources: [.process("Resources")]),
         .testTarget(
             name: "MuMetalTests",
