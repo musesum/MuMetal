@@ -6,7 +6,7 @@ import Foundation
 #else
 import AVFoundation
 
-extension MetCamera: AVCaptureVideoDataOutputSampleBufferDelegate {
+extension Camera: AVCaptureVideoDataOutputSampleBufferDelegate {
 
     private func texture(_ sampleBuf: CMSampleBuffer) -> MTLTexture? {
         guard let textureCache else { return err("textureCache") }

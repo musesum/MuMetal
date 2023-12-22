@@ -3,17 +3,14 @@
 
 import UIKit
 
-/// x,y clips inside width,height
-public typealias ClipRect = CGRect
-
-public class MetAspect {
+public class AspectRatio {
 
     /** create a clipping rect where x,y is inside boundary, not offset
     - Parameters:
       - from: sourc size to rescale and clip
       - to: destination size in which to fill
      */
-    static public func fillClip(from: CGSize, to: CGSize) -> ClipRect {
+    static public func fillClip(from: CGSize, to: CGSize) -> CGRect {
 
         let ht = to.height      // height to
         let wt = to.width       // width to

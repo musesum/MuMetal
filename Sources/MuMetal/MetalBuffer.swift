@@ -7,12 +7,12 @@ import MuFlo
 
 // only float buffers are allowed for now
 
-public let Float1Len = MemoryLayout<Float>.size
-public let Float2Len = MemoryLayout<SIMD2<Float>>.size
-public let Float3Len = MemoryLayout<SIMD3<Float>>.size
-public let Float4Len = MemoryLayout<SIMD4<Float>>.size
+public let Float1size = MemoryLayout<Float>.size
+public let Float2size = MemoryLayout<SIMD2<Float>>.size
+public let Float3size = MemoryLayout<SIMD3<Float>>.size
+public let Float4size = MemoryLayout<SIMD4<Float>>.size
 
-public class MetBuffer {
+public class MetalBuffer {
 
     private var name = "" // name of Metal Kernel
     public var bufIndex = 0  // index in metal buffer
@@ -42,28 +42,17 @@ public class MetBuffer {
 
         switch floats.count {
             case 1:
-
                 buf1 = floats[0]
-                mtlBuffer = device.makeBuffer(bytes: &buf1,
-                                              length: Float1Len)
-
+                mtlBuffer = device.makeBuffer(bytes: &buf1, length: Float1size)
             case 2:
-
                 buf2 = SIMD2<Float>(floats)
-                mtlBuffer = device.makeBuffer(bytes: &buf2,
-                                              length: Float2Len)
+                mtlBuffer = device.makeBuffer(bytes: &buf2, length: Float2size)
             case 3:
-
                 buf3 = SIMD3<Float>(floats)
-                mtlBuffer = device.makeBuffer(bytes: &buf3,
-                                              length: Float3Len)
-
+                mtlBuffer = device.makeBuffer(bytes: &buf3, length: Float3size)
             case 4:
-
                 buf4 = SIMD4<Float>(floats)
-                mtlBuffer = device.makeBuffer(bytes: &buf4,
-                                              length: Float4Len)
-
+                mtlBuffer = device.makeBuffer(bytes: &buf4, length: Float4size)
             default:
                 print("⁉️ updateFloats unknown count: \(floats)")
 

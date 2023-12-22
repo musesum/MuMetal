@@ -95,7 +95,7 @@ import Foundation
 public typealias FloatRG16 = (Float16,Float16)
 public typealias Quad = [FloatRG16]
 
-class CubeDex {
+class CubemapIndex {
 
 
     var size = CGSize.zero
@@ -448,18 +448,18 @@ class CubeDex {
 
         """  // keep blank line
 
-        let cubeDex = CubeDex(CGSize(width: 6,height: 6))
+        let cubemapIndex = CubemapIndex(CGSize(width: 6,height: 6))
         var err = 0
-        err += compare(cubeDex.scriptQuad(cubeDex.top  ), topStr  )
-        err += compare(cubeDex.scriptQuad(cubeDex.bot  ), botStr  )
-        err += compare(cubeDex.scriptQuad(cubeDex.front), frontStr)
-        err += compare(cubeDex.scriptQuad(cubeDex.left ), leftStr )
-        err += compare(cubeDex.scriptQuad(cubeDex.right), rightStr)
-        err += compare(cubeDex.scriptQuad(cubeDex.back ), backStr )
+        err += compare(cubemapIndex.scriptQuad(cubemapIndex.top  ), topStr  )
+        err += compare(cubemapIndex.scriptQuad(cubemapIndex.bot  ), botStr  )
+        err += compare(cubemapIndex.scriptQuad(cubemapIndex.front), frontStr)
+        err += compare(cubemapIndex.scriptQuad(cubemapIndex.left ), leftStr )
+        err += compare(cubemapIndex.scriptQuad(cubemapIndex.right), rightStr)
+        err += compare(cubemapIndex.scriptQuad(cubemapIndex.back ), backStr )
 
         print (err == 0
-               ? "CubeDex test passed"
-               : "CubeDex test has \(err) errors")
+               ? "CubemapIndex test passed"
+               : "CubemapIndex test has \(err) errors")
     }
 }
 

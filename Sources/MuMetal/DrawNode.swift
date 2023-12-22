@@ -7,11 +7,11 @@ public protocol TouchDrawDelegate {
     func drawTexture(_ texBuf: UnsafeMutablePointer<UInt32>, size: CGSize) -> Bool
 }
 
-public class MetNodeDraw: MetNodeCompute {
+public class DrawNode: ComputeNode {
 
     public var drawDelegate: TouchDrawDelegate?
 
-    public init(_ pipeline: MetPipeline,
+    public init(_ pipeline: Pipeline,
                 _ drawDelegate: TouchDrawDelegate) {
 
         super.init(pipeline, "draw", "compute.draw")

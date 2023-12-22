@@ -10,18 +10,18 @@ public protocol MetFacePoseDelegate {
     func didUpdate(_ ciImage: CIImage)
 }
 
-open class MetFacePose: NSObject {
+open class FacePose: NSObject {
 
-    private let pipeline: MetPipeline
+    private let pipeline: Pipeline
     private let delegate: MetFacePoseDelegate?
     private var faceMask: Bool
 
     private var visionSequence: VNSequenceRequestHandler!
     private var faceRectangles: VNDetectFaceRectanglesRequest!
     private var personSegment: VNGeneratePersonSegmentationRequest!
-    private var angleColors: MetFaceAngleColors?
+    private var angleColors: FaceAngleColors?
     private var ciContext: CIContext!
-    private var camSession: MetCamera!
+    private var camSession: Camera!
 
     var ciImage: CIImage? {
         didSet {
@@ -31,7 +31,7 @@ open class MetFacePose: NSObject {
         }
     }
 
-    public init(_ pipeline: MetPipeline,
+    public init(_ pipeline: Pipeline,
                 _ faceMask: Bool,
                 _ delegate: MetFacePoseDelegate? = nil) {
 
@@ -42,7 +42,7 @@ open class MetFacePose: NSObject {
         super.init()
         
         ciContext = CIContext(mtlDevice: pipeline.device)
-        camSession = MetCamera(self, position: .front)
+        camSession = Camera(self, position: .front)
         camSession.startCamera()
 
         setupFacePose()
@@ -58,7 +58,7 @@ open class MetFacePose: NSObject {
         faceRectangles = VNDetectFaceRectanglesRequest { [weak self] request, _ in
             guard let face = request.results?.first as? VNFaceObservation else { return }
             // Generate RGB color intensity values for the face rectangle angles.
-            self?.angleColors = MetFaceAngleColors(roll: face.roll, pitch: face.pitch, yaw: face.yaw)
+            self?.angleColors = FaceAngleColors(roll: face.roll, pitch: face.pitch, yaw: face.yaw)
         }
         faceRectangles.revision = VNDetectFaceRectanglesRequestRevision3
 
@@ -124,7 +124,7 @@ open class MetFacePose: NSObject {
 
 // MARK: - Capture Video Data
 
-extension MetFacePose: AVCaptureVideoDataOutputSampleBufferDelegate {
+extension FacePose: AVCaptureVideoDataOutputSampleBufferDelegate {
     @objc public func captureOutput(_ : AVCaptureOutput,
                                     didOutput sampleBuf: CMSampleBuffer,
                                     from _: AVCaptureConnection) {

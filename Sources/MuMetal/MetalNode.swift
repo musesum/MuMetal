@@ -5,20 +5,20 @@ import MetalKit
 import QuartzCore
 import MuFlo
 
-public enum MetNodeType { case computing, rendering }
+public enum MetalNodeType { case computing, rendering }
 
-open class MetNodeRender: MetNode {
+open class RenderNode: MetalNode {
 
     public var renderPipe: MTLRenderPipelineState!
 }
 
-open class MetNode: Equatable {
+open class MetalNode: Equatable {
 
     var id = Visitor.nextId()
-    public static func == (lhs: MetNode, rhs: MetNode) -> Bool { return lhs.id == rhs.id }
+    public static func == (lhs: MetalNode, rhs: MetalNode) -> Bool { return lhs.id == rhs.id }
 
     public var name: String
-    public var metType: MetNodeType
+    public var metType: MetalNodeType
     public var filename = "" // optional filename for runtime compile of shader file
 
     public var inTex: MTLTexture?   // input texture 0
@@ -28,19 +28,19 @@ open class MetNode: Equatable {
     public var library: MTLLibrary!
     public var function: MTLFunction?
 
-    public var inNode: MetNode?    // input node
-    public var outNode: MetNode?   // output node
+    public var inNode: MetalNode?    // input node
+    public var outNode: MetalNode?   // output node
 
-    internal var nameBuffer = [String: MetBuffer]()
+    internal var nameBuffer = [String: MetalBuffer]()
 
     public var loops = 1
     public var isOn = false
-    public var pipeline: MetPipeline
+    public var pipeline: Pipeline
 
-    public init(_ pipeline : MetPipeline,
+    public init(_ pipeline : Pipeline,
                 _ name     : String,
                 _ filename : String = "",
-                _ type     : MetNodeType) {
+                _ type     : MetalNodeType) {
 
         self.pipeline = pipeline
         self.name = name
@@ -52,7 +52,7 @@ open class MetNode: Equatable {
     }
 
     func makeNewTex(_ via: String) -> MTLTexture? {
-        if let tex = MetTexCache.makeTexturePixelFormat(.bgra8Unorm, size: pipeline.drawSize, device: pipeline.device) {
+        if let tex = TextureCache.makeTexturePixelFormat(.bgra8Unorm, size: pipeline.drawSize, device: pipeline.device) {
             let texPtr = String.pointer(tex)
             print("makeNewTex via: \(via) => \(texPtr)")
             return tex

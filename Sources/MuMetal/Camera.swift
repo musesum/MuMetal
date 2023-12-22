@@ -4,9 +4,9 @@ import Metal
 import UIKit
 #if os(visionOS)
 #else
-public final class MetCamera: NSObject {
+public final class Camera: NSObject {
 
-    public static var shared = MetCamera(nil, position: .front)
+    public static var shared = Camera(nil, position: .front)
     
     var uiOrientation: UIInterfaceOrientation { get {
         UIApplication.shared.connectedScenes
@@ -16,7 +16,7 @@ public final class MetCamera: NSObject {
 
     var camTex: MTLTexture?  // optional texture 2
     var camPos: AVCaptureDevice.Position = .front
-    var camState: MetCameraState = .waiting
+    var camState: CameraState = .waiting
 
     private var camSession = AVCaptureSession()
     private var camQueue = DispatchQueue(label: "CameraQueue", attributes: [])

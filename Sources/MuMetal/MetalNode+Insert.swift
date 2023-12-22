@@ -2,10 +2,10 @@
 
 import Foundation
 
-extension MetNode {
+extension MetalNode {
 
     @discardableResult
-    public func insert(before: MetNode?) -> MetNode? {
+    public func insert(before: MetalNode?) -> MetalNode? {
         if let before {
             if before.id == self.id { return self }
             inNode = before.inNode
@@ -16,7 +16,7 @@ extension MetNode {
     }
     
     @discardableResult
-    public func insert(after: MetNode?) -> MetNode {
+    public func insert(after: MetalNode?) -> MetalNode {
         if let after {
             if after.id == self.id { return self }
             inNode = after
@@ -32,8 +32,8 @@ extension MetNode {
     public enum InsertWhere { case above, below }
 
     @discardableResult
-    public func insertNode(_ insertNode: MetNode,
-                           _ insertWhere: InsertWhere) -> MetNode? {
+    public func insertNode(_ insertNode: MetalNode,
+                           _ insertWhere: InsertWhere) -> MetalNode? {
 
         if insertNode.id == self.id { return self }
 
@@ -70,7 +70,7 @@ extension MetNode {
         return self
     }
     @discardableResult
-    public func replace(with newNode: MetNode) -> MetNode? {
+    public func replace(with newNode: MetalNode) -> MetalNode? {
 
         // ignore replaceing self with self
         if newNode.id == self.id { return self }

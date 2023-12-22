@@ -1,7 +1,7 @@
 
 import AVKit
 
-public class MetNodeRecord: MetNodeCompute {
+public class RecordNode: ComputeNode {
     
     var isRecording = false
     var recordingStartTime = TimeInterval(0)
@@ -10,7 +10,7 @@ public class MetNodeRecord: MetNodeCompute {
     var assetWriterInput: AVAssetWriterInput?
     var inputPixelBufferAdaptor: AVAssetWriterInputPixelBufferAdaptor?
     
-    public init(_ pipeline: MetPipeline,
+    public init(_ pipeline: Pipeline,
                 _ filename: String = "compute.record") {
         
         super.init(pipeline, "record", filename)

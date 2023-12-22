@@ -5,16 +5,16 @@ import UIKit
 import MuFlo
 
 
-public class MetNodeCamix: MetNodeCamera {
+public class CamixNode: CameraNode {
     
     public init(_ root˚    : Flo,
-                _ pipeline : MetPipeline) {
+                _ pipeline : Pipeline) {
 
         super.init(root˚, pipeline, "camix", "compute.camix")
     }
 }
 
-public class MetNodeCamera: MetNodeCompute {
+public class CameraNode: ComputeNode {
 
     private var front˚: Flo?
     var front: Bool = true
@@ -23,7 +23,7 @@ public class MetNodeCamera: MetNodeCompute {
 
     public init(
         _ root˚     : Flo,
-        _ pipeline  : MetPipeline,
+        _ pipeline  : Pipeline,
         _ name      : String = "camera",
         _ filename  : String = "compute.camera") {
 
@@ -35,7 +35,7 @@ public class MetNodeCamera: MetNodeCompute {
         self.front = front
 #if os(visionOS)
 #else
-        MetCamera.shared.facing(front)
+        Camera.shared.facing(front)
 #endif
     }
 
@@ -89,11 +89,11 @@ public class MetNodeCamera: MetNodeCompute {
         #if os(visionOS)
          outTex = inTex
         #else
-        if isOn, MetCamera.shared.hasNewTex {
+        if isOn, Camera.shared.hasNewTex {
             // inTex is used by camix.metal, but ignored by camera.metal
             inTex = inNode?.outTex
             outTex = outTex
-            altTex = MetCamera.shared.camTex
+            altTex = Camera.shared.camTex
         } else {
             outTex = inTex
         }
@@ -103,7 +103,7 @@ public class MetNodeCamera: MetNodeCompute {
     override public func computeNode(_ computeCmd: MTLComputeCommandEncoder) {
         #if os(visionOS)
         #else
-        if isOn, MetCamera.shared.hasNewTex {
+        if isOn, Camera.shared.hasNewTex {
 
             let frame = getAspectFill()
             if frame != .zero {

@@ -3,7 +3,7 @@
 import AVFoundation
 import Photos
 
-extension MetNodeRecord {
+extension RecordNode {
     
     func removeURL(_ url: URL?) {
         guard let url = url else { return }

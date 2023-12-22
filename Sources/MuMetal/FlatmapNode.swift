@@ -5,7 +5,7 @@ import Metal
 import MetalKit
 import QuartzCore
 
-public class MetNodeFlatmap: MetNodeRender {
+public class FlatmapNode: RenderNode {
 
     public var cgImage: CGImage? { get {
         if let tex =  pipeline.metalLayer.nextDrawable()?.texture,
@@ -19,7 +19,7 @@ public class MetNodeFlatmap: MetNodeRender {
     private var viewSize  = SIMD2<Float>(repeating: 0)
     private var clipFrame = SIMD4<Float>(repeating: 0) // clip rect
 
-    public init(_ pipeline: MetPipeline,
+    public init(_ pipeline: Pipeline,
                 _ filename: String = "render.flatmap") {
 
         super.init(pipeline, "flatmap", filename, .rendering)
@@ -34,7 +34,7 @@ public class MetNodeFlatmap: MetNodeRender {
                         pipeline.metalLayer.contentsScale)
         self.viewSize = SIMD2<Float>(viewSize.floats())
 
-        let clip = MetAspect.fillClip(from: pipeline.drawSize,
+        let clip = AspectRatio.fillClip(from: pipeline.drawSize,
                                       to: viewSize).normalize()
         
         clipFrame = SIMD4<Float>(clip.floats())
@@ -100,8 +100,8 @@ public class MetNodeFlatmap: MetNodeRender {
 
         // vertex
         renderCmd.setVertexBuffer(vertices, offset: 0, index: 0)
-        renderCmd.setVertexBytes(&viewSize , length: Float2Len, index: 1)
-        renderCmd.setVertexBytes(&clipFrame, length: Float4Len, index: 2)
+        renderCmd.setVertexBytes(&viewSize , length: Float2size, index: 1)
+        renderCmd.setVertexBytes(&clipFrame, length: Float4size, index: 2)
         // fragment
         renderCmd.setFragmentTexture(inTex, index: 0)
         for buf in nameBuffer.values {

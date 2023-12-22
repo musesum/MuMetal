@@ -3,16 +3,16 @@
 import Foundation
 
 /// A structure that provides an RGB color intensity value for the roll, pitch, and yaw angles of face pose.
-struct MetFaceAngleColors {
+struct FaceAngleColors {
 
     let red: CGFloat
     let blue: CGFloat
     let green: CGFloat
 
     init(roll: NSNumber?, pitch: NSNumber?, yaw: NSNumber?) {
-        red   = 0.4 * MetFaceAngleColors.convert(value: roll, with: -.pi, and: .pi)
-        blue  = 0.3 * MetFaceAngleColors.convert(value: pitch, with: -.pi / 2, and: .pi / 2)
-        green = 0.3 * MetFaceAngleColors.convert(value: yaw, with: -.pi / 2, and: .pi / 2)
+        red   = 0.4 * FaceAngleColors.convert(value: roll, with: -.pi, and: .pi)
+        blue  = 0.3 * FaceAngleColors.convert(value: pitch, with: -.pi / 2, and: .pi / 2)
+        green = 0.3 * FaceAngleColors.convert(value: yaw, with: -.pi / 2, and: .pi / 2)
     }
 
     static func convert(value: NSNumber?, with minValue: CGFloat, and maxValue: CGFloat) -> CGFloat {

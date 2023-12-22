@@ -8,33 +8,25 @@ import ModelIO
 import MetalKit
 import MuVision
 
-public class ModelCubemap {
-    let vertices: [Float]
-    let indices: [UInt16]
-    let device: MTLDevice
-    let mdlMesh: MDLMesh
-    var vertexBuf: MTLBuffer!
-    var indexBuf: MTLBuffer!
+public class CubemapModel: MeshModel {
 
     struct VertexCube {
         var position : vector_float4 = .zero
     }
 
-    init(_ device: MTLDevice,
-         _ metalVD: MTLVertexDescriptor) {
+    override init(_ device: MTLDevice,
+                  _ metalVD: MTLVertexDescriptor) {
 
-        self.device = device
+        super.init(device, metalVD)
 
-        let _0 = Float(-0.5) // position unit 0
-        let _1 = Float( 0.5) // position unit 1
-
+        let r =  Float( 0.5)
         vertices = [
-            _0,_1,_1, 1,   _1,_1,_1, 1,  _1,_1,_0, 1,  _0,_1,_0, 1, // +Y
-            _0,_0,_0, 1,   _1,_0,_0, 1,  _1,_0,_1, 1,  _0,_0,_1, 1, // -Y
-            _0,_0,_1, 1,   _1,_0,_1, 1,  _1,_1,_1, 1,  _0,_1,_1, 1, // +Z
-            _1,_0,_0, 1,   _0,_0,_0, 1,  _0,_1,_0, 1,  _1,_1,_0, 1, // -Z
-            _0,_0,_0, 1,   _0,_0,_1, 1,  _0,_1,_1, 1,  _0,_1,_0, 1, // -X
-            _1,_0,_1, 1,   _1,_0,_0, 1,  _1,_1,_0, 1,  _1,_1,_1, 1, // +X
+            -r,+r,+r, 1,   +r,+r,+r, 1,  +r,+r,-r, 1,  -r,+r,-r, 1, // +Y
+            -r,-r,-r, 1,   +r,-r,-r, 1,  +r,-r,+r, 1,  -r,-r,+r, 1, // -Y
+            -r,-r,+r, 1,   +r,-r,+r, 1,  +r,+r,+r, 1,  -r,+r,+r, 1, // +Z
+            +r,-r,-r, 1,   -r,-r,-r, 1,  -r,+r,-r, 1,  +r,+r,-r, 1, // -Z
+            -r,-r,-r, 1,   -r,-r,+r, 1,  -r,+r,+r, 1,  -r,+r,-r, 1, // -X
+            +r,-r,+r, 1,   +r,-r,-r, 1,  +r,+r,-r, 1,  +r,+r,+r, 1, // +X
         ]
         indices =  [
             0,   2,  3,   2,  0,  1,
@@ -45,38 +37,18 @@ public class ModelCubemap {
             20, 22, 23,  22, 20, 21,
         ]
 
-        let verticesLen = vertices.count * MemoryLayout<VertexCube>.stride
-        let indicesLen = indices.count * MemoryLayout<UInt16>.size
-        vertexBuf = device.makeBuffer(bytes: vertices, length: verticesLen)
-        indexBuf  = device.makeBuffer(bytes: indices , length: indicesLen )
-
-        let allocator = MTKMeshBufferAllocator(device: device)
-        let vertexData = Data(bytes: vertices, count: verticesLen)
-        let vertexBuffer = allocator.newBuffer(with: vertexData, type: .vertex)
-
-        let indexData = Data(bytes: indices, count: indices.count * MemoryLayout<UInt32>.stride)
-        let indexBuffer = allocator.newBuffer(with: indexData, type: .index)
-
-        let submesh = MDLSubmesh(indexBuffer: indexBuffer,
-                                 indexCount: indices.count,
-                                 indexType: .uint16,
-                                 geometryType: .triangles,
-                                 material: nil) // You can create a default MDLMaterial if needed
-
-        mdlMesh = MDLMesh(vertexBuffers: [vertexBuffer],
-                          vertexCount: vertices.count,
-                          descriptor:  metalVD.modelVD,
-                          submeshes: [submesh])
-
+        updateBuffers(
+            verticesLen : vertices.count * MemoryLayout<VertexCube>.stride,
+            indicesLen  : indices.count * MemoryLayout<UInt16>.size)
     }
 }
-public class MeshCubemap: MeshBase {
+public class CubemapMetal: MeshMetal {
 
-    var model: ModelCubemap!
+    var model: CubemapModel!
 
     init(_ device: MTLDevice) {
         super.init(device: device, compare: .less, winding: .counterClockwise)
-        model = ModelCubemap(device, metalVD)
+        model = CubemapModel(device, metalVD)
 
         mtkMesh = try! MTKMesh(mesh: model.mdlMesh, device: device)
     }
@@ -86,23 +58,23 @@ public class MeshCubemap: MeshBase {
     }
 }
 
-public class MetNodeCubemap: MetNodeRender {
+public class CubemapNode: RenderNode {
 
     struct CubemapUniforms {
         var projectModel : matrix_float4x4
     }
 
     private var uniformBuf: MTLBuffer!
-    private var meshCubemap: MeshCubemap!
-    private var cubeDex: CubeDex?
+    private var meshCubemap: CubemapMetal!
+    private var cubemapIndex: CubemapIndex?
     private let viaIndex: Bool
 
     public var cubeTex: MTLTexture?
 
-    public init(_ pipeline: MetPipeline,
+    public init(_ pipeline: Pipeline,
                 _ viaIndex: Bool) {
 
-        self.meshCubemap = MeshCubemap(pipeline.device)
+        self.meshCubemap = CubemapMetal(pipeline.device)
         self.viaIndex = viaIndex
         super.init(pipeline, "cubemap", "render.cubemap", .rendering)
 
@@ -211,40 +183,41 @@ public class MetNodeCubemap: MetNodeRender {
         for slice in 0 ..< 6 {
             let image = UIImage(named: names[slice])!
             let data = image.cgImage!.pixelData()
-            texture.replace(region:         region,
-                            mipmapLevel:    0,
-                            slice:          slice,
-                            withBytes:      data!,
-                            bytesPerRow:    bytesPerRow,
-                            bytesPerImage:  bytesPerImage)
+
+            texture.replace(region        : region,
+                            mipmapLevel   : 0,
+                            slice         : slice,
+                            withBytes     : data!,
+                            bytesPerRow   : bytesPerRow,
+                            bytesPerImage : bytesPerImage)
         }
         return texture
     }
 
     func makeIndexCube(_ size: CGSize) -> MTLTexture? {
 
-        if cubeDex?.size != size {
-            cubeDex = CubeDex(size)
+        if cubemapIndex?.size != size {
+            cubemapIndex = CubemapIndex(size)
         }
-        guard let cubeDex else { return nil }
+        guard let cubemapIndex else { return nil }
 
         let td = MTLTextureDescriptor
             .textureCubeDescriptor(pixelFormat : .rg16Float,
-                                   size        : cubeDex.side,
+                                   size        : cubemapIndex.side,
                                    mipmapped   : true)
         let texture = pipeline.device.makeTexture(descriptor: td)!
 
         let bytesPerPixel = 4
-        let bytesPerRow = bytesPerPixel * cubeDex.side
-        let bytesPerImage = bytesPerRow * cubeDex.side
-        let region = MTLRegionMake2D(0, 0, cubeDex.side, cubeDex.side)
+        let bytesPerRow = bytesPerPixel * cubemapIndex.side
+        let bytesPerImage = bytesPerRow * cubemapIndex.side
+        let region = MTLRegionMake2D(0, 0, cubemapIndex.side, cubemapIndex.side)
 
-        addCubeFace(cubeDex.left  , 0)
-        addCubeFace(cubeDex.right , 1)
-        addCubeFace(cubeDex.top   , 2)
-        addCubeFace(cubeDex.bot   , 3)
-        addCubeFace(cubeDex.front , 4)
-        addCubeFace(cubeDex.back  , 5)
+        addCubeFace(cubemapIndex.left  , 0)
+        addCubeFace(cubemapIndex.right , 1)
+        addCubeFace(cubemapIndex.top   , 2)
+        addCubeFace(cubemapIndex.bot   , 3)
+        addCubeFace(cubemapIndex.front , 4)
+        addCubeFace(cubemapIndex.back  , 5)
 
         func addCubeFace(_ quad: Quad, _ slice: Int) {
 

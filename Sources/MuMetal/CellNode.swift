@@ -4,7 +4,7 @@ import Foundation
 import Metal
 import MetalKit
 
-public class MetNodeCell: MetNodeCompute {
+public class CellNode: ComputeNode {
     
     // cellular automata uses double buffering
     override public func updateTextures() {

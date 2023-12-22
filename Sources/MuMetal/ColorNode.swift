@@ -9,11 +9,11 @@ public typealias DrawTextureFunc = ((_ bytes: UnsafeMutablePointer<UInt32>,
 
 public typealias GetTextureFunc = ((_ size: Int) -> (UnsafeMutablePointer<UInt32>))
 
-public class MetNodeColor: MetNodeCompute {
+public class ColorNode: ComputeNode {
 
     public var getPal: GetTextureFunc?
 
-    public init(_ pipeline: MetPipeline,
+    public init(_ pipeline: Pipeline,
                 _ getPal: @escaping GetTextureFunc) {
 
         super.init(pipeline, "color", "compute.color")
@@ -41,7 +41,7 @@ public class MetNodeColor: MetNodeCompute {
         }
         func makePaletteTex() -> MTLTexture? {
             
-            let paletteTex = MetTexCache
+            let paletteTex = TextureCache
                 .makeTexturePixelFormat(.bgra8Unorm,
                                         size: CGSize(width: 256, height: 1),
                                         device: pipeline.device)

@@ -6,16 +6,16 @@ import MetalKit
 
 public let MetBaseFormat = MTLPixelFormat.bgra8Unorm
 
-public class MetTexCache {
+public class TextureCache {
 
-    static var cache = [MTLTexture]() //TextureCache
+    static var textures = [MTLTexture]()
 
     static func recycleTextureFormat(_ pixelFormat: MTLPixelFormat, size: CGSize) -> MTLTexture? {
-        for tex in cache {
-            if  CGFloat(tex.width)  == size.width,
-                CGFloat(tex.height) == size.height,
-                tex.pixelFormat == pixelFormat {
-                return tex
+        for texture in textures {
+            if  CGFloat(texture.width)  == size.width,
+                CGFloat(texture.height) == size.height,
+                texture.pixelFormat == pixelFormat {
+                return texture
             }
         }
         return nil
@@ -23,18 +23,18 @@ public class MetTexCache {
 
     public static func makeTexturePixelFormat(_ pixelFormat: MTLPixelFormat, size: CGSize, device: MTLDevice?) -> MTLTexture? {
 
-        var tex = recycleTextureFormat(pixelFormat, size: size)
+        var texture = recycleTextureFormat(pixelFormat, size: size)
 
-        if tex == nil {
+        if texture == nil {
             let td = MTLTextureDescriptor()
             td.textureType = .type2D
             td.pixelFormat = pixelFormat
             td.width = Int(size.width)
             td.height = Int(size.height)
             td.usage = [.shaderRead, .shaderWrite]
-            tex = device?.makeTexture(descriptor: td)
+            texture = device?.makeTexture(descriptor: td)
         }
-        return tex
+        return texture
     }
 }
  

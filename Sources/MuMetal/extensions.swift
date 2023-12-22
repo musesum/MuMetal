@@ -10,13 +10,13 @@ import Foundation
 extension CGRect {
 
     /// normalize to 0...1
-    public func normalize() -> ClipRect {
+    public func normalize() -> CGRect {
         let x = origin.x
         let y = origin.y
         let w = size.width
         let h = size.height
 
-        let pp = ClipRect(x: x / w,
+        let pp = CGRect(x: x / w,
                           y: y / h,
                           width: (w - 2*x) / w,
                           height:(h - 2*y) / h)

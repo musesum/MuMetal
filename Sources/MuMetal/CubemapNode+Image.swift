@@ -2,7 +2,7 @@
 
 
 import CoreImage
-extension MetNodeCubemap {
+extension CubemapNode {
 
     func makeImageCube(_ ciImage: CIImage) -> MTLTexture? {
 

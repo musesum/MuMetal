@@ -2,13 +2,13 @@
 
 import Metal
 
-open class MetNodeCompute: MetNode {
+open class ComputeNode: MetalNode {
 
     var computePipe: MTLComputePipelineState? // _cellRulePipeline;
     var threadSize = MTLSize()
     var threadCount = MTLSize()
 
-    public init(_ pipeline: MetPipeline,
+    public init(_ pipeline: Pipeline,
                 _ name: String,
                 _ filename: String = "") {
 

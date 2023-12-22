@@ -8,19 +8,19 @@ import Metal
 #if os(visionOS)
 import CompositorServices
 #endif
-open class MetPipeline: NSObject {
+open class Pipeline: NSObject {
 
     public var metalLayer = CAMetalLayer()
     public var device: MTLDevice!
     public var library: MTLLibrary?
 
-    public var flatmapNode: MetNodeRender?  // render 2d to screen
-    public var cubemapNode: MetNodeCubemap?  // render cubemap to screen
+    public var flatmapNode: RenderNode?  // render 2d to screen
+    public var cubemapNode: CubemapNode?  // render cubemap to screen
 
     public var commandQueue: MTLCommandQueue!  // queue w/ command buffers
-    public var nodeNamed = [String: MetNode]() //??  find node by name
-    public var firstNode: MetNode?    // 1st node in rendering chain
-    public var lastNode: MetNode?
+    public var nodeNamed = [String: MetalNode]() //??  find node by name
+    public var firstNode: MetalNode?    // 1st node in rendering chain
+    public var lastNode: MetalNode?
 
     public var drawSize = CGSize.zero  // size of draw surface
     public var viewSize = CGSize.zero  // size of render surface
@@ -72,7 +72,7 @@ open class MetPipeline: NSObject {
         return str
     }
 
-    public func removeNode(_ node: MetNode) {
+    public func removeNode(_ node: MetalNode) {
         node.inNode?.outNode = node.outNode
         node.outNode?.inNode = node.inNode
     }
@@ -86,10 +86,10 @@ open class MetPipeline: NSObject {
     }
 }
 
-extension MetPipeline {
+extension Pipeline {
 
     public func resize(_ viewSize: CGSize, _ scale: CGFloat) {
-        clipRect = MetAspect.fillClip(from: drawSize, to: viewSize).normalize()
+        clipRect = AspectRatio.fillClip(from: drawSize, to: viewSize).normalize()
         metalLayer.contentsScale = scale
         metalLayer.drawableSize = viewSize
         metalLayer.layoutIfNeeded() //???
@@ -166,13 +166,13 @@ extension MetPipeline {
     }
 
     public func computeNodes(_ commandBuf: MTLCommandBuffer,
-                             _ node: MetNode?) -> MetNode? {
+                             _ node: MetalNode?) -> MetalNode? {
         var node = node
 
         // compute
         if node?.metType == .computing,
            let computeCmd = commandBuf.makeComputeCommandEncoder() {
-            while let computeNode = node as? MetNodeCompute {
+            while let computeNode = node as? ComputeNode {
                 computeNode.updateTextures()
                 computeNode.computeNode(computeCmd)
                 node = computeNode.outNode
@@ -183,12 +183,12 @@ extension MetPipeline {
     }
     public func renderNodes(_ commandBuf: MTLCommandBuffer,
                             _ drawable: CAMetalDrawable,
-                            _ node: MetNode?) {
+                            _ node: MetalNode?) {
         var node = node
         if  node?.metType == .rendering,
             let renderCmd = commandBuf.makeRenderCommandEncoder(descriptor:  makeRenderPass(drawable)) {
 
-            while let renderNode = node as? MetNodeRender {
+            while let renderNode = node as? RenderNode {
                 renderNode.updateTextures()
                 renderNode.renderNode(renderCmd)
                 node = renderNode.outNode
