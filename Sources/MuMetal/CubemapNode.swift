@@ -8,25 +8,27 @@ import ModelIO
 import MetalKit
 import MuVision
 
-public class CubemapModel: MeshModel {
+public struct VertexCube {
+    var position : vector_float4 = .zero
+}
 
-    struct VertexCube {
-        var position : vector_float4 = .zero
-    }
 
-    override init(_ device: MTLDevice,
-                  _ metalVD: MTLVertexDescriptor) {
+public class CubemapModel: MeshModel<Float> {
 
-        super.init(device, metalVD)
+    override public init(_ device: MTLDevice,
+                         _ nameFormats: [VertexNameFormat],
+                         _ vertexStride: Int) {
 
-        let r =  Float( 0.5)
+        super.init(device, nameFormats, vertexStride)
+
+        let r = Float(0.5)
         vertices = [
             -r,+r,+r, 1,   +r,+r,+r, 1,  +r,+r,-r, 1,  -r,+r,-r, 1, // +Y
-            -r,-r,-r, 1,   +r,-r,-r, 1,  +r,-r,+r, 1,  -r,-r,+r, 1, // -Y
-            -r,-r,+r, 1,   +r,-r,+r, 1,  +r,+r,+r, 1,  -r,+r,+r, 1, // +Z
-            +r,-r,-r, 1,   -r,-r,-r, 1,  -r,+r,-r, 1,  +r,+r,-r, 1, // -Z
-            -r,-r,-r, 1,   -r,-r,+r, 1,  -r,+r,+r, 1,  -r,+r,-r, 1, // -X
-            +r,-r,+r, 1,   +r,-r,-r, 1,  +r,+r,-r, 1,  +r,+r,+r, 1, // +X
+             -r,-r,-r, 1,   +r,-r,-r, 1,  +r,-r,+r, 1,  -r,-r,+r, 1, // -Y
+             -r,-r,+r, 1,   +r,-r,+r, 1,  +r,+r,+r, 1,  -r,+r,+r, 1, // +Z
+             +r,-r,-r, 1,   -r,-r,-r, 1,  -r,+r,-r, 1,  +r,+r,-r, 1, // -Z
+             -r,-r,-r, 1,   -r,-r,+r, 1,  -r,+r,+r, 1,  -r,+r,-r, 1, // -X
+             +r,-r,+r, 1,   +r,-r,-r, 1,  +r,+r,-r, 1,  +r,+r,+r, 1, // +X
         ]
         indices =  [
             0,   2,  3,   2,  0,  1,
@@ -37,24 +39,27 @@ public class CubemapModel: MeshModel {
             20, 22, 23,  22, 20, 21,
         ]
 
-        updateBuffers(
-            verticesLen : vertices.count * MemoryLayout<VertexCube>.stride,
-            indicesLen  : indices.count * MemoryLayout<UInt16>.size)
+        let verticesLen = vertices.count * MemoryLayout<VertexCube>.stride
+        let indicesLen = indices.count * indices.count * MemoryLayout<UInt32>.size
+
+        vertexBuf = device.makeBuffer(bytes: vertices, length: verticesLen)
+        indexBuf  = device.makeBuffer(bytes: indices , length: indicesLen )
+
+        updateBuffers(verticesLen,indicesLen)
     }
 }
 public class CubemapMetal: MeshMetal {
 
-    var model: CubemapModel!
+    var cubemapModel: CubemapModel!
 
     init(_ device: MTLDevice) {
+    
         super.init(device: device, compare: .less, winding: .counterClockwise)
-        model = CubemapModel(device, metalVD)
+        let nameFormats: [VertexNameFormat] = [("position", .float4)]
+        let vertexStride = MemoryLayout<VertexCube>.stride
+        cubemapModel = CubemapModel(device, nameFormats,vertexStride)
+        mtkMesh = try! MTKMesh(mesh: cubemapModel.mdlMesh, device: device)
 
-        mtkMesh = try! MTKMesh(mesh: model.mdlMesh, device: device)
-    }
-
-    override public func makeMetalVD() {
-        addVertexFormat(.float4, 0)
     }
 }
 
@@ -63,18 +68,17 @@ public class CubemapNode: RenderNode {
     struct CubemapUniforms {
         var projectModel : matrix_float4x4
     }
-
-    private var uniformBuf: MTLBuffer!
-    private var meshCubemap: CubemapMetal!
-    private var cubemapIndex: CubemapIndex?
     private let viaIndex: Bool
+    private var cubemapMetal: CubemapMetal!
+    private var uniformBuf: MTLBuffer!
+    private var cubemapIndex: CubemapIndex?
 
     public var cubeTex: MTLTexture?
 
     public init(_ pipeline: Pipeline,
                 _ viaIndex: Bool) {
 
-        self.meshCubemap = CubemapMetal(pipeline.device)
+        self.cubemapMetal = CubemapMetal(pipeline.device)
         self.viaIndex = viaIndex
         super.init(pipeline, "cubemap", "render.cubemap", .rendering)
 
@@ -92,7 +96,8 @@ public class CubemapNode: RenderNode {
         let pd = MTLRenderPipelineDescriptor()
         pd.vertexFunction   = library.makeFunction(name: vertexName)
         pd.fragmentFunction = library.makeFunction(name: fragmentName)
-        pd.vertexDescriptor = meshCubemap.metalVD
+        pd.vertexDescriptor = cubemapMetal.metalVD
+        
         pd.colorAttachments[0].pixelFormat = .bgra8Unorm
         pd.depthAttachmentPixelFormat = .depth32Float
 
@@ -125,26 +130,10 @@ public class CubemapNode: RenderNode {
 
             //cubeTexture = makeCube(["px","nx","py","ny","pz","nz"], device)
         }
-
         uniformBuf = pipeline.device.makeBuffer(
             length: MemoryLayout<CubemapUniforms>.stride,
             options: .cpuCacheModeWriteCombined)!
 
-    }
-
-    public func renderNode_(_ renderCmd: MTLRenderCommandEncoder) {
-        guard isOn else { return }
-
-        renderCmd.setRenderPipelineState(renderPipe)
-        renderCmd.setVertexBuffer(uniformBuf, offset: 0, index: 1)
-        renderCmd.setFragmentTexture(cubeTex, index: 0)
-        if viaIndex, let inTex {
-            renderCmd.setFragmentTexture(inTex, index: 1)
-        }
-        for buf in nameBuffer.values {
-            renderCmd.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
-        }
-        meshCubemap.drawMesh(renderCmd) //????
     }
 
     override public func renderNode(_ renderCmd: MTLRenderCommandEncoder) {
@@ -159,7 +148,8 @@ public class CubemapNode: RenderNode {
         for buf in nameBuffer.values {
             renderCmd.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
         }
-         meshCubemap.drawMesh(renderCmd)
+        renderCmd.setCullMode(.none) // creates artifacts
+         cubemapMetal.drawMesh(renderCmd)
     }
 
     func makeImageCube(_ names: [String],

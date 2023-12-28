@@ -92,7 +92,7 @@ extension Pipeline {
         clipRect = AspectRatio.fillClip(from: drawSize, to: viewSize).normalize()
         metalLayer.contentsScale = scale
         metalLayer.drawableSize = viewSize
-        metalLayer.layoutIfNeeded() //???
+        metalLayer.layoutIfNeeded() 
     }
 
     public func makeRenderPass(_ metalDrawable: CAMetalDrawable) -> MTLRenderPassDescriptor {

@@ -112,7 +112,7 @@ class CubemapIndex {
     var left  : Quad
     var bot   : Quad
 
-    enum CubeTri: Int { case
+    enum CubeTriangle: Int { case
 
         // clock, counter
         nw_ne_c, ne_nw_c,
@@ -122,7 +122,7 @@ class CubemapIndex {
         maximum
     }
 
-    var cubeTris = [CubeTri: [FloatRG16]]()
+    var cubeTriangles = [CubeTriangle: [FloatRG16]]()
     /// triangle order for mapping `front` to other Quads
     //  front : [.nw_ne_c, .ne_se_c, .se_sw_c, .sw_nw_c]
     //  back  : [.nw_ne_c, .ne_se_c, .se_sw_c, .sw_nw_c]
@@ -228,12 +228,12 @@ class CubemapIndex {
         mapTris(.se_ne_c, to: .sw_nw_c, &left) // ; logQuad(left);
     }
 
-    func mapTris(_  srcTri : CubeTri,
-                 to dstTri : CubeTri,
+    func mapTris(_  srcTri : CubeTriangle,
+                 to dstTri : CubeTriangle,
                  _  quad   : inout Quad ) {
 
-        if let srcIndices = cubeTris[srcTri],
-           let dstIndices = cubeTris[dstTri] {
+        if let srcIndices = cubeTriangles[srcTri],
+           let dstIndices = cubeTriangles[dstTri] {
 
             logIndices(srcIndices, dstIndices)
 
@@ -267,14 +267,14 @@ class CubemapIndex {
         let S2 = S/2
 
         // first create trianglar index arrays
-        cubeTris[.nw_ne_c] = make_nw_ne_c()
-        cubeTris[.ne_nw_c] = make_ne_nw_c()
-        cubeTris[.ne_se_c] = make_ne_se_c()
-        cubeTris[.se_ne_c] = make_se_ne_c()
-        cubeTris[.se_sw_c] = make_se_sw_c()
-        cubeTris[.sw_se_c] = make_sw_se_c()
-        cubeTris[.sw_nw_c] = make_sw_nw_c()
-        cubeTris[.nw_sw_c] = make_nw_sw_c()
+        cubeTriangles[.nw_ne_c] = make_nw_ne_c()
+        cubeTriangles[.ne_nw_c] = make_ne_nw_c()
+        cubeTriangles[.ne_se_c] = make_ne_se_c()
+        cubeTriangles[.se_ne_c] = make_se_ne_c()
+        cubeTriangles[.se_sw_c] = make_se_sw_c()
+        cubeTriangles[.sw_se_c] = make_sw_se_c()
+        cubeTriangles[.sw_nw_c] = make_sw_nw_c()
+        cubeTriangles[.nw_sw_c] = make_nw_sw_c()
 
         // these are the triangle mapped to face of cube
         // next fill each face with indices to front face

@@ -4,7 +4,7 @@
 
 using namespace metal;
 
-struct VertexPlato {
+struct VertexOut {
     float4 position [[ position ]];
     float4 texCoord;
     float faceId;
@@ -13,8 +13,8 @@ struct VertexPlato {
 
 struct PlatoUniforms {
     
-    float range;    // from 0 to 1 to animate
-    float harmonif; // total depth of subdivisions
+    float range; // from 0 to 11 to animate
+    float depth; // total depth of subdivisions
     float passthru;
     float shadowWhite;
     float shadowDepth;
@@ -28,7 +28,7 @@ struct PlatoUniforms {
 };
 
 // index ranged  0...1
-struct PlatoVert01 {
+struct PlatoVertex {
     float4 pos0  [[attribute(0)]]; // position at 0
     float4 pos1  [[attribute(1)]]; // position at 1
     float4 norm0 [[attribute(2)]]; // normal at 0
@@ -36,24 +36,25 @@ struct PlatoVert01 {
     float vertId;
     float faceId;   // shared by 3 vertices
     float harmonic; // depth of subdivision
-    float padding;  // pad out 256 boundary
+    float phase;  // pad out 256 boundary
 };
 
-vertex VertexPlato vertexPlato
+vertex VertexOut vertexPlato
 (
- constant PlatoVert01*   in       [[ buffer(0) ]],
+ constant PlatoVertex*   in       [[ buffer(0) ]],
  constant PlatoUniforms& uniforms [[ buffer(1) ]],
  uint32_t                vertexId [[ vertex_id ]])
 {
-    VertexPlato out;
-
-    float range  = uniforms.range;// 0...1 maps pv0...pv1
+    VertexOut out;
     float3 pos0  = in[vertexId].pos0.xyz;
     float3 pos1  = in[vertexId].pos1.xyz;
     float3 norm0 = in[vertexId].norm0.xyz;
     float3 norm1 = in[vertexId].norm1.xyz;
-    float4 pos   = float4((pos0+(pos1-pos0)*range), 1);
-    float4 norm  = float4((norm0+(norm1-norm0)*range), 0);
+    float phase = in[vertexId].phase;
+
+    float range01  = uniforms.range;// 0...1 maps pv0...pv1
+    float4 pos   = float4((pos0 + (pos1-pos0) * range01), 1);
+    float4 norm  = float4((norm0 + (norm1-norm0) * range01), 0);
 
     float4 camPos = uniforms.worldCamera;
     float4 worldPos = uniforms.identity * pos;
@@ -72,7 +73,7 @@ vertex VertexPlato vertexPlato
 
 fragment half4 fragmentPlatoCubeIndex
 (
- VertexPlato             out      [[ stage_in   ]],
+ VertexOut               out      [[ stage_in   ]],
  constant PlatoUniforms& uniforms [[ buffer(1)  ]],
  texturecube<half>       cubeTex  [[ texture(0) ]],
  texture2d  <half>       inTex    [[ texture(1) ]],
@@ -110,7 +111,7 @@ fragment half4 fragmentPlatoCubeIndex
 /// vert.color is used for creating a shadow mixed with cube's color
 fragment half4 fragmentPlatoCubeColor
 (
- VertexPlato       out     [[ stage_in   ]],
+ VertexOut         out     [[ stage_in   ]],
  texturecube<half> cubeTex [[ texture(0) ]])
 {
     float3 texCoord = float3(out.texCoord.x, out.texCoord.y, -out.texCoord.z);
@@ -124,10 +125,9 @@ fragment half4 fragmentPlatoCubeColor
 /// no cubemap, untested
 fragment half4 fragmentPlatoColor
 (
- VertexPlato      out   [[ stage_in   ]],
+ VertexOut        out   [[ stage_in   ]],
  texture2d <half> inTex [[ texture(1) ]])
 {
-
     constexpr sampler samplr(filter::linear,
                              address::repeat);
 

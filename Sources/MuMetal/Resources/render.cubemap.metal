@@ -9,7 +9,7 @@ struct VertexOut {
     float4 texCoord;
 };
 
-struct VertexCube {
+struct VertexIn {
     float4 position [[ attribute(0) ]];
 };
 
@@ -21,7 +21,7 @@ struct CubemapUniforms {
 
 vertex VertexOut vertexCubemap
 (
- constant VertexCube*      in        [[ buffer(0) ]],
+ constant VertexIn*        in        [[ buffer(0) ]],
  constant CubemapUniforms  &uniforms [[ buffer(1) ]],
  uint32_t                  vertexID  [[ vertex_id ]])
 {
