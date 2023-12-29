@@ -148,8 +148,9 @@ public class CubemapNode: RenderNode {
         for buf in nameBuffer.values {
             renderCmd.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
         }
-        renderCmd.setCullMode(.none) // creates artifacts
-         cubemapMetal.drawMesh(renderCmd)
+        renderCmd.setDepthStencilState(pipeline.depthStencil(write: false))
+
+        cubemapMetal.drawMesh(renderCmd)
     }
 
     func makeImageCube(_ names: [String],
