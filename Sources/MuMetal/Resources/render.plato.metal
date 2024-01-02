@@ -14,7 +14,7 @@ struct VertexOut {
 struct PlatoUniforms {
     
     float range; // from 0 to 11 to animate
-    float depth; // total depth of subdivisions
+    float convex; // total depth of subdivisions
     float passthru;
     float shadowWhite;
     float shadowDepth;
@@ -24,7 +24,6 @@ struct PlatoUniforms {
     float4x4 projectModel;
     float4   worldCamera;
     float4x4 identity;
-    float4x4 inverse; // of identity
 };
 
 // index ranged  0...1
@@ -50,7 +49,6 @@ vertex VertexOut vertexPlato
     float3 pos1  = in[vertexId].pos1.xyz;
     float3 norm0 = in[vertexId].norm0.xyz;
     float3 norm1 = in[vertexId].norm1.xyz;
-    float phase = in[vertexId].phase;
 
     float range01  = uniforms.range;// 0...1 maps pv0...pv1
     float4 pos   = float4((pos0 + (pos1-pos0) * range01), 1);
@@ -58,7 +56,7 @@ vertex VertexOut vertexPlato
 
     float4 camPos = uniforms.worldCamera;
     float4 worldPos = uniforms.identity * pos;
-    float4 worldNorm = normalize(uniforms.inverse * norm);
+    float4 worldNorm = normalize(uniforms.identity * norm);
     float4 eyeDirection = normalize(worldPos - camPos);
 
     out.position = uniforms.projectModel * pos;

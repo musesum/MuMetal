@@ -17,7 +17,7 @@ extension CubemapNode {
         let cubeLength = Int(s)
 
         let td = MTLTextureDescriptor
-            .textureCubeDescriptor(pixelFormat : .rgba8Unorm,
+            .textureCubeDescriptor(pixelFormat : MetalRenderPixelFormat,
                                    size        : cubeLength,
                                    mipmapped   : true)
         let texture = pipeline.device.makeTexture(descriptor: td)!

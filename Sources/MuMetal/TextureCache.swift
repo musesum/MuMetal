@@ -4,7 +4,8 @@
 import Foundation
 import MetalKit
 
-public let MetBaseFormat = MTLPixelFormat.bgra8Unorm
+public let MetalComputePixelFormat = MTLPixelFormat.bgra8Unorm
+public let MetalRenderPixelFormat = MTLPixelFormat.bgra8Unorm_srgb
 
 public class TextureCache {
 
@@ -31,7 +32,7 @@ public class TextureCache {
             td.pixelFormat = pixelFormat
             td.width = Int(size.width)
             td.height = Int(size.height)
-            td.usage = [.shaderRead, .shaderWrite]
+            td.usage = [.shaderRead, .shaderWrite, .renderTarget]
             texture = device?.makeTexture(descriptor: td)
         }
         return texture

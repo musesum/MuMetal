@@ -39,7 +39,8 @@ open class Pipeline: NSObject {
         device = MTLCreateSystemDefaultDevice()!
         library = device.makeDefaultLibrary()
         metalLayer.device = device
-        
+        metalLayer.pixelFormat = MetalRenderPixelFormat
+
         #if os(visionOS)
         drawSize = CGSize(width: 1920, height: 1080)
         metalLayer.contentsScale = 3
@@ -165,14 +166,14 @@ extension Pipeline {
         return device.makeSamplerState(descriptor: sd)!
     }
 
-    public func computeNodes(_ commandBuf: MTLCommandBuffer,
-                             _ node: MetalNode?) -> MetalNode? {
-        var node = node
+    public func computeNodes(_ commandBuf: MTLCommandBuffer) -> MetalNode? {
+        var node = firstNode
 
         // compute
         if node?.metType == .computing,
            let computeCmd = commandBuf.makeComputeCommandEncoder() {
             while let computeNode = node as? ComputeNode {
+                computeNode.updateUniforms()
                 computeNode.updateTextures()
                 computeNode.computeNode(computeCmd)
                 node = computeNode.outNode
@@ -181,14 +182,39 @@ extension Pipeline {
         }
         return node
     }
+
+    /// Called whenever the view needs to render a frame
+    public func renderFrame() {
+
+        if settingUp { return }
+
+        _ = tripleSemaphore.wait(timeout:DispatchTime.distantFuture)
+        tripleIndex = (tripleIndex + 1) % 3
+
+        guard let commandBuf = commandQueue.makeCommandBuffer() else { fatalError("renderFrame::commandBuf") }
+        commandBuf.addCompletedHandler { _ in
+            self.tripleSemaphore.signal()
+        }
+
+        guard let drawable = metalLayer.nextDrawable() else { return }
+        renderNodes(commandBuf, drawable)
+
+        commandBuf.present(drawable)
+        commandBuf.commit()
+        commandBuf.waitUntilCompleted()
+    }
     public func renderNodes(_ commandBuf: MTLCommandBuffer,
-                            _ drawable: CAMetalDrawable,
-                            _ node: MetalNode?) {
-        var node = node
-        if  node?.metType == .rendering,
+                            _ drawable: CAMetalDrawable) {
+
+        // compute
+        var node = computeNodes(commandBuf)
+
+        // render
+        if node?.metType == .rendering,
             let renderCmd = commandBuf.makeRenderCommandEncoder(descriptor:  makeRenderPass(drawable)) {
 
             while let renderNode = node as? RenderNode {
+                renderNode.updateUniforms()
                 renderNode.updateTextures()
                 renderNode.renderNode(renderCmd)
                 node = renderNode.outNode
@@ -196,38 +222,5 @@ extension Pipeline {
             renderCmd.endEncoding()
         }
     }
-    /// Called whenever the view needs to render a frame
-    public func drawNodes() {
-
-        if settingUp { return }
-
-        _ = tripleSemaphore.wait(timeout:DispatchTime.distantFuture)
-        tripleIndex = (tripleIndex + 1) % 3
-
-        guard let commandBuf = commandQueue.makeCommandBuffer() else { return }
-        commandBuf.addCompletedHandler { _ in
-            self.tripleSemaphore.signal()
-        }
-        let node = computeNodes(commandBuf,firstNode)
-
-        guard let drawable = metalLayer.nextDrawable() else { return }
-        renderNodes(commandBuf, drawable, node)
-
-        commandBuf.present(drawable)
-        commandBuf.commit()
-        commandBuf.waitUntilCompleted()
-    }
-#if os(visionOS)
-
-    func drawLayer(_ layerDrawable : LayerRenderer.Drawable,
-                   _ renderCmd: MTLRenderCommandEncoder,
-                   _ viewports: [MTLViewport]) {
-
-//????        guard let eyeBuf, let mesh, let renderPipe else { return }
-//        eyeBuf.setViewMappings(renderCmd, layerDrawable, viewports)
-//        eyeBuf.setUniformBuf(renderCmd)
-//        mesh.drawMesh(renderCmd, renderPipe)
-    }
-#endif
 
 }

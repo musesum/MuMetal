@@ -7,11 +7,13 @@ import simd
 import ModelIO
 import MetalKit
 import MuVision
+#if os(visionOS)
+import CompositorServices
+#endif
 
 public struct VertexCube {
     var position : vector_float4 = .zero
 }
-
 
 public class CubemapModel: MeshModel<Float> {
 
@@ -68,17 +70,17 @@ public class CubemapNode: RenderNode {
     struct CubemapUniforms {
         var projectModel : matrix_float4x4
     }
-    private let viaIndex: Bool
-    private var cubemapMetal: CubemapMetal!
-    private var uniformBuf: MTLBuffer!
-    private var cubemapIndex: CubemapIndex?
+    private let viaIndex     : Bool
+    private var metal        : CubemapMetal!
+    private var uniforms     : CubemapUniforms?
+    private var cubemapIndex : CubemapIndex?
 
     public var cubeTex: MTLTexture?
 
     public init(_ pipeline: Pipeline,
                 _ viaIndex: Bool) {
 
-        self.cubemapMetal = CubemapMetal(pipeline.device)
+        self.metal = CubemapMetal(pipeline.device)
         self.viaIndex = viaIndex
         super.init(pipeline, "cubemap", "render.cubemap", .rendering)
 
@@ -96,9 +98,9 @@ public class CubemapNode: RenderNode {
         let pd = MTLRenderPipelineDescriptor()
         pd.vertexFunction   = library.makeFunction(name: vertexName)
         pd.fragmentFunction = library.makeFunction(name: fragmentName)
-        pd.vertexDescriptor = cubemapMetal.metalVD
+        pd.vertexDescriptor = metal.metalVD
         
-        pd.colorAttachments[0].pixelFormat = .bgra8Unorm
+        pd.colorAttachments[0].pixelFormat = MetalRenderPixelFormat
         pd.depthAttachmentPixelFormat = .depth32Float
 
         do {
@@ -106,19 +108,6 @@ public class CubemapNode: RenderNode {
         }
         catch { print("⁉️ \(#function) failed to create \(name), error \(error)") }
     }
-
-    func updateUniforms() {
-
-        let orientation = Motion.shared.updateDeviceOrientation()
-        let perspective = pipeline.perspective()
-        let viewModel = orientation * identity
-        let projectModel = perspective * viewModel
-        var cubemapUniforms = CubemapUniforms(projectModel: projectModel)
-
-        let uniformLen = MemoryLayout<CubemapUniforms>.stride
-        memcpy(uniformBuf.contents(), &cubemapUniforms,  uniformLen)
-    }
-
     func makeResources() {
 
         if viaIndex {
@@ -130,17 +119,41 @@ public class CubemapNode: RenderNode {
 
             //cubeTexture = makeCube(["px","nx","py","ny","pz","nz"], device)
         }
-        uniformBuf = pipeline.device.makeBuffer(
+        metal.eyeBuf = UniformEyeBuf(metal.device, "Cubemap", far: true)
+        metal.uniformBuf = pipeline.device.makeBuffer(
             length: MemoryLayout<CubemapUniforms>.stride,
             options: .cpuCacheModeWriteCombined)!
 
     }
+    override public func updateUniforms() {
 
-    override public func renderNode(_ renderCmd: MTLRenderCommandEncoder) {
-        guard isOn else { return }
+        let orientation = Motion.shared.updateDeviceOrientation()
+        let perspective = pipeline.perspective()
+        let viewModel = orientation * identity
+        let projectModel = perspective * viewModel
+
+        uniforms = CubemapUniforms(projectModel: projectModel)
+
+        let uniformLen = MemoryLayout<CubemapUniforms>.stride
+        memcpy(metal.uniformBuf.contents(), &uniforms,  uniformLen)
+    }
+
+#if os(visionOS)
+
+    /// Update projection and rotation
+    override public func updateUniforms(_ layerDrawable: LayerRenderer.Drawable) {
+
+        updateUniforms()
+        if let eyeBuf = metal.eyeBuf, let uniforms {
+            eyeBuf.updateEyeUniforms(layerDrawable, uniforms.projectModel)
+        }
+    }
+    override public func renderLayer(_ layerDrawable: LayerRenderer.Drawable, 
+                                     _ renderCmd: MTLRenderCommandEncoder,
+                                     _ viewports: [MTLViewport]) {
 
         renderCmd.setRenderPipelineState(renderPipe)
-        renderCmd.setVertexBuffer(uniformBuf, offset: 0, index: 1)
+        renderCmd.setVertexBuffer(metal.uniformBuf, offset: 0, index: 1)
         renderCmd.setFragmentTexture(cubeTex, index: 0)
         if viaIndex, let inTex {
             renderCmd.setFragmentTexture(inTex, index: 1)
@@ -150,7 +163,27 @@ public class CubemapNode: RenderNode {
         }
         renderCmd.setDepthStencilState(pipeline.depthStencil(write: false))
 
-        cubemapMetal.drawMesh(renderCmd)
+        metal.drawMesh(renderCmd)
+    }
+
+#endif
+
+
+    override public func renderNode(_ renderCmd: MTLRenderCommandEncoder) {
+        guard isOn else { return }
+
+        renderCmd.setRenderPipelineState(renderPipe)
+        renderCmd.setVertexBuffer(metal.uniformBuf, offset: 0, index: 1)
+        renderCmd.setFragmentTexture(cubeTex, index: 0)
+        if viaIndex, let inTex {
+            renderCmd.setFragmentTexture(inTex, index: 1)
+        }
+        for buf in nameBuffer.values {
+            renderCmd.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
+        }
+        renderCmd.setDepthStencilState(pipeline.depthStencil(write: false))
+
+        metal.drawMesh(renderCmd)
     }
 
     func makeImageCube(_ names: [String],
@@ -224,7 +257,7 @@ public class CubemapNode: RenderNode {
 
     override public func updateTextures() {
 
-        updateUniforms()
+        //???? updateUniforms()
 
         if let inNode {
 

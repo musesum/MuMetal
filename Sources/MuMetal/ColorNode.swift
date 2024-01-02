@@ -42,7 +42,7 @@ public class ColorNode: ComputeNode {
         func makePaletteTex() -> MTLTexture? {
             
             let paletteTex = TextureCache
-                .makeTexturePixelFormat(.bgra8Unorm,
+                .makeTexturePixelFormat(MetalComputePixelFormat,
                                         size: CGSize(width: 256, height: 1),
                                         device: pipeline.device)
             return paletteTex

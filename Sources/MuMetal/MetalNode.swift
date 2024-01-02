@@ -5,6 +5,10 @@ import MetalKit
 import QuartzCore
 import MuFlo
 
+#if os(visionOS)
+import CompositorServices
+#endif
+
 public enum MetalNodeType { case computing, rendering }
 
 open class RenderNode: MetalNode {
@@ -52,7 +56,7 @@ open class MetalNode: Equatable {
     }
 
     func makeNewTex(_ via: String) -> MTLTexture? {
-        if let tex = TextureCache.makeTexturePixelFormat(.bgra8Unorm, size: pipeline.drawSize, device: pipeline.device) {
+        if let tex = TextureCache.makeTexturePixelFormat(MetalComputePixelFormat, size: pipeline.drawSize, device: pipeline.device) {
             let texPtr = String.pointer(tex)
             print("makeNewTex via: \(via) => \(texPtr)")
             return tex
@@ -124,9 +128,17 @@ open class MetalNode: Equatable {
         outTex = outTex ?? makeNewTex(name)
     }
 
-//    open func computeNode(_ computeCmd: MTLComputeCommandEncoder) {
-//    }
-    open func renderNode(_ renderCmd: MTLRenderCommandEncoder) {
-    }
+    open func updateUniforms() { }
+    open func renderNode(_ renderCmd: MTLRenderCommandEncoder) { }
+
+#if os(visionOS)
+    open func updateUniforms(_ layerDrawable: LayerRenderer.Drawable) {}
+    open func renderLayer(_ layerDrawable: LayerRenderer.Drawable,
+                          _ renderCmd: MTLRenderCommandEncoder,
+                          _ viewports: [MTLViewport]) { }
+
+    #endif
+
+
 
 }

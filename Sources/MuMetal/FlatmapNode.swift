@@ -72,7 +72,7 @@ public class FlatmapNode: RenderNode {
         pd.label = "Texturing Pipeline"
         pd.vertexFunction = vertexFunc
         pd.fragmentFunction = fragmentFunc
-        pd.colorAttachments[0].pixelFormat = pipeline.metalLayer.pixelFormat
+        pd.colorAttachments[0].pixelFormat = MetalRenderPixelFormat //????  pipeline.metalLayer.pixelFormat
         pd.depthAttachmentPixelFormat = .depth32Float
 
         do {

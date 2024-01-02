@@ -4,14 +4,14 @@ import simd
 
 public func perspective4x4(_ aspect: Float,
                            _ fovy  : Float,
-                           _ near  : Float,
-                           _ far   : Float) -> matrix_float4x4 {
+                           _ nearZ : Float,
+                           _ farZ  : Float) -> matrix_float4x4 {
     
     let yScale  = 1 / tan(fovy * 0.5)
     let xScale  = yScale / aspect
-    let zRange  = far - near
-    let zScale  = -(far + near) / zRange
-    let wzScale = -far * near / zRange
+    let zRange  = farZ - nearZ
+    let zScale  = -(farZ + nearZ) / zRange
+    let wzScale = -farZ * nearZ / zRange
     let P = vector_float4([ xScale, 0, 0, 0  ])
     let Q = vector_float4([ 0, yScale, 0, 0  ])
     let R = vector_float4([ 0, 0, zScale, -1 ])
