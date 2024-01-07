@@ -86,7 +86,7 @@ public class CubemapNode: RenderNode {
     override public func updateUniforms(_ layerDrawable: LayerRenderer.Drawable) {
 
         updateUniforms()
-        metal.eyeBuf?.updateEyeUniforms(layerDrawable)
+        metal.eyeBuf?.updateEyeUniforms(layerDrawable, matrix_identity_float4x4)
     }
 
 #endif
