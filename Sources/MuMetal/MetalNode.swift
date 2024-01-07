@@ -4,6 +4,7 @@ import Metal
 import MetalKit
 import QuartzCore
 import MuFlo
+import MuVision
 
 #if os(visionOS)
 import CompositorServices
@@ -129,15 +130,13 @@ open class MetalNode: Equatable {
     }
 
     open func updateUniforms() { }
+    
     open func renderNode(_ renderCmd: MTLRenderCommandEncoder) { }
 
 #if os(visionOS)
     open func updateUniforms(_ layerDrawable: LayerRenderer.Drawable) {}
-    open func renderLayer(_ layerDrawable: LayerRenderer.Drawable,
-                          _ renderCmd: MTLRenderCommandEncoder,
-                          _ viewports: [MTLViewport]) { }
 
-    #endif
+#endif
 
 
 

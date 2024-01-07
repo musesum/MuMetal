@@ -1,6 +1,7 @@
 // Plato
 
 #include <metal_stdlib>
+#include "SpatialTypes.h"
 
 using namespace metal;
 
@@ -20,10 +21,7 @@ struct PlatoUniforms {
     float shadowDepth;
     float invert;
     float zoom;
-
-    float4x4 projectModel;
-    float4   worldCamera;
-    float4x4 identity;
+    float4 worldCamera;
 };
 
 // index ranged  0...1
@@ -40,31 +38,34 @@ struct PlatoVertex {
 
 vertex VertexOut vertexPlato
 (
- constant PlatoVertex*   in       [[ buffer(0) ]],
+ constant PlatoVertex*   vertIn   [[ buffer(0) ]],
  constant PlatoUniforms& uniforms [[ buffer(1) ]],
- uint32_t                vertexId [[ vertex_id ]])
+ constant UniformEyes&   eyes     [[ buffer(3) ]],
+ ushort                  ampId    [[ amplification_id]],
+ uint32_t                vertId   [[ vertex_id ]])
 {
-    VertexOut out;
-    float3 pos0  = in[vertexId].pos0.xyz;
-    float3 pos1  = in[vertexId].pos1.xyz;
-    float3 norm0 = in[vertexId].norm0.xyz;
-    float3 norm1 = in[vertexId].norm1.xyz;
+    VertexOut vertOut;
+    UniformEye eye = eyes.eye[ampId];
+
+    float3 pos0  = vertIn[vertId].pos0.xyz;
+    float3 pos1  = vertIn[vertId].pos1.xyz;
+    float3 norm0 = vertIn[vertId].norm0.xyz;
+    float3 norm1 = vertIn[vertId].norm1.xyz;
 
     float range01  = uniforms.range;// 0...1 maps pv0...pv1
     float4 pos   = float4((pos0 + (pos1-pos0) * range01), 1);
     float4 norm  = float4((norm0 + (norm1-norm0) * range01), 0);
 
     float4 camPos = uniforms.worldCamera;
-    float4 worldPos = uniforms.identity * pos;
-    float4 worldNorm = normalize(uniforms.identity * norm);
-    float4 eyeDirection = normalize(worldPos - camPos);
+    float4 worldNorm = normalize(norm);
+    float4 eyeDirection = normalize(pos - camPos);
 
-    out.position = uniforms.projectModel * pos;
-    out.texCoord = reflect(eyeDirection, worldNorm);
-    out.faceId = in[vertexId].faceId;
-    out.harmonic = in[vertexId].harmonic;
+    vertOut.position = eye.projection * pos;
+    vertOut.texCoord = reflect(eyeDirection, worldNorm);
+    vertOut.faceId = vertIn[vertId].faceId;
+    vertOut.harmonic = vertIn[vertId].harmonic;
 
-    return out;
+    return vertOut;
 }
 
 // MARK: - fragment
@@ -77,8 +78,7 @@ fragment half4 fragmentPlatoCubeIndex
  texture2d  <half>       inTex    [[ texture(1) ]],
  texture2d  <half>       palTex   [[ texture(2) ]])
 {
-    constexpr sampler samplr(filter::linear,
-                             address::repeat);
+    constexpr sampler samplr(filter::linear, address::repeat);
 
     float palMod = fmod(out.faceId, 256) / 256.0;
     float2 palPos = float2(palMod, 0.0);
@@ -109,13 +109,12 @@ fragment half4 fragmentPlatoCubeIndex
 /// vert.color is used for creating a shadow mixed with cube's color
 fragment half4 fragmentPlatoCubeColor
 (
- VertexOut         out     [[ stage_in   ]],
+ VertexOut         vertOut [[ stage_in   ]],
  texturecube<half> cubeTex [[ texture(0) ]])
 {
-    float3 texCoord = float3(out.texCoord.x, out.texCoord.y, -out.texCoord.z);
+    float3 texCoord = float3(vertOut.texCoord.x, vertOut.texCoord.y, -vertOut.texCoord.z);
 
-    constexpr sampler samplr(filter::linear,
-                             address::repeat);
+    constexpr sampler samplr(filter::linear, address::repeat);
 
     return cubeTex.sample(samplr, texCoord);
 }
@@ -123,12 +122,11 @@ fragment half4 fragmentPlatoCubeColor
 /// no cubemap, untested
 fragment half4 fragmentPlatoColor
 (
- VertexOut        out   [[ stage_in   ]],
- texture2d <half> inTex [[ texture(1) ]])
+ VertexOut        vertOut [[ stage_in   ]],
+ texture2d <half> inTex   [[ texture(1) ]])
 {
-    constexpr sampler samplr(filter::linear,
-                             address::repeat);
+    constexpr sampler samplr(filter::linear, address::repeat);
 
-    return inTex.sample(samplr, out.texCoord.xy);
+    return inTex.sample(samplr, vertOut.texCoord.xy);
 }
 

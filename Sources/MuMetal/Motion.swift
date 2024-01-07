@@ -13,7 +13,7 @@ public class Motion {
 
     public init() {
         motion = CMMotionManager()
-        sceneOrientation = identity
+        sceneOrientation = matrix_identity_float4x4
         updateMotion()
     }
 

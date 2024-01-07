@@ -4,20 +4,18 @@ import Foundation
 import Metal
 import MetalKit
 import QuartzCore
+#if os(visionOS)
+import CompositorServices
+#endif
+import MuVision
 
 public class FlatmapNode: RenderNode {
 
-    public var cgImage: CGImage? { get {
-        if let tex =  pipeline.metalLayer.nextDrawable()?.texture,
-           let img = tex.toImage() {
-            return img
-        } else {
-            return nil
-        }
-    }}
+
     private var vertices: MTLBuffer? // Metal buffer for vertex data
     private var viewSize  = SIMD2<Float>(repeating: 0)
     private var clipFrame = SIMD4<Float>(repeating: 0) // clip rect
+
 
     public init(_ pipeline: Pipeline,
                 _ filename: String = "render.flatmap") {
@@ -72,7 +70,7 @@ public class FlatmapNode: RenderNode {
         pd.label = "Texturing Pipeline"
         pd.vertexFunction = vertexFunc
         pd.fragmentFunction = fragmentFunc
-        pd.colorAttachments[0].pixelFormat = MetalRenderPixelFormat //????  pipeline.metalLayer.pixelFormat
+        pd.colorAttachments[0].pixelFormat = MetalRenderPixelFormat 
         pd.depthAttachmentPixelFormat = .depth32Float
 
         do {
@@ -90,7 +88,15 @@ public class FlatmapNode: RenderNode {
 
         // no output texture here
     }
+#if os(visionOS)
 
+    /// Update projection and rotation
+    override public func updateUniforms(_ layerDrawable: LayerRenderer.Drawable) {
+
+        updateUniforms()
+        
+    }
+#endif
     override open func renderNode(_ renderCmd: MTLRenderCommandEncoder) {
         guard let renderPipe else { return }
 
@@ -107,6 +113,19 @@ public class FlatmapNode: RenderNode {
         for buf in nameBuffer.values {
             renderCmd.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
         }
+        // cull stencil
+        renderCmd.setCullMode(.none) // creates artifacts
+        renderCmd.setFrontFacing(.clockwise)
         renderCmd.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6) //metVertices.count
     }
+}
+extension FlatmapNode {
+    public var cgImage: CGImage? { get {
+        if let tex =  pipeline.metalLayer.nextDrawable()?.texture,
+           let img = tex.toImage() {
+            return img
+        } else {
+            return nil
+        }
+    }}
 }

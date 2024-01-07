@@ -15,66 +15,13 @@ public struct VertexCube {
     var position : vector_float4 = .zero
 }
 
-public class CubemapModel: MeshModel<Float> {
-
-    override public init(_ device: MTLDevice,
-                         _ nameFormats: [VertexNameFormat],
-                         _ vertexStride: Int) {
-
-        super.init(device, nameFormats, vertexStride)
-
-        let r = Float(0.5)
-        vertices = [
-            -r,+r,+r, 1,   +r,+r,+r, 1,  +r,+r,-r, 1,  -r,+r,-r, 1, // +Y
-             -r,-r,-r, 1,   +r,-r,-r, 1,  +r,-r,+r, 1,  -r,-r,+r, 1, // -Y
-             -r,-r,+r, 1,   +r,-r,+r, 1,  +r,+r,+r, 1,  -r,+r,+r, 1, // +Z
-             +r,-r,-r, 1,   -r,-r,-r, 1,  -r,+r,-r, 1,  +r,+r,-r, 1, // -Z
-             -r,-r,-r, 1,   -r,-r,+r, 1,  -r,+r,+r, 1,  -r,+r,-r, 1, // -X
-             +r,-r,+r, 1,   +r,-r,-r, 1,  +r,+r,-r, 1,  +r,+r,+r, 1, // +X
-        ]
-        indices =  [
-            0,   2,  3,   2,  0,  1,
-            4,   6,  7,   6,  4,  5,
-            8,  10, 11,  10,  8,  9,
-            12, 14, 15,  14, 12, 13,
-            16, 18, 19,  18, 16, 17,
-            20, 22, 23,  22, 20, 21,
-        ]
-
-        let verticesLen = vertices.count * MemoryLayout<VertexCube>.stride
-        let indicesLen = indices.count * indices.count * MemoryLayout<UInt32>.size
-
-        vertexBuf = device.makeBuffer(bytes: vertices, length: verticesLen)
-        indexBuf  = device.makeBuffer(bytes: indices , length: indicesLen )
-
-        updateBuffers(verticesLen,indicesLen)
-    }
-}
-public class CubemapMetal: MeshMetal {
-
-    var cubemapModel: CubemapModel!
-
-    init(_ device: MTLDevice) {
-    
-        super.init(device: device, compare: .less, winding: .counterClockwise)
-        let nameFormats: [VertexNameFormat] = [("position", .float4)]
-        let vertexStride = MemoryLayout<VertexCube>.stride
-        cubemapModel = CubemapModel(device, nameFormats,vertexStride)
-        mtkMesh = try! MTKMesh(mesh: cubemapModel.mdlMesh, device: device)
-
-    }
-}
 
 public class CubemapNode: RenderNode {
 
-    struct CubemapUniforms {
-        var projectModel : matrix_float4x4
-    }
     private let viaIndex     : Bool
     private var metal        : CubemapMetal!
-    private var uniforms     : CubemapUniforms?
     private var cubemapIndex : CubemapIndex?
-
+    
     public var cubeTex: MTLTexture?
 
     public init(_ pipeline: Pipeline,
@@ -120,22 +67,17 @@ public class CubemapNode: RenderNode {
             //cubeTexture = makeCube(["px","nx","py","ny","pz","nz"], device)
         }
         metal.eyeBuf = UniformEyeBuf(metal.device, "Cubemap", far: true)
-        metal.uniformBuf = pipeline.device.makeBuffer(
-            length: MemoryLayout<CubemapUniforms>.stride,
-            options: .cpuCacheModeWriteCombined)!
-
     }
     override public func updateUniforms() {
 
         let orientation = Motion.shared.updateDeviceOrientation()
         let perspective = pipeline.perspective()
-        let viewModel = orientation * identity
-        let projectModel = perspective * viewModel
+        let projectModel = perspective * orientation
 
-        uniforms = CubemapUniforms(projectModel: projectModel)
-
-        let uniformLen = MemoryLayout<CubemapUniforms>.stride
-        memcpy(metal.uniformBuf.contents(), &uniforms,  uniformLen)
+#if !os(visionOS)
+        
+        metal.eyeBuf?.updateEyeUniforms(projectModel)
+#endif
     }
 
 #if os(visionOS)
@@ -144,36 +86,19 @@ public class CubemapNode: RenderNode {
     override public func updateUniforms(_ layerDrawable: LayerRenderer.Drawable) {
 
         updateUniforms()
-        if let eyeBuf = metal.eyeBuf, let uniforms {
-            eyeBuf.updateEyeUniforms(layerDrawable, uniforms.projectModel)
-        }
-    }
-    override public func renderLayer(_ layerDrawable: LayerRenderer.Drawable, 
-                                     _ renderCmd: MTLRenderCommandEncoder,
-                                     _ viewports: [MTLViewport]) {
-
-        renderCmd.setRenderPipelineState(renderPipe)
-        renderCmd.setVertexBuffer(metal.uniformBuf, offset: 0, index: 1)
-        renderCmd.setFragmentTexture(cubeTex, index: 0)
-        if viaIndex, let inTex {
-            renderCmd.setFragmentTexture(inTex, index: 1)
-        }
-        for buf in nameBuffer.values {
-            renderCmd.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
-        }
-        renderCmd.setDepthStencilState(pipeline.depthStencil(write: false))
-
-        metal.drawMesh(renderCmd)
+        metal.eyeBuf?.updateEyeUniforms(layerDrawable)
     }
 
 #endif
 
 
     override public func renderNode(_ renderCmd: MTLRenderCommandEncoder) {
+
         guard isOn else { return }
 
+        metal.eyeBuf?.setUniformBuf(renderCmd)
+
         renderCmd.setRenderPipelineState(renderPipe)
-        renderCmd.setVertexBuffer(metal.uniformBuf, offset: 0, index: 1)
         renderCmd.setFragmentTexture(cubeTex, index: 0)
         if viaIndex, let inTex {
             renderCmd.setFragmentTexture(inTex, index: 1)
@@ -181,7 +106,6 @@ public class CubemapNode: RenderNode {
         for buf in nameBuffer.values {
             renderCmd.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
         }
-        renderCmd.setDepthStencilState(pipeline.depthStencil(write: false))
 
         metal.drawMesh(renderCmd)
     }
@@ -256,8 +180,6 @@ public class CubemapNode: RenderNode {
     }
 
     override public func updateTextures() {
-
-        //???? updateUniforms()
 
         if let inNode {
 

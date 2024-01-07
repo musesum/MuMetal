@@ -1,6 +1,7 @@
 // Cubemap
 
 #include <metal_stdlib>
+#include "SpatialTypes.h"
 
 using namespace metal;
 
@@ -13,41 +14,39 @@ struct VertexIn {
     float4 position [[ attribute(0) ]];
 };
 
-struct CubemapUniforms {
-    float4x4 projectModel;
-};
 
 // MARK: - Vertex
 
 vertex VertexOut vertexCubemap
 (
- constant VertexIn*        in        [[ buffer(0) ]],
- constant CubemapUniforms  &uniforms [[ buffer(1) ]],
- uint32_t                  vertexID  [[ vertex_id ]])
+ constant VertexIn*        vertIn   [[ buffer(0) ]],
+ constant UniformEyes&     eyes     [[ buffer(3) ]],
+ ushort                    ampId    [[ amplification_id]],
+ uint32_t                  vertId   [[ vertex_id ]])
 {
-    VertexOut out;
+    VertexOut vertOut;
+    UniformEye eye = eyes.eye[ampId];
 
-    float4 position = in[vertexID].position;
+    float4 position = vertIn[vertId].position;
+    vertOut.position = eye.projection * position;
+    vertOut.texCoord = position;
 
-    out.position = uniforms.projectModel * position;
-    out.texCoord = position;
-
-    return out;
+    return vertOut;
 }
 
 // MARK: - Fragment via index texture
 
 fragment half4 fragmentCubeIndex
 (
- VertexOut          out     [[ stage_in   ]],
+ VertexOut          vertOut [[ stage_in   ]],
  texturecube<half>  cubeTex [[ texture(0) ]],
  texture2d<half>    inTex   [[ texture(1) ]],
  constant float2&   repeat  [[ buffer(1)  ]],
  constant float2&   mirror  [[ buffer(2)  ]])
 {
-    float3 texCoord = float3(out.texCoord.x,
-                             out.texCoord.y,
-                             -out.texCoord.z);
+    float3 texCoord = float3(vertOut.texCoord.x,
+                             vertOut.texCoord.y,
+                             -vertOut.texCoord.z);
 
     constexpr sampler samplr(filter::linear,
                              address::repeat);
@@ -85,13 +84,13 @@ fragment half4 fragmentCubeIndex
 
 fragment half4 fragmentCubeColor
 (
- VertexOut          out     [[ stage_in   ]],
+ VertexOut          vertOut [[ stage_in   ]],
  texturecube<half>  cubeTex [[ texture(0) ]])
 {
     constexpr sampler samplr(filter::linear,
                              address::repeat);
 
-    float3 texCoord = float3(out.texCoord.x, out.texCoord.y, -out.texCoord.z);
+    float3 texCoord = float3(vertOut.texCoord.x, vertOut.texCoord.y, -vertOut.texCoord.z);
 
     return cubeTex.sample(samplr, texCoord);
 }

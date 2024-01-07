@@ -21,15 +21,6 @@ public func perspective4x4(_ aspect: Float,
     return mat
 }
 
-public var identity: matrix_float4x4 = {
-    let P = vector_float4([ 1, 0, 0, 0 ])
-    let Q = vector_float4([ 0, 1, 0, 0 ])
-    let R = vector_float4([ 0, 0, 1, 0 ])
-    let S = vector_float4([ 0, 0, 0, 1 ])
-    
-    return matrix_float4x4([P, Q, R, S])
-} ()
-
 public func translation(_ t: vector_float4) -> matrix_float4x4 {
     let X = vector_float4([  1,  0,  0,  0 ])
     let Y = vector_float4([  0,  1,  0,  0 ])

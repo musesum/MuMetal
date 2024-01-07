@@ -146,9 +146,10 @@ extension Pipeline {
         return perspective
     }
 
-    public func depthStencil(write: Bool) -> MTLDepthStencilState {
+
+    public func depthStencil(write: Bool, compare: MTLCompareFunction) -> MTLDepthStencilState {
         let depth = MTLDepthStencilDescriptor()
-        depth.depthCompareFunction = .less
+        depth.depthCompareFunction = compare //??????
         depth.isDepthWriteEnabled = write
         let depthStencil = device.makeDepthStencilState(descriptor: depth)!
         return depthStencil
@@ -197,13 +198,14 @@ extension Pipeline {
         }
 
         guard let drawable = metalLayer.nextDrawable() else { return }
-        renderNodes(commandBuf, drawable)
+        renderMetal(commandBuf, drawable)
 
         commandBuf.present(drawable)
         commandBuf.commit()
         commandBuf.waitUntilCompleted()
+
     }
-    public func renderNodes(_ commandBuf: MTLCommandBuffer,
+    public func renderMetal(_ commandBuf: MTLCommandBuffer,
                             _ drawable: CAMetalDrawable) {
 
         // compute
@@ -213,11 +215,15 @@ extension Pipeline {
         if node?.metType == .rendering,
             let renderCmd = commandBuf.makeRenderCommandEncoder(descriptor:  makeRenderPass(drawable)) {
 
-            while let renderNode = node as? RenderNode {
-                renderNode.updateUniforms()
-                renderNode.updateTextures()
-                renderNode.renderNode(renderCmd)
-                node = renderNode.outNode
+            while let nodeNow = node as? RenderNode {
+                nodeNow.updateUniforms()
+                nodeNow.updateTextures()
+                #if os(visionOS)
+                nodeNow.renderNode(renderCmd)
+                #else
+                nodeNow.renderNode(renderCmd)
+                #endif
+                node = nodeNow.outNode
             }
             renderCmd.endEncoding()
         }
