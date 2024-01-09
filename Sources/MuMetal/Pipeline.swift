@@ -93,7 +93,7 @@ extension Pipeline {
         clipRect = AspectRatio.fillClip(from: drawSize, to: viewSize).normalize()
         metalLayer.contentsScale = scale
         metalLayer.drawableSize = viewSize
-        metalLayer.layoutIfNeeded() 
+        metalLayer.layoutIfNeeded()
     }
 
     public func makeRenderPass(_ metalDrawable: CAMetalDrawable) -> MTLRenderPassDescriptor {
@@ -146,38 +146,17 @@ extension Pipeline {
         return perspective
     }
 
-
-    public func depthStencil(write: Bool, compare: MTLCompareFunction) -> MTLDepthStencilState {
-        let depth = MTLDepthStencilDescriptor()
-        depth.depthCompareFunction = compare //??????
-        depth.isDepthWriteEnabled = write
-        let depthStencil = device.makeDepthStencilState(descriptor: depth)!
-        return depthStencil
-    }
-
-    /// used by MetNodeCubemap
-    public func makeSampler(normalized: Bool) -> MTLSamplerState{
-        let sd = MTLSamplerDescriptor()
-        sd.minFilter = .linear
-        sd.magFilter = .linear
-
-        // normalized: 0..1, otherwise 0..width, 0..height.
-        sd.supportArgumentBuffers = normalized
-        sd.normalizedCoordinates = normalized
-        return device.makeSamplerState(descriptor: sd)!
-    }
-
     public func computeNodes(_ commandBuf: MTLCommandBuffer) -> MetalNode? {
         var node = firstNode
 
         // compute
         if node?.metType == .computing,
            let computeCmd = commandBuf.makeComputeCommandEncoder() {
-            while let computeNode = node as? ComputeNode {
-                computeNode.updateUniforms()
-                computeNode.updateTextures()
-                computeNode.computeNode(computeCmd)
-                node = computeNode.outNode
+            while let nodeNow = node as? ComputeNode {
+                nodeNow.updateUniforms()
+                nodeNow.updateTextures()
+                nodeNow.computeNode(computeCmd)
+                node = nodeNow.outNode
             }
             computeCmd.endEncoding()
         }
@@ -189,25 +168,24 @@ extension Pipeline {
 
         if settingUp { return }
 
-        _ = tripleSemaphore.wait(timeout:DispatchTime.distantFuture)
+        performCpuWork()
+
+        //???? _ = tripleSemaphore.wait(timeout:DispatchTime.distantFuture)
         tripleIndex = (tripleIndex + 1) % 3
 
         guard let commandBuf = commandQueue.makeCommandBuffer() else { fatalError("renderFrame::commandBuf") }
-        commandBuf.addCompletedHandler { _ in
-            self.tripleSemaphore.signal()
-        }
-
+//        commandBuf.addCompletedHandler { _ in
+//            self.tripleSemaphore.signal()
+//        }
         guard let drawable = metalLayer.nextDrawable() else { return }
         renderMetal(commandBuf, drawable)
-
-        commandBuf.present(drawable)
-        commandBuf.commit()
-        commandBuf.waitUntilCompleted()
-
     }
+    func performCpuWork() {
+        // nothing right now
+    }
+
     public func renderMetal(_ commandBuf: MTLCommandBuffer,
                             _ drawable: CAMetalDrawable) {
-
         // compute
         var node = computeNodes(commandBuf)
 
@@ -218,15 +196,14 @@ extension Pipeline {
             while let nodeNow = node as? RenderNode {
                 nodeNow.updateUniforms()
                 nodeNow.updateTextures()
-                #if os(visionOS)
                 nodeNow.renderNode(renderCmd)
-                #else
-                nodeNow.renderNode(renderCmd)
-                #endif
                 node = nodeNow.outNode
             }
             renderCmd.endEncoding()
         }
+        commandBuf.present(drawable)
+        commandBuf.commit()
+        commandBuf.waitUntilCompleted()
     }
 
 }

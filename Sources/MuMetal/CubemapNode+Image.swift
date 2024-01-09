@@ -73,8 +73,6 @@ extension CubemapNode {
 
     public func updateCubemap(_ ciImage: CIImage?) {
         guard let ciImage else { return }
-        //cubeTex = makeImageCube(ciImage)
-        //cubeTex = makeIndexCube(ciImage.extent.size)
         altTex = makeSquareImageTex(ciImage)
     }
 

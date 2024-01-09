@@ -3,28 +3,44 @@
 import MetalKit
 import MuVision
 
+
 public class CubemapMetal: MeshMetal {
 
     var model: CubemapModel!
-
+    
     init(_ device: MTLDevice) {
 
-        // compare  write  cull   winding
-        // .less    true  .back  .counterClockwise -- frozen, jaggy plato, flat ok
-        // .less    false .back  .counterClockwise -- frozen, jaggy plato, flat ok
-        // .greater true  .front .clockwise        -- frozen, jaggy plato, flat ok
-        // .less    true  .front .clockwise        -- frozen, jaggy plato
-        // .greater true  .none, .clockwise        -- no cubemap
-        // .greater true  .none, .counterClockwise -- no cubemap
-        // .greater false .none, .counterClockwise -- no cubemap
-        // .less    true  .front .counterClockwise -- occlude plato
-        // .less    true  .none  .counterClockwise -- occlude plato
-        // .less    true  .none  .clockwise        -- occlude plato
-        // .less    true  .back  .clockwise        -- occlude plato
-        // .less    false .back  .clockwise        -- metal good!
+        super.init(DepthRenderState(
+            device,
+            vision: DepthRender(.none, .counterClockwise, .greater, true),
+            metal : DepthRender(.back, .clockwise       , .less   , false)))
 
-        super.init(device, cull: .back, winding: .clockwise)
-        self.stencil = MeshMetal.stencil(device, .less, false)
+
+
+        //   cull   winding          compare  write
+        //  .back  .counterClockwise .less    true  //-- frozen, jaggy plato, flat ok
+        //  .back  .counterClockwise .less    false //-- frozen, jaggy plato, flat ok
+        //  .front .clockwise        .greater true  //-- frozen, jaggy plato, flat ok
+        //  .front .clockwise        .less    true  //-- frozen, jaggy plato
+        //  .none  .clockwise        .greater true  //-- no cubemap
+        //  .none  .counterClockwise .greater true  //-- no cubemap
+        //  .none  .counterClockwise .greater false //-- no cubemap
+        //  .front .counterClockwise .less    true  //-- occlude plato
+        //  .none  .counterClockwise .less    true  //-- occlude plato
+        //  .none  .clockwise        .less    true  //-- occlude plato
+        //  .back  .clockwise        .less    true  //-- occlude plato
+        //  .back  .clockwise        .less    false //-- metal good!
+
+        // .back  .clockwise         .less    false  //-- jaggy
+        // .back  .counterClockwise  .less    false  //-- jaggy
+        // .none  .counterClockwise  .less    false  //-- jaggy
+        // .none  .counterClockwise  .less    true   //-- jaggy, flat ok
+        // .front .counterClockwise  .less    true   //-- jaggy, flat ok
+
+        // .none  .counterClockwise  .greater  true  //-- plato big, flat ok, cube no; blank
+        // .none  .clockwise         .greater  true  //-- plato big, flat ok, cube no; blank
+        // .front .clockwise         .greater  true  //--  jaggy plato big, flat ok, cube no; jaggy
+
 
         let nameFormats: [VertexNameFormat] = [
             ("position", .float4)

@@ -66,18 +66,15 @@ public class CubemapNode: RenderNode {
 
             //cubeTexture = makeCube(["px","nx","py","ny","pz","nz"], device)
         }
-        metal.eyeBuf = UniformEyeBuf(metal.device, "Cubemap", far: true)
+        metal.eyeBuf = UniformEyeBuf(pipeline.device, "Cubemap", far: true)
     }
     override public func updateUniforms() {
 
         let orientation = Motion.shared.updateDeviceOrientation()
         let perspective = pipeline.perspective()
         let projectModel = perspective * orientation
-
-#if !os(visionOS)
-        
         metal.eyeBuf?.updateEyeUniforms(projectModel)
-#endif
+
     }
 
 #if os(visionOS)
