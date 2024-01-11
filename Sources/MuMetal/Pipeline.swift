@@ -7,6 +7,7 @@ import MetalKit
 import Metal
 #if os(visionOS)
 import CompositorServices
+import MuVision
 #endif
 open class Pipeline: NSObject {
 
@@ -96,6 +97,16 @@ extension Pipeline {
         metalLayer.layoutIfNeeded()
     }
 
+    public func resize_new(_ viewSize: CGSize, _ scale: CGFloat) {
+        let clip = AspectRatio.fillClip(from: drawSize, to: viewSize)
+        let clipFrame = CGRect(x: clip.minX/scale, y: clip.minY/scale, width: clip.width/scale, height: clip.height/scale)
+        clipRect = clip.normalize()
+        metalLayer.drawableSize = viewSize
+        metalLayer.bounds = clipFrame
+        metalLayer.frame = clipFrame
+        metalLayer.layoutIfNeeded()
+    }
+
     public func makeRenderPass(_ metalDrawable: CAMetalDrawable) -> MTLRenderPassDescriptor {
 
         updateDepthTex()
@@ -104,7 +115,8 @@ extension Pipeline {
         renderPass.colorAttachments[0].texture = metalDrawable.texture
         renderPass.colorAttachments[0].loadAction = .dontCare
         renderPass.colorAttachments[0].storeAction = .store
-        renderPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 1)
+        renderPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0) //????
+        
         renderPass.depthAttachment.texture = self.depthTex
         renderPass.depthAttachment.loadAction = .dontCare
         renderPass.depthAttachment.storeAction = .dontCare

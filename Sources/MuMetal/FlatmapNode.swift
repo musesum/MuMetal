@@ -33,7 +33,7 @@ public class FlatmapNode: RenderNode {
         self.viewSize = SIMD2<Float>(viewSize.floats())
 
         let clip = AspectRatio.fillClip(from: pipeline.drawSize,
-                                      to: viewSize).normalize()
+                                        to: viewSize).normalize()
         
         clipFrame = SIMD4<Float>(clip.floats())
 
