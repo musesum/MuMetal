@@ -5,9 +5,9 @@ import Foundation
 import Collections
 import MetalKit
 import Metal
+import MuVision
 #if os(visionOS)
 import CompositorServices
-import MuVision
 #endif
 open class Pipeline: NSObject {
 
@@ -41,6 +41,7 @@ open class Pipeline: NSObject {
         library = device.makeDefaultLibrary()
         metalLayer.device = device
         metalLayer.pixelFormat = MetalRenderPixelFormat
+        metalLayer.backgroundColor = nil
 
         #if os(visionOS)
         drawSize = CGSize(width: 1920, height: 1080)
@@ -90,21 +91,15 @@ open class Pipeline: NSObject {
 
 extension Pipeline {
 
-    public func resize(_ viewSize: CGSize, _ scale: CGFloat) {
-        clipRect = AspectRatio.fillClip(from: drawSize, to: viewSize).normalize()
-        metalLayer.contentsScale = scale
-        metalLayer.drawableSize = viewSize
-        metalLayer.layoutIfNeeded()
-    }
-
-    public func resize_new(_ viewSize: CGSize, _ scale: CGFloat) {
+    public func resize(_ frame: CGRect, _ viewSize: CGSize, _ scale: CGFloat) {
         let clip = AspectRatio.fillClip(from: drawSize, to: viewSize)
-        let clipFrame = CGRect(x: clip.minX/scale, y: clip.minY/scale, width: clip.width/scale, height: clip.height/scale)
         clipRect = clip.normalize()
+
         metalLayer.drawableSize = viewSize
-        metalLayer.bounds = clipFrame
-        metalLayer.frame = clipFrame
+        metalLayer.contentsScale = scale
         metalLayer.layoutIfNeeded()
+        metalLayer.frame = frame
+        print("clip\(clip.script) frame\(metalLayer.frame.script)")
     }
 
     public func makeRenderPass(_ metalDrawable: CAMetalDrawable) -> MTLRenderPassDescriptor {
@@ -115,7 +110,7 @@ extension Pipeline {
         renderPass.colorAttachments[0].texture = metalDrawable.texture
         renderPass.colorAttachments[0].loadAction = .dontCare
         renderPass.colorAttachments[0].storeAction = .store
-        renderPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0) //????
+        renderPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0)
         
         renderPass.depthAttachment.texture = self.depthTex
         renderPass.depthAttachment.loadAction = .dontCare
