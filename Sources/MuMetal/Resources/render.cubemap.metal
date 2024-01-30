@@ -19,19 +19,23 @@ struct VertexIn {
 
 vertex VertexOut vertexCubemap
 (
- constant VertexIn*        vertIn   [[ buffer(0) ]],
+ constant VertexIn*        in       [[ buffer(0) ]],
  constant UniformEyes&     eyes     [[ buffer(3) ]],
  ushort                    ampId    [[ amplification_id]],
  uint32_t                  vertId   [[ vertex_id ]])
 {
-    VertexOut vertOut;
-    UniformEye eye = eyes.eye[ampId];
+    VertexOut out;
+    UniformEye eye = eyes.eye[ampId]; // works with eye[1], eye[0]
 
-    float4 position = vertIn[vertId].position;
-    vertOut.position = eye.projection * position;
-    vertOut.texCoord = position;
+    float4 position = in[vertId].position;
 
-    return vertOut;
+    out.position = (eye.projection *
+                    eye.viewModel *
+                    position);
+
+    out.texCoord = position;
+
+    return out;
 }
 
 // MARK: - Fragment via index texture

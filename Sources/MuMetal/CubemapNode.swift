@@ -15,7 +15,6 @@ public struct VertexCube {
     var position : vector_float4 = .zero
 }
 
-
 public class CubemapNode: RenderNode {
 
     private let viaIndex     : Bool
@@ -49,6 +48,10 @@ public class CubemapNode: RenderNode {
         
         pd.colorAttachments[0].pixelFormat = MetalRenderPixelFormat
         pd.depthAttachmentPixelFormat = .depth32Float
+        #if targetEnvironment(simulator)
+        #elseif os(visionOS)
+        pd.maxVertexAmplificationCount = 2
+        #endif
 
         do {
             renderPipe = try pipeline.device.makeRenderPipelineState(descriptor: pd)
@@ -68,24 +71,26 @@ public class CubemapNode: RenderNode {
         }
         metal.eyeBuf = UniformEyeBuf(pipeline.device, "Cubemap", far: true)
     }
-    override public func updateUniforms() {
-
-        let orientation = Motion.shared.updateDeviceOrientation()
-        let perspective = pipeline.perspective()
-        let projectModel = perspective * orientation
-        metal.eyeBuf?.updateEyeUniforms(projectModel)
-
-    }
 
 #if os(visionOS)
 
     /// Update projection and rotation
     override public func updateUniforms(_ layerDrawable: LayerRenderer.Drawable) {
 
-        updateUniforms()
+//        let orientation = Motion.shared.updateDeviceOrientation()
+//        let perspective = pipeline.perspective()
+//        let projectModel = perspective * orientation
+
         metal.eyeBuf?.updateEyeUniforms(layerDrawable, matrix_identity_float4x4)
     }
+#else
+override public func updateUniforms() {
 
+        let orientation = Motion.shared.updateDeviceOrientation()
+        let perspective = pipeline.perspective()
+        let projectModel = perspective * orientation
+        metal.eyeBuf?.updateEyeUniforms(projectModel)
+    }
 #endif
 
 
@@ -93,7 +98,7 @@ public class CubemapNode: RenderNode {
 
         guard isOn else { return }
 
-        metal.eyeBuf?.setUniformBuf(renderCmd)
+        metal.eyeBuf?.setUniformBuf(renderCmd, "Cubemap")
 
         renderCmd.setRenderPipelineState(renderPipe)
         renderCmd.setFragmentTexture(cubeTex, index: 0)
@@ -103,7 +108,6 @@ public class CubemapNode: RenderNode {
         for buf in nameBuffer.values {
             renderCmd.setFragmentBuffer(buf.mtlBuffer, offset: 0, index: buf.bufIndex)
         }
-
         metal.drawMesh(renderCmd)
     }
 

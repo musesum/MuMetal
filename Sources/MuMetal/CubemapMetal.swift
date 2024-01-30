@@ -11,8 +11,8 @@ public class CubemapMetal: MeshMetal {
 
         super.init(DepthRendering(
             device,
-            immer : RenderDepth(.none, .counterClockwise, .greater, true),
-            metal : RenderDepth(.back, .clockwise       , .less   , false)))
+            immer: RenderDepth(.none, .counterClockwise, .greater, true),
+            metal: RenderDepth(.back, .clockwise       , .less   , false)))
 
         //  cull   winding          compare  write
         // .back  .counterClockwise .less    true  //-- frozen, jaggy plato, flat ok
@@ -38,10 +38,12 @@ public class CubemapMetal: MeshMetal {
         // .front .clockwise        .greater  true  //--  jaggy plato big, flat ok, cube no; jaggy
 
         let nameFormats: [VertexNameFormat] = [
-            ("position", .float4)
+            ("position", .float4),
+            //???? ("normal", .float3),
+            //???? ("texCoord",.float2),
         ]
         let vertexStride = MemoryLayout<VertexCube>.stride
-        model = CubemapModel(device, nameFormats,vertexStride)
+        model = CubemapModel(device, nameFormats, vertexStride)
         mtkMesh = try! MTKMesh(mesh: model.mdlMesh, device: device)
     }
 }

@@ -38,7 +38,7 @@ struct PlatoVertex {
 
 vertex VertexOut vertexPlato
 (
- constant PlatoVertex*   vertIn   [[ buffer(0) ]],
+ constant PlatoVertex*   in       [[ buffer(0) ]],
  constant PlatoUniforms& uniforms [[ buffer(1) ]],
  constant UniformEyes&   eyes     [[ buffer(3) ]],
  ushort                  ampId    [[ amplification_id]],
@@ -47,10 +47,10 @@ vertex VertexOut vertexPlato
     VertexOut vertOut;
     UniformEye eye = eyes.eye[ampId];
 
-    float3 pos0  = vertIn[vertId].pos0.xyz;
-    float3 pos1  = vertIn[vertId].pos1.xyz;
-    float3 norm0 = vertIn[vertId].norm0.xyz;
-    float3 norm1 = vertIn[vertId].norm1.xyz;
+    float3 pos0  = in[vertId].pos0.xyz;
+    float3 pos1  = in[vertId].pos1.xyz;
+    float3 norm0 = in[vertId].norm0.xyz;
+    float3 norm1 = in[vertId].norm1.xyz;
 
     float range01  = uniforms.range;// 0...1 maps pv0...pv1
     float4 pos   = float4((pos0 + (pos1-pos0) * range01), 1);
@@ -62,8 +62,8 @@ vertex VertexOut vertexPlato
 
     vertOut.position = eye.projection * pos;
     vertOut.texCoord = reflect(eyeDirection, worldNorm);
-    vertOut.faceId = vertIn[vertId].faceId;
-    vertOut.harmonic = vertIn[vertId].harmonic;
+    vertOut.faceId = in[vertId].faceId;
+    vertOut.harmonic = in[vertId].harmonic;
 
     return vertOut;
 }
@@ -115,7 +115,6 @@ fragment half4 fragmentPlatoCubeColor
     float3 texCoord = float3(vertOut.texCoord.x, vertOut.texCoord.y, -vertOut.texCoord.z);
 
     constexpr sampler samplr(filter::linear, address::repeat);
-
     return cubeTex.sample(samplr, texCoord);
 }
 
@@ -126,7 +125,6 @@ fragment half4 fragmentPlatoColor
  texture2d <half> inTex   [[ texture(1) ]])
 {
     constexpr sampler samplr(filter::linear, address::repeat);
-
     return inTex.sample(samplr, vertOut.texCoord.xy);
 }
 

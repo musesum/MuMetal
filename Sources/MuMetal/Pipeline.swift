@@ -22,6 +22,7 @@ open class Pipeline: NSObject {
     public var nodeNamed = [String: MetalNode]() //??  find node by name
     public var firstNode: MetalNode?    // 1st node in rendering chain
     public var lastNode: MetalNode?
+    public var renderNode: MetalNode?
 
     public var drawSize = CGSize.zero  // size of draw surface
     public var viewSize = CGSize.zero  // size of render surface
@@ -153,7 +154,7 @@ extension Pipeline {
         return perspective
     }
 
-    public func computeNodes(_ commandBuf: MTLCommandBuffer) -> MetalNode? {
+    public func computeNodes(_ commandBuf: MTLCommandBuffer)  {
         var node = firstNode
 
         // compute
@@ -167,24 +168,28 @@ extension Pipeline {
             }
             computeCmd.endEncoding()
         }
-        return node
+        renderNode = node
     }
 
     /// Called whenever the view needs to render a frame
     public func renderFrame() {
 
+        if RenderDepth.state == .immer { return } //????
         if settingUp { return }
 
         performCpuWork()
 
-        //???? _ = tripleSemaphore.wait(timeout:DispatchTime.distantFuture)
+        _ = tripleSemaphore.wait(timeout:DispatchTime.distantFuture)
         tripleIndex = (tripleIndex + 1) % 3
 
         guard let commandBuf = commandQueue.makeCommandBuffer() else { fatalError("renderFrame::commandBuf") }
-//        commandBuf.addCompletedHandler { _ in
-//            self.tripleSemaphore.signal()
-//        }
+        commandBuf.addCompletedHandler { _ in
+            self.tripleSemaphore.signal()
+        }
         guard let drawable = metalLayer.nextDrawable() else { return }
+
+        computeNodes(commandBuf)
+        
         renderMetal(commandBuf, drawable)
     }
     func performCpuWork() {
@@ -193,10 +198,8 @@ extension Pipeline {
 
     public func renderMetal(_ commandBuf: MTLCommandBuffer,
                             _ drawable: CAMetalDrawable) {
-        // compute
-        var node = computeNodes(commandBuf)
 
-        // render
+        var node = renderNode
         if node?.metType == .rendering,
             let renderCmd = commandBuf.makeRenderCommandEncoder(descriptor:  makeRenderPass(drawable)) {
 
@@ -211,6 +214,8 @@ extension Pipeline {
         commandBuf.present(drawable)
         commandBuf.commit()
         commandBuf.waitUntilCompleted()
+
+        func err(_ msg: String) {  print("\(#function) err: \(msg)") }
     }
 
 }

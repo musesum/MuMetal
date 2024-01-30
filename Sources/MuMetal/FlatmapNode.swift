@@ -11,11 +11,9 @@ import MuVision
 
 public class FlatmapNode: RenderNode {
 
-
     private var vertices: MTLBuffer? // Metal buffer for vertex data
     private var viewSize  = SIMD2<Float>(repeating: 0)
     private var clipFrame = SIMD4<Float>(repeating: 0) // clip rect
-
 
     public init(_ pipeline: Pipeline,
                 _ filename: String = "render.flatmap") {
@@ -72,6 +70,10 @@ public class FlatmapNode: RenderNode {
         pd.fragmentFunction = fragmentFunc
         pd.colorAttachments[0].pixelFormat = MetalRenderPixelFormat 
         pd.depthAttachmentPixelFormat = .depth32Float
+        #if targetEnvironment(simulator)
+        #elseif os(visionOS)
+        pd.maxVertexAmplificationCount = 2
+        #endif
 
         do {
             renderPipe = try pipeline.device.makeRenderPipelineState(descriptor: pd)
@@ -93,9 +95,8 @@ public class FlatmapNode: RenderNode {
     /// Update projection and rotation
     override public func updateUniforms(_ layerDrawable: LayerRenderer.Drawable) {
 
-        updateUniforms()
-        
     }
+
 #endif
     override open func renderNode(_ renderCmd: MTLRenderCommandEncoder) {
         guard let renderPipe else { return }

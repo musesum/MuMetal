@@ -109,6 +109,7 @@ open class MetalNode: Equatable {
     }
 
     enum MakeFunctionError: Error { case failed }
+    
     public func makeFunction(_ name: String) throws -> MTLFunction {
         if let fn = library.makeFunction(name:name) {
             return fn
@@ -129,15 +130,12 @@ open class MetalNode: Equatable {
         outTex = outTex ?? makeNewTex(name)
     }
 
-    open func updateUniforms() { }
-    
     open func renderNode(_ renderCmd: MTLRenderCommandEncoder) { }
-
-#if os(visionOS)
+    open func updateUniforms() { }
+    #if os(visionOS)
     open func updateUniforms(_ layerDrawable: LayerRenderer.Drawable) {}
+    #else
 
-#endif
-
-
+    #endif
 
 }
