@@ -21,7 +21,6 @@ struct PlatoUniforms {
     float shadowDepth;
     float invert;
     float zoom;
-    float4 worldCamera;
 };
 
 // index ranged  0...1
@@ -44,7 +43,7 @@ vertex VertexOut vertexPlato
  ushort                  ampId    [[ amplification_id]],
  uint32_t                vertId   [[ vertex_id ]])
 {
-    VertexOut vertOut;
+    VertexOut out;
     UniformEye eye = eyes.eye[ampId];
 
     float3 pos0  = in[vertId].pos0.xyz;
@@ -56,16 +55,16 @@ vertex VertexOut vertexPlato
     float4 pos   = float4((pos0 + (pos1-pos0) * range01), 1);
     float4 norm  = float4((norm0 + (norm1-norm0) * range01), 0);
 
-    float4 camPos = uniforms.worldCamera;
+    float4 camPos = eye.viewModel[3];
     float4 worldNorm = normalize(norm);
     float4 eyeDirection = normalize(pos - camPos);
 
-    vertOut.position = eye.projection * pos;
-    vertOut.texCoord = reflect(eyeDirection, worldNorm);
-    vertOut.faceId = in[vertId].faceId;
-    vertOut.harmonic = in[vertId].harmonic;
+    out.position = eye.projection * eye.viewModel * pos;
+    out.texCoord = reflect(eyeDirection, worldNorm);
+    out.faceId = in[vertId].faceId;
+    out.harmonic = in[vertId].harmonic;
 
-    return vertOut;
+    return out;
 }
 
 // MARK: - fragment

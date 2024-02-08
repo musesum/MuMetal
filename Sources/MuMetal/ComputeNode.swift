@@ -19,7 +19,7 @@ open class ComputeNode: MetalNode {
     }
     func setupThreadGroup() {
 
-        ///???? https://developer.apple.com/documentation/metal/compute_passes/creating_threads_and_threadgroups
+        ///??? https://developer.apple.com/documentation/metal/compute_passes/creating_threads_and_threadgroups
 
         threadSize = MTLSizeMake(16, 16, 1)
         let itemW = pipeline.drawSize.width

@@ -7,6 +7,7 @@ import simd
 import ModelIO
 import MetalKit
 import MuVision
+import MuExtensions
 #if os(visionOS)
 import CompositorServices
 #endif
@@ -20,8 +21,7 @@ public class CubemapNode: RenderNode {
     private let viaIndex     : Bool
     private var metal        : CubemapMetal!
     private var cubemapIndex : CubemapIndex?
-    
-    public var cubeTex: MTLTexture?
+    public var cubeTex       : MTLTexture?
 
     public init(_ pipeline: Pipeline,
                 _ viaIndex: Bool) {
@@ -80,19 +80,29 @@ public class CubemapNode: RenderNode {
 //        let orientation = Motion.shared.updateDeviceOrientation()
 //        let perspective = pipeline.perspective()
 //        let projectModel = perspective * orientation
-
-        metal.eyeBuf?.updateEyeUniforms(layerDrawable, matrix_identity_float4x4)
+          let cameraPos = vector_float4([0, 0,  -4, 1])
+        let label = (RenderDepth.state == .immer ? "👁️C⃝" : "👁️C")
+        metal.eyeBuf?.updateEyeUniforms(layerDrawable, cameraPos, label)
     }
-#else
-override public func updateUniforms() {
+
+#endif
+    // for both metal and visionOS passthru
+    override public func updateUniforms() {
 
         let orientation = Motion.shared.updateDeviceOrientation()
         let perspective = pipeline.perspective()
-        let projectModel = perspective * orientation
-        metal.eyeBuf?.updateEyeUniforms(projectModel)
-    }
-#endif
+        let viewModel = orientation
+        let projection = perspective * orientation
 
+        MuLog.Log("👁️c", interval: 4) {
+            print("👁️c")
+            print("\t👁️c orientation ", orientation.script)
+            print("\t👁️c perspective ", perspective.script)
+            print("\t👁️c projection  ", projection.script)
+            print("\t👁️c viewModel   ", viewModel.script)
+        }
+        metal.eyeBuf?.updateEyeUniforms(perspective, viewModel)
+    }
 
     override public func renderNode(_ renderCmd: MTLRenderCommandEncoder) {
 

@@ -8,6 +8,7 @@ import QuartzCore
 import CompositorServices
 #endif
 import MuVision
+import MuExtensions
 
 public class FlatmapNode: RenderNode {
 
@@ -24,7 +25,7 @@ public class FlatmapNode: RenderNode {
         makePipeline()
     }
 
-    func makeResources() {
+   public func makeResources() {
 
         let viewSize = (pipeline.metalLayer.frame.size *
                         pipeline.metalLayer.contentsScale)
@@ -32,10 +33,10 @@ public class FlatmapNode: RenderNode {
 
         let clip = AspectRatio.fillClip(from: pipeline.drawSize,
                                         to: viewSize).normalize()
-        
+
         clipFrame = SIMD4<Float>(clip.floats())
 
-        print(" MetNodeRender::clipFrame: \(clipFrame)")
+        print(" FlatMap::clipFrame: \(clipFrame)")
 
         let w2 = Float(viewSize.width / 2)
         let h2 = Float(viewSize.height / 2)
@@ -50,9 +51,11 @@ public class FlatmapNode: RenderNode {
             Vertex2D( w2, h2, 1, 0)]
 
         let size = MemoryLayout<Vertex2D>.size * metVertices.count
+        
         vertices = pipeline.device.makeBuffer(bytes: metVertices,
                                               length: size,
                                               options: .storageModeShared)
+
     }
 
     func makePipeline() {
@@ -94,9 +97,11 @@ public class FlatmapNode: RenderNode {
 
     /// Update projection and rotation
     override public func updateUniforms(_ layerDrawable: LayerRenderer.Drawable) {
-
     }
 
+#else
+    override public func updateUniforms() {
+    }
 #endif
     override open func renderNode(_ renderCmd: MTLRenderCommandEncoder) {
         guard let renderPipe else { return }

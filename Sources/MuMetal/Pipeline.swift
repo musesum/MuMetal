@@ -5,17 +5,19 @@ import Foundation
 import Collections
 import MetalKit
 import Metal
-import MuVision
 #if os(visionOS)
 import CompositorServices
 #endif
+import MuVision
+import MuExtensions
+
 open class Pipeline: NSObject {
 
     public var metalLayer = CAMetalLayer()
     public var device: MTLDevice!
     public var library: MTLLibrary?
 
-    public var flatmapNode: RenderNode?  // render 2d to screen
+    public var flatmapNode: FlatmapNode?  // render 2d to screen
     public var cubemapNode: CubemapNode?  // render cubemap to screen
 
     public var commandQueue: MTLCommandQueue!  // queue w/ command buffers
@@ -101,6 +103,8 @@ extension Pipeline {
         metalLayer.layoutIfNeeded()
         metalLayer.frame = frame
         print("clip\(clip.script) frame\(metalLayer.frame.script)")
+        flatmapNode?.makeResources() //?????
+        cubemapNode?.makeResources() //?????
     }
 
     public func makeRenderPass(_ metalDrawable: CAMetalDrawable) -> MTLRenderPassDescriptor {
@@ -148,10 +152,9 @@ extension Pipeline {
         let FOV = aspect > 1 ? 60.0 : 90.0
         let FOVPI = Float(FOV * .pi / 180.0) 
         let near = Float(0.1)
-        let far = Float(100)
+        let far = Float(8)
 
-        let perspective = perspective4x4(aspect, FOVPI, near, far)
-        return perspective
+        return perspective4x4(aspect, FOVPI, near, far)
     }
 
     public func computeNodes(_ commandBuf: MTLCommandBuffer)  {
@@ -174,7 +177,7 @@ extension Pipeline {
     /// Called whenever the view needs to render a frame
     public func renderFrame() {
 
-        if RenderDepth.state == .immer { return } //????
+        if RenderDepth.state == .immer { return } //???
         if settingUp { return }
 
         performCpuWork()
@@ -199,6 +202,9 @@ extension Pipeline {
     public func renderMetal(_ commandBuf: MTLCommandBuffer,
                             _ drawable: CAMetalDrawable) {
 
+
+        //????? WorldTracking.shared.updateAnchorNow()
+        
         var node = renderNode
         if node?.metType == .rendering,
             let renderCmd = commandBuf.makeRenderCommandEncoder(descriptor:  makeRenderPass(drawable)) {

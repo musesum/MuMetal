@@ -29,11 +29,6 @@ struct VertexMesh {
     float3 normal   [[ attribute(normal)   ]];
 };
 
-//struct VertexOut {
-//    float4 position [[ position ]];
-//    float2 texCoord;
-//    float3 normal;
-//};
 
 struct UniformEye {
     matrix_float4x4 projection;
