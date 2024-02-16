@@ -80,8 +80,8 @@ public class CubemapNode: RenderNode {
 //        let orientation = Motion.shared.updateDeviceOrientation()
 //        let perspective = pipeline.perspective()
 //        let projectModel = perspective * orientation
-          let cameraPos = vector_float4([0, 0,  -4, 1])
-        let label = (RenderDepth.state == .immer ? "👁️C⃝" : "👁️C")
+          let cameraPos =  vector_float4([0, 0,  -4, 1]) //???? 
+        let label = (RenderDepth.state == .immer ? "👁️C⃝ubemap" : "👁️Cubemap")
         metal.eyeBuf?.updateEyeUniforms(layerDrawable, cameraPos, label)
     }
 
@@ -90,18 +90,13 @@ public class CubemapNode: RenderNode {
     override public func updateUniforms() {
 
         let orientation = Motion.shared.updateDeviceOrientation()
-        let perspective = pipeline.perspective()
-        let viewModel = orientation
-        let projection = perspective * orientation
+        let projection = pipeline.projection()
 
-        MuLog.Log("👁️c", interval: 4) {
-            print("👁️c")
+        MuLog.Log("👁️cubemap", interval: 4) {
             print("\t👁️c orientation ", orientation.script)
-            print("\t👁️c perspective ", perspective.script)
             print("\t👁️c projection  ", projection.script)
-            print("\t👁️c viewModel   ", viewModel.script)
         }
-        metal.eyeBuf?.updateEyeUniforms(perspective, viewModel)
+        metal.eyeBuf?.updateEyeUniforms(projection, orientation)
     }
 
     override public func renderNode(_ renderCmd: MTLRenderCommandEncoder) {

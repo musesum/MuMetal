@@ -11,9 +11,9 @@ public class CubemapMetal: MeshMetal {
 
         super.init(DepthRendering(
             device,
-            immer: RenderDepth(.none, .counterClockwise, .less, true),
+            immer: RenderDepth(.none, .counterClockwise, .greater, true),
             //      RenderDepth(.none, .counterClockwise, .greater, true)))
-            metal: RenderDepth(.none, . clockwise       , .less   , false)))
+            metal: RenderDepth(.none,  .clockwise       , .less   , false)))
 
         //  cull   winding          compare  write
         // .back  .counterClockwise .less    true  //-- frozen, jaggy plato, flat ok

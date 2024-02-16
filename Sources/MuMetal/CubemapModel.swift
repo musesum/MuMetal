@@ -10,7 +10,7 @@ public class CubemapModel: MeshModel<Float> {
 
         super.init(device, nameFormats, vertexStride)
 
-        let r = Float(0.5)
+        let r = Float(10)
         vertices = [
             -r,+r,+r, 1,   +r,+r,+r, 1,  +r,+r,-r, 1,  -r,+r,-r, 1, // +Y
              -r,-r,-r, 1,   +r,-r,-r, 1,  +r,-r,+r, 1,  -r,-r,+r, 1, // -Y

@@ -145,16 +145,9 @@ extension Pipeline {
         }
     }
 
-    public func perspective() -> simd_float4x4 {
 
-        let size = metalLayer.drawableSize
-        let aspect = Float(size.width / size.height)
-        let FOV = aspect > 1 ? 60.0 : 90.0
-        let FOVPI = Float(FOV * .pi / 180.0) 
-        let near = Float(0.1)
-        let far = Float(8)
-
-        return perspective4x4(aspect, FOVPI, near, far)
+    public func projection() -> simd_float4x4 {
+        return MuExtensions.projection(metalLayer.drawableSize)
     }
 
     public func computeNodes(_ commandBuf: MTLCommandBuffer)  {
@@ -202,8 +195,8 @@ extension Pipeline {
     public func renderMetal(_ commandBuf: MTLCommandBuffer,
                             _ drawable: CAMetalDrawable) {
 
-
-        //????? WorldTracking.shared.updateAnchorNow()
+        //?? ARKit for non visionOS?
+        //?? WorldTracking.shared.updateAnchorNow()
         
         var node = renderNode
         if node?.metType == .rendering,
