@@ -69,15 +69,13 @@ open class Pipeline: NSObject {
         var node = firstNode
         while node != nil {
             if let node {
-                str += "\n\(node.name.pad(7))(\(node.inNode?.name ?? ""))".pad(17) +
-                "-> " + (node.outNode?.name ?? "nil")
+                str += node.name + " -> "
             }
             node = node!.outNode
         }
-        str += "\n"
-        return str
+        return str + "nil"
     }
-
+    
     public func removeNode(_ node: MetalNode) {
         node.inNode?.outNode = node.outNode
         node.outNode?.inNode = node.inNode

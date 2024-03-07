@@ -45,7 +45,8 @@ public class CubemapNode: RenderNode {
         pd.vertexFunction   = library.makeFunction(name: vertexName)
         pd.fragmentFunction = library.makeFunction(name: fragmentName)
         pd.vertexDescriptor = metal.metalVD
-        
+
+
         pd.colorAttachments[0].pixelFormat = MetalRenderPixelFormat
         pd.depthAttachmentPixelFormat = .depth32Float
         #if targetEnvironment(simulator)
@@ -76,23 +77,19 @@ public class CubemapNode: RenderNode {
 
     /// Update projection and rotation
     override public func updateUniforms(_ layerDrawable: LayerRenderer.Drawable) {
-
-//        let orientation = Motion.shared.updateDeviceOrientation()
-//        let perspective = pipeline.perspective()
-//        let projectModel = perspective * orientation
-          let cameraPos =  vector_float4([0, 0,  -4, 1]) //???? 
+        let cameraPos =  vector_float4([0, 0,  -4, 1]) //???? 
         let label = (RenderDepth.state == .immer ? "👁️C⃝ubemap" : "👁️Cubemap")
         metal.eyeBuf?.updateEyeUniforms(layerDrawable, cameraPos, label)
     }
 
 #endif
-    // for both metal and visionOS passthru
+    // for both metal and visionOS reflection
     override public func updateUniforms() {
 
         let orientation = Motion.shared.updateDeviceOrientation()
         let projection = pipeline.projection()
 
-        MuLog.Log("👁️cubemap", interval: 4) {
+        MuLog.NoLog("👁️cubemap", interval: 4) {
             print("\t👁️c orientation ", orientation.script)
             print("\t👁️c projection  ", projection.script)
         }

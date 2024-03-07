@@ -16,9 +16,9 @@ struct PlatoUniforms {
     
     float range; // from 0 to 11 to animate
     float convex; // total depth of subdivisions
-    float passthru;
-    float shadowWhite;
-    float shadowDepth;
+    float reflect;
+    float alpha;
+    float depth;
     float invert;
     float zoom;
 };
@@ -51,13 +51,12 @@ vertex VertexOut vertexPlato
     float3 norm0 = in[vertId].norm0.xyz;
     float3 norm1 = in[vertId].norm1.xyz;
 
-    float range01  = uniforms.range;// 0...1 maps pv0...pv1
-    float4 pos   = float4((pos0 + (pos1-pos0) * range01), 1);
-    float4 norm  = float4((norm0 + (norm1-norm0) * range01), 0);
+    float range01 = uniforms.range;// 0...1 maps pv0...pv1
+    float4 pos  = float4((pos0  + (pos1 - pos0) * range01), 1);
+    float4 norm = float4((norm0 + (norm1-norm0) * range01), 0);
 
-    float4 camPos = eye.viewModel[3];
     float4 worldNorm = normalize(norm);
-    float4 eyeDirection = normalize(pos - camPos);
+    float4 eyeDirection = normalize(pos);
 
     out.position = eye.projection * eye.viewModel * pos;
     out.texCoord = reflect(eyeDirection, worldNorm);
@@ -88,20 +87,19 @@ fragment half4 fragmentPlatoCubeIndex
                              -out.texCoord.z);
     half4 cubeIndex = cubeTex.sample(samplr, texCoord);
 
-    half4 reflect = inTex.sample(samplr, float2(cubeIndex.xy));
-    float passthru = max(uniforms.passthru, 0.001);
+    half4 sampled = inTex.sample(samplr, float2(cubeIndex.xy));
+    float reflect = max(uniforms.reflect, 0.001);
 
-    const half3 mix = half3((reflect * passthru) + palette * (1.0 - passthru));
+    const half3 mix = half3((sampled * reflect) + palette * (1.0 - reflect));
 
     const float count = 6;
-    float gray     = uniforms.shadowWhite;
+    float alpha    = uniforms.alpha; // x-axis
+    float depth    = uniforms.depth;
     float harmonic = out.harmonic;
     float inverse  = uniforms.invert * count;
-    float alpha    = uniforms.shadowDepth * abs(harmonic-inverse);
-
-    half3 shaded = (mix * (1-alpha) + gray * alpha);
-
-    return half4(shaded.xyz,1);
+    float gradient = depth * abs(harmonic-inverse);
+    half3 shaded   = mix * (1-gradient);
+    return half4(shaded.xyz, 1 - alpha * gradient);
 }
 
 /// texturecube has color information uploaded to it
@@ -114,7 +112,9 @@ fragment half4 fragmentPlatoCubeColor
     float3 texCoord = float3(vertOut.texCoord.x, vertOut.texCoord.y, -vertOut.texCoord.z);
 
     constexpr sampler samplr(filter::linear, address::repeat);
-    return cubeTex.sample(samplr, texCoord);
+    half4 color = cubeTex.sample(samplr, texCoord);
+    color.w = vertOut.texCoord.w;
+    return color;
 }
 
 /// no cubemap, untested

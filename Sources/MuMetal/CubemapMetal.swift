@@ -11,8 +11,16 @@ public class CubemapMetal: MeshMetal {
 
         super.init(DepthRendering(
             device,
-            immer: RenderDepth(.none, .counterClockwise, .greater, true),
-            //      RenderDepth(.none, .counterClockwise, .greater, true)))
+            immer: RenderDepth(.none, .clockwise, .greater, true),
+            //immer: RenderDepth(.none, .clockwise, .less, true), missing cube
+            //immer: RenderDepth(.none, .clockwise, .less, false), missing cube
+            
+            //immer: RenderDepth(.none, .clockwise, .greater, true), ok?
+
+            //immer: RenderDepth(.none, .counterClockwise, .greater, true),
+            //immer: RenderDepth(.none, .counterClockwise, .greater, true), hidden
+            //immer: RenderDepth(.none, .counterClockwise, .less, true), hidden
+
             metal: RenderDepth(.none,  .clockwise       , .less   , false)))
 
         //  cull   winding          compare  write
