@@ -25,10 +25,10 @@ public final class Camera: NSObject {
     private var device = MTLCreateSystemDefaultDevice()
     var camDelegate: AVCaptureVideoDataOutputSampleBufferDelegate?
 
-    public init(_ delegate: AVCaptureVideoDataOutputSampleBufferDelegate?,
+    public init(_ handState: AVCaptureVideoDataOutputSampleBufferDelegate?,
                 position: AVCaptureDevice.Position ) {
 
-        self.camDelegate = delegate
+        self.camDelegate = handState
         self.camPos = position
         super.init()
 

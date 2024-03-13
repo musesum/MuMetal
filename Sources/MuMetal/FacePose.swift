@@ -13,7 +13,7 @@ public protocol MetFacePoseDelegate {
 open class FacePose: NSObject {
 
     private let pipeline: Pipeline
-    private let delegate: MetFacePoseDelegate?
+    private let facePose: MetFacePoseDelegate?
     private var faceMask: Bool
 
     private var visionSequence: VNSequenceRequestHandler!
@@ -26,18 +26,18 @@ open class FacePose: NSObject {
     var ciImage: CIImage? {
         didSet {
             if let ciImage {
-                delegate?.didUpdate(ciImage)
+                facePose?.didUpdate(ciImage)
             }
         }
     }
 
     public init(_ pipeline: Pipeline,
                 _ faceMask: Bool,
-                _ delegate: MetFacePoseDelegate? = nil) {
+                _ facePose: MetFacePoseDelegate? = nil) {
 
         self.pipeline = pipeline
         self.faceMask = faceMask
-        self.delegate = delegate
+        self.facePose = facePose
 
         super.init()
         
