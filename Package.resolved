@@ -6,7 +6,7 @@
       "location" : "https://github.com/musesum/MuExtensions.git",
       "state" : {
         "branch" : "main",
-        "revision" : "df22a3673baa4f47f4d89d6e99197509e3f9449c"
+        "revision" : "c67d533063532f0ac9533bc8646f294f52b64498"
       }
     },
     {
@@ -15,7 +15,7 @@
       "location" : "https://github.com/musesum/MuFlo.git",
       "state" : {
         "branch" : "main",
-        "revision" : "c97fc49b50d64881c42385ed8f4545f90fc80591"
+        "revision" : "283cd16d1e7be14fd3db65405d39e87dfaa24860"
       }
     },
     {
@@ -33,7 +33,7 @@
       "location" : "https://github.com/musesum/MuVision.git",
       "state" : {
         "branch" : "main",
-        "revision" : "0b33989f21c662faa90f0505a80b8a1cb3627fcb"
+        "revision" : "3eee3a0b3173632df596d9d9ca1bddcddee6044d"
       }
     },
     {
