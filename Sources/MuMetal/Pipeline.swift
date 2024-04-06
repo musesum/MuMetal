@@ -9,7 +9,7 @@ import Metal
 import CompositorServices
 #endif
 import MuVision
-import MuExtensions
+import MuFlo
 
 open class Pipeline: NSObject {
 
@@ -145,7 +145,7 @@ extension Pipeline {
 
 
     public func projection() -> simd_float4x4 {
-        return MuExtensions.projection(metalLayer.drawableSize)
+        return MuFlo.projection(metalLayer.drawableSize)
     }
 
     public func computeNodes(_ commandBuf: MTLCommandBuffer)  {

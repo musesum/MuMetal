@@ -8,7 +8,7 @@ import QuartzCore
 import CompositorServices
 #endif
 import MuVision
-import MuExtensions
+import MuFlo
 
 public class FlatmapNode: RenderNode {
 

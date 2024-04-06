@@ -11,7 +11,6 @@ let package = Package(
             targets: ["MuMetal"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/musesum/MuExtensions.git", .branch("main")),
         .package(url: "https://github.com/musesum/MuFlo.git", .branch("main")),
         .package(url: "https://github.com/musesum/MuVision.git", .branch("main")),
     ],
@@ -19,7 +18,6 @@ let package = Package(
         .target(
             name: "MuMetal",
             dependencies: [
-                .product(name: "MuExtensions", package: "MuExtensions"),
                 .product(name: "MuFlo", package: "MuFlo"),
                 .product(name: "MuVision", package: "MuVision")
             ],

@@ -6,11 +6,11 @@ import CoreImage
 import simd
 import ModelIO
 import MetalKit
-import MuVision
-import MuExtensions
 #if os(visionOS)
 import CompositorServices
 #endif
+import MuVision
+import MuFlo
 
 public struct VertexCube {
     var position : vector_float4 = .zero
