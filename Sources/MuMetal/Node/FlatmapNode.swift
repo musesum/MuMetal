@@ -41,16 +41,16 @@ public class FlatmapNode: RenderNode {
         let w2 = Float(viewSize.width / 2)
         let h2 = Float(viewSize.height / 2)
 
-        let metVertices: [Vertex2D] = [
+        let metVertices: [FlatmapVertex] = [
             // (position texCoord)
-            Vertex2D( w2,-h2, 1, 1),
-            Vertex2D(-w2,-h2, 0, 1),
-            Vertex2D(-w2, h2, 0, 0),
-            Vertex2D( w2,-h2, 1, 1),
-            Vertex2D(-w2, h2, 0, 0),
-            Vertex2D( w2, h2, 1, 0)]
+            FlatmapVertex( w2,-h2, 1, 1),
+            FlatmapVertex(-w2,-h2, 0, 1),
+            FlatmapVertex(-w2, h2, 0, 0),
+            FlatmapVertex( w2,-h2, 1, 1),
+            FlatmapVertex(-w2, h2, 0, 0),
+            FlatmapVertex( w2, h2, 1, 0)]
 
-        let size = MemoryLayout<Vertex2D>.size * metVertices.count
+        let size = MemoryLayout<FlatmapVertex>.size * metVertices.count
         
         vertices = pipeline.device.makeBuffer(bytes: metVertices,
                                               length: size,

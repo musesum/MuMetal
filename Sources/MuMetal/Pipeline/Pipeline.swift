@@ -101,8 +101,8 @@ extension Pipeline {
         metalLayer.layoutIfNeeded()
         metalLayer.frame = frame
         print("clip\(clip.script) frame\(metalLayer.frame.script)")
-        flatmapNode?.makeResources() //?????
-        cubemapNode?.makeResources() //?????
+        flatmapNode?.makeResources() //???
+        cubemapNode?.makeResources() //???
     }
 
     public func makeRenderPass(_ metalDrawable: CAMetalDrawable) -> MTLRenderPassDescriptor {
