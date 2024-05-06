@@ -26,6 +26,7 @@ public class MetalBuffer {
     //private var buf: Any! // this doesn't work
 
     public var mtlBuffer: MTLBuffer? // buffer of constants
+    public var float: Float { return buf1 }
 
     public init(_ name: String,
                 _ index: Int,

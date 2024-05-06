@@ -2,12 +2,12 @@
 
 import Metal
 
-open class TileNode: ComputeNode {
+open class TileNode: KernelNode {
     
     public init(_ pipeline: Pipeline,
                 _ name: String) {
         
-        super.init(pipeline, name, "compute.tile")
+        super.init(pipeline, name, "kernel.tile")
     }
     
     // cellular automata uses double buffering

@@ -20,9 +20,9 @@ public class TouchFlo {
     private var dotOn˚   : Flo? // addDot(f, .began)
     private var dotOff˚  : Flo? // addDot(f, .ended)
 
-    private var texSize = CGSize.zero
-    public var viewSize = CGSize(width: 1920, height: 1080)
-    private var texBuf: UnsafeMutablePointer<UInt32>?
+    private var bufSize = CGSize.zero
+    public var viewSize = CGSize(width: 1920, height: 1080) //????? 
+    private var drawBuf: UnsafeMutablePointer<UInt32>?
     private var archive: FloArchive?
 
     public init() {
@@ -111,37 +111,38 @@ extension TouchFlo {
     public func drawPoint(_ point: CGPoint,
                           _ radius: CGFloat) {
 
-        guard let texBuf else { return }
+        guard let drawBuf else { return }
         if point == .zero { return }
 
         #if os(visionOS)
-        let scale = CGFloat(2) //?? UITraitCollection().displayScale == 0
+        let scale = CGFloat(3) //?? UITraitCollection().displayScale == 0
         #else
         let scale = UIScreen.main.scale
         #endif
 
-        let p = point * scale
-        let p1 = viewPointToTexture(p, viewSize: viewSize, texSize: texSize)
+        let viewPoint = point * scale
+        let texPoint = viewPointToTexture(viewPoint, viewSize, bufSize) //??????
 
         let r = radius * 2.0 - 1
         let r2 = Int(r * r / 4.0)
-        let xs = Int(texSize.width)
-        let ys = Int(texSize.height)
-        let px = Int(p1.x)
-        let py = Int(p1.y)
+        let texW = Int(bufSize.width)
+        let texH = Int(bufSize.height)
+        let texMax = Int(bufSize.width * bufSize.height)
+        let texX = Int(texPoint.x)
+        let texY = Int(texPoint.y)
 
-        var x0 = Int(p1.x - radius - 0.5)
-        var y0 = Int(p1.y - radius - 0.5)
-        var x1 = Int(p1.x + radius + 0.5)
-        var y1 = Int(p1.y + radius + 0.5)
+        var x0 = Int(texPoint.x - radius - 0.5)
+        var y0 = Int(texPoint.y - radius - 0.5)
+        var x1 = Int(texPoint.x + radius + 0.5)
+        var y1 = Int(texPoint.y + radius + 0.5)
 
-        if x0 < 0 { x0 += xs }
-        if y0 < 0 { y0 += ys }
-        while x1 < x0 { x1 += xs }
-        while y1 < y0 { y1 += ys }
+        while x0 < 0 { x0 += texW }
+        while y0 < 0 { y0 += texH }
+        while x1 < x0 { x1 += texW }
+        while y1 < y0 { y1 += texH }
 
         if radius == 1 {
-            texBuf[y0 * xs + x0] = index
+            drawBuf[y0 * texW + x0] = index
             return
         }
 
@@ -149,16 +150,16 @@ extension TouchFlo {
 
             for x in x0 ..< x1  {
 
-                let xd = (x - px) * (x - px)
-                let yd = (y - py) * (y - py)
+                let xd = (x - texX) * (x - texX)
+                let yd = (y - texY) * (y - texY)
 
                 if xd + yd < r2 {
 
-                    let yy = (y + ys) % ys  // wrapped pixel y index
-                    let xx = (x + xs) % xs  // wrapped pixel x index
-                    let ii = yy * xs + xx   // final pixel x, y index into buffer
+                    let yy = (y + texH) % texH  // wrapped pixel y index
+                    let xx = (x + texW) % texW  // wrapped pixel x index
+                    let ii = (yy * texW + xx) % texMax // final pixel x, y index into buffer
 
-                    texBuf[ii] = index     // set the buffer to value
+                    drawBuf[ii] = index     // set the buffer to value
                 }
             }
         }
@@ -166,39 +167,41 @@ extension TouchFlo {
 
 
     // duplicate in MuMetal::MetAspect
-    public func viewPointToTexture(_ p: CGPoint, viewSize: CGSize, texSize: CGSize) -> CGPoint {
+    public func viewPointToTexture(_ point: CGPoint,
+                                   _ viewSize: CGSize,
+                                   _ texSize: CGSize) -> CGPoint {
 
         let fill = fillClip(from: texSize, to: viewSize)
         let norm = fill.normalize()
-        let x0 = p.x / viewSize.width
-        let y0 = p.y / viewSize.height
+        let x0 = point.x / viewSize.width
+        let y0 = point.y / viewSize.height
         let x1 = (x0 + norm.minX) * norm.width * texSize.width
         let y1 = (y0 + norm.minY) * norm.height * texSize.height
         return CGPoint(x: x1, y: y1)
     }
 
     func drawFill(_ fill: UInt32) {
-        guard let texBuf else { return }
+        guard let drawBuf else { return }
 
-        let w = Int(texSize.width)
-        let h = Int(texSize.height)
+        let w = Int(bufSize.width)
+        let h = Int(bufSize.height)
         let count = w * h // count
 
         for i in 0 ..< count {
-            texBuf[i] = fill
+            drawBuf[i] = fill
         }
     }
     func drawData() {
 
-        let w = Int(texSize.width)
-        let h = Int(texSize.height)
+        let w = Int(bufSize.width)
+        let h = Int(bufSize.height)
         let count = w * h // count
 
         archive?.textureData["draw"]??.withUnsafeBytes { dataPtr in
-            guard let texBuf else { return }
+            guard let drawBuf else { return }
             let tex32Ptr = dataPtr.bindMemory(to: UInt32.self)
             for i in 0 ..< count {
-                texBuf[i] = tex32Ptr[i]
+                drawBuf[i] = tex32Ptr[i]
             }
         }
         archive?.textureData["draw"] = nil
@@ -206,30 +209,24 @@ extension TouchFlo {
 }
 extension TouchFlo: TouchDrawDelegate {
 
-    public func drawTexture(_ texBuf: UnsafeMutablePointer<UInt32>,
-                            size: CGSize) -> Bool {
+    public func setDrawBuffer(_ drawBuf: UnsafeMutablePointer<UInt32>,
+                              _ bufSize: CGSize) {
 
-        self.texBuf = texBuf
-        self.texSize = size
+        self.drawBuf = drawBuf
+        self.bufSize = bufSize
 
         if archive?.textureData["draw"] != nil {
             fill = -1 // preempt fill after data
             drawData()
-            return false
         } else if fill > 255 {
             let fill = UInt32(fill)
             drawFill(fill)
             self.fill = -1
-            return false
         } else if fill >= 0 {
             let v8 = UInt32(fill * 255)
             let fill = (v8 << 24) + (v8 << 16) + (v8 << 8) + v8
             drawFill(fill)
             self.fill = -1
-            return false
-        } else {
-            TouchCanvas.flushTouchCanvas()
-            return false // didn't fill so don't duplicate 2nd texture
         }
     }
     // duplicate in MuMetal::MetAspect

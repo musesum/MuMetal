@@ -10,11 +10,11 @@ public class CamixNode: CameraNode {
     public init(_ root˚    : Flo,
                 _ pipeline : Pipeline) {
 
-        super.init(root˚, pipeline, "camix", "compute.camix")
+        super.init(root˚, pipeline, "camix", "kernel.camix")
     }
 }
 
-public class CameraNode: ComputeNode {
+public class CameraNode: KernelNode {
 
     private var front˚: Flo?
     var front: Bool = true
@@ -25,10 +25,10 @@ public class CameraNode: ComputeNode {
         _ root˚     : Flo,
         _ pipeline  : Pipeline,
         _ name      : String = "camera",
-        _ filename  : String = "compute.camera") {
+        _ filename  : String = "kernel.camera") {
 
             super.init(pipeline, name, filename)
-            let camera = root˚.bind("shader.compute.camera")
+            let camera = root˚.bind("shader.kernel.camera")
             front˚ = camera.bind("front") { flo,_ in self.updateFacing(flo.bool) }
     }
     func updateFacing(_ front: Bool) {
@@ -100,7 +100,7 @@ public class CameraNode: ComputeNode {
         #endif
     }
 
-    override public func computeNode(_ computeCmd: MTLComputeCommandEncoder) {
+    override public func kernelNode(_ computeCmd: MTLComputeCommandEncoder) {
         #if os(visionOS)
         #else
         if isOn, Camera.shared.hasNewTex {
@@ -108,7 +108,7 @@ public class CameraNode: ComputeNode {
             let frame = getAspectFill()
             if frame != .zero {
                 updateBuffer("frame", frame)
-                super.computeNode(computeCmd)
+                super.kernelNode(computeCmd)
             }
         }
         #endif

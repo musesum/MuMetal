@@ -9,14 +9,14 @@ public typealias DrawTextureFunc = ((_ bytes: UnsafeMutablePointer<UInt32>,
 
 public typealias GetTextureFunc = ((_ size: Int) -> (UnsafeMutablePointer<UInt32>))
 
-public class ColorNode: ComputeNode {
+public class ColorNode: KernelNode {
 
     public var getPal: GetTextureFunc?
 
     public init(_ pipeline: Pipeline,
                 _ getPal: @escaping GetTextureFunc) {
 
-        super.init(pipeline, "color", "compute.color")
+        super.init(pipeline, "color", "kernel.color")
         self.getPal = getPal
     }
 

@@ -148,16 +148,16 @@ extension Pipeline {
         return MuFlo.projection(metalLayer.drawableSize)
     }
 
-    public func computeNodes(_ commandBuf: MTLCommandBuffer)  {
+    public func kernelNodes(_ commandBuf: MTLCommandBuffer)  {
         var node = firstNode
 
         // compute
         if node?.metType == .computing,
            let computeCmd = commandBuf.makeComputeCommandEncoder() {
-            while let nodeNow = node as? ComputeNode {
+            while let nodeNow = node as? KernelNode {
                 nodeNow.updateUniforms()
                 nodeNow.updateTextures()
-                nodeNow.computeNode(computeCmd)
+                nodeNow.kernelNode(computeCmd)
                 node = nodeNow.outNode
             }
             computeCmd.endEncoding()
@@ -182,7 +182,7 @@ extension Pipeline {
         }
         guard let drawable = metalLayer.nextDrawable() else { return }
 
-        computeNodes(commandBuf)
+        kernelNodes(commandBuf)
         
         renderMetal(commandBuf, drawable)
     }

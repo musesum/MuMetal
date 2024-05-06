@@ -5,8 +5,11 @@ import Foundation
 import MetalKit
 
 public let MetalComputePixelFormat = MTLPixelFormat.bgra8Unorm
+#if os(visionOS)
 public let MetalRenderPixelFormat = MTLPixelFormat.bgra8Unorm_srgb
-
+#else
+public let MetalRenderPixelFormat = MTLPixelFormat.bgra8Unorm
+#endif
 public class TextureCache {
 
     static var textures = [MTLTexture]()

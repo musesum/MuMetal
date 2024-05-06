@@ -1,7 +1,7 @@
 
 import AVKit
 
-public class RecordNode: ComputeNode {
+public class RecordNode: KernelNode {
     
     var isRecording = false
     var recordingStartTime = TimeInterval(0)
@@ -11,7 +11,7 @@ public class RecordNode: ComputeNode {
     var inputPixelBufferAdaptor: AVAssetWriterInputPixelBufferAdaptor?
     
     public init(_ pipeline: Pipeline,
-                _ filename: String = "compute.record") {
+                _ filename: String = "kernel.record") {
         
         super.init(pipeline, "record", filename)
         // placeholder nameIndex["record"] = 0
@@ -40,7 +40,7 @@ public class RecordNode: ComputeNode {
         outTex = inTex
     }
 
-    override public func computeNode(_ computeCmd: MTLComputeCommandEncoder) {
+    override public func kernelNode(_ computeCmd: MTLComputeCommandEncoder) {
         if isRecording, let inTex = inTex {
             writeFrame(inTex)
         }

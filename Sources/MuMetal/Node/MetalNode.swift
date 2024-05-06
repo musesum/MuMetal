@@ -38,7 +38,7 @@ open class MetalNode: Equatable {
 
     internal var nameBuffer = [String: MetalBuffer]()
 
-    public var loops = 1
+    //public var loops = 1
     public var isOn = false
     public var pipeline: Pipeline
 

@@ -144,7 +144,6 @@ open class TouchCanvasBuffer {
 
         let item = makeTouchCanvasItem(touch.hash, force, radius, nextXY, phase, azimuth, altitude, Visitor(.canvas))
 
-
         if PeersController.shared.hasPeers {
             let encoder = JSONEncoder()
             do {

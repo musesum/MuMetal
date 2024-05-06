@@ -2,7 +2,7 @@
 
 import Metal
 
-open class ComputeNode: MetalNode {
+open class KernelNode: MetalNode {
 
     var computePipe: MTLComputePipelineState? // _cellRulePipeline;
     var threadSize = MTLSize()
@@ -44,7 +44,7 @@ open class ComputeNode: MetalNode {
         }
     }
 
-    public func computeNode(_ computeCmd: MTLComputeCommandEncoder) {
+    public func kernelNode(_ computeCmd: MTLComputeCommandEncoder) {
         // setup and execute compute textures
 
         if let computePipe {

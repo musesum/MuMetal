@@ -18,10 +18,10 @@ struct FlatmapVertex {
 // MARK: - vertex
 vertex VertexFlat vertexFlatmap
 (
- constant FlatmapVertex*     vertIn    [[ buffer(0) ]],
- constant float2&       viewSize  [[ buffer(1) ]],
- constant float4&       clipFrame [[ buffer(2) ]],
- constant UniformEyes&  eyes      [[ buffer(3) ]],
+ constant FlatmapVertex* vertIn    [[ buffer(0) ]],
+ constant float2&        viewSize  [[ buffer(1) ]],
+ constant float4&        clipFrame [[ buffer(2) ]],
+ constant UniformEyes&   eyes      [[ buffer(3) ]],
  //ushort                 ampId     [[ amplification_id]],
  uint                   vertId    [[ vertex_id ]])
 {
@@ -41,7 +41,7 @@ vertex VertexFlat vertexFlatmap
 fragment half4 fragmentFlatmap
 (
  VertexFlat       vertOut [[ stage_in   ]],
- texture2d<half>  tex     [[ texture(0) ]],
+ texture2d<half>  inTex   [[ texture(0) ]],
  constant float2& repeat  [[ buffer(1)  ]],
  constant float2& mirror  [[ buffer(2)  ]])
 {
@@ -68,10 +68,7 @@ fragment half4 fragmentFlatmap
                      / fmax(0.0001, mirror.y));
         }
     }
-    constexpr sampler samplr(filter::linear,
-                             address::repeat);
-
-    float2 modCoord = mod / reps;
-    return tex.sample(samplr, modCoord);
+    constexpr sampler samplr(filter::linear, address::repeat);
+    return inTex.sample(samplr,  mod / reps);
 }
 

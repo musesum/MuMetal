@@ -4,7 +4,7 @@ import Foundation
 import Metal
 import MetalKit
 
-public class CellNode: ComputeNode {
+public class CellNode: KernelNode {
     
     // cellular automata uses double buffering
     override public func updateTextures() {
@@ -14,14 +14,16 @@ public class CellNode: ComputeNode {
         outTex = outTex ?? makeNewTex(name)
     }
 
-    override public func computeNode(_ computeCmd: MTLComputeCommandEncoder) {
+    override public func kernelNode(_ computeCmd: MTLComputeCommandEncoder) {
 
         if isOn {
-            super.computeNode(computeCmd)
+            super.kernelNode(computeCmd)
 
-            for _ in 1 ..< loops {
-                flipInOutTextures()
-                super.computeNode(computeCmd)
+            if let loops = nameBuffer["loops"]?.float, loops >= 1 {
+                for _ in 1 ..< Int(loops) {
+                    flipInOutTextures()
+                    super.kernelNode(computeCmd)
+                }
             }
         }
         // cellular automata uses double buffering
